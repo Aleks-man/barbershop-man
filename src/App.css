@@ -136,8 +136,8 @@
 .home-hero-image {
   z-index: -3;
   object-fit: cover;
-  filter: blur(3px) saturate(0.92) contrast(1.04);
-  transform: scale(1.035);
+  filter: saturate(0.95) contrast(1.03);
+  transform: scale(1.01);
 }
 
 .home-hero-shade {
