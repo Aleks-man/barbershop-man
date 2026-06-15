@@ -32,7 +32,7 @@ export function HomePage() {
         <aside className="hero-status" aria-label="Свободные окна на сегодня">
           <span>Сегодня</span>
           <strong>4 свободных окна</strong>
-          <Link to="/booking">Выбрать время</Link>
+          <Link to="/booking">Записаться</Link>
         </aside>
       </section>
     </main>

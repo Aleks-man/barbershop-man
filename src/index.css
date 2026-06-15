@@ -31,7 +31,28 @@
 }
 
 html {
+  overflow-y: scroll;
+  scrollbar-color: rgba(190, 146, 77, 0.48) rgba(14, 15, 14, 0.9);
+  scrollbar-gutter: stable;
   scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(14, 15, 14, 0.9);
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(14, 15, 14, 0.9);
+  border-radius: 999px;
+  background: rgba(190, 146, 77, 0.48);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(190, 146, 77, 0.7);
 }
 
 body {
