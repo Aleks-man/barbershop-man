@@ -4,18 +4,21 @@ type BookingSelectProps = {
   label: string
   name: string
   options: string[]
-  defaultValue: string
+  placeholder: string
+  value: string
+  onChange: (value: string) => void
 }
 
 export function BookingSelect({
   label,
   name,
   options,
-  defaultValue,
+  placeholder,
+  value,
+  onChange,
 }: BookingSelectProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
-  const [value, setValue] = useState(defaultValue)
   const listId = useId()
 
   const closeMenu = () => {
@@ -52,7 +55,9 @@ export function BookingSelect({
           aria-haspopup="listbox"
           onClick={toggleMenu}
         >
-          {value}
+          <span className={value ? undefined : 'booking-select-placeholder'}>
+            {value || placeholder}
+          </span>
         </button>
         {isOpen && (
           <span
@@ -69,7 +74,7 @@ export function BookingSelect({
                 role="option"
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => {
-                  setValue(option)
+                  onChange(option)
                   closeMenu()
                 }}
               >

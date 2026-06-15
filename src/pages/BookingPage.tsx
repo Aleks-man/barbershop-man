@@ -1,9 +1,43 @@
+import { useEffect, useState } from 'react'
 import { BookingSelect } from '../components/BookingSelect'
 import { PageIntro } from '../components/PageIntro'
 import bookingBg from '../assets/booking-bg.png'
 import { barbers, schedule, services } from '../data/site'
 
 export function BookingPage() {
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [service, setService] = useState('')
+  const [barber, setBarber] = useState('')
+  const [statusMessage, setStatusMessage] = useState('')
+  const isFormReady = Boolean(
+    name.trim() && phone.trim() && service.trim() && barber.trim(),
+  )
+
+  useEffect(() => {
+    if (!statusMessage) {
+      return
+    }
+
+    const timerId = window.setTimeout(() => {
+      setStatusMessage('')
+    }, 3000)
+
+    return () => window.clearTimeout(timerId)
+  }, [statusMessage])
+
+  const handleSubmit = () => {
+    if (!isFormReady) {
+      return
+    }
+
+    setStatusMessage('Заявка отправлена. Мы скоро свяжемся с вами.')
+    setName('')
+    setPhone('')
+    setService('')
+    setBarber('')
+  }
+
   return (
     <main
       className="page-shell page-shell--visual booking-page"
@@ -25,29 +59,64 @@ export function BookingPage() {
         </div>
       </section>
 
-      <form className="booking-form">
+      <form className="booking-form" onSubmit={(event) => event.preventDefault()}>
         <label>
           Имя
-          <input type="text" name="name" placeholder="Иван" />
+          <input
+            type="text"
+            name="name"
+            placeholder="Иван"
+            value={name}
+            onChange={(event) => {
+              setName(event.target.value)
+              setStatusMessage('')
+            }}
+          />
         </label>
         <BookingSelect
           label="Услуга"
           name="service"
           options={services.map((service) => service.title)}
-          defaultValue="Стрижка и борода"
+          placeholder="Выберите услугу"
+          value={service}
+          onChange={(nextService) => {
+            setService(nextService)
+            setStatusMessage('')
+          }}
         />
         <BookingSelect
           label="Мастер"
           name="barber"
           options={barbers.map((barber) => barber.name)}
-          defaultValue="Антон"
+          placeholder="Выберите мастера"
+          value={barber}
+          onChange={(nextBarber) => {
+            setBarber(nextBarber)
+            setStatusMessage('')
+          }}
         />
         <label>
           Телефон
-          <input type="tel" name="phone" placeholder="+7 999 000 00 00" />
+          <input
+            type="tel"
+            name="phone"
+            placeholder="+7 999 000 00 00"
+            value={phone}
+            onChange={(event) => {
+              setPhone(event.target.value)
+              setStatusMessage('')
+            }}
+          />
         </label>
-        <button type="button">Оставить заявку</button>
+        <button type="button" disabled={!isFormReady} onClick={handleSubmit}>
+          Оставить заявку
+        </button>
       </form>
+      {statusMessage && (
+        <p className="booking-toast" role="status">
+          {statusMessage}
+        </p>
+      )}
     </main>
   )
 }
