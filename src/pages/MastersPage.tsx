@@ -1,13 +1,17 @@
 import { PageIntro } from '../components/PageIntro'
+import mastersBg from '../assets/masters-bg.png'
 import { barbers } from '../data/site'
 
 export function MastersPage() {
   return (
-    <main className="page-shell">
+    <main
+      className="page-shell page-shell--visual"
+      style={{ backgroundImage: `url(${mastersBg})` }}
+    >
       <PageIntro
         eyebrow="Мастера"
-        title="Разные руки, один стандарт."
-        text="Выбирайте мастера по стилю и темпу. Мы сохраняем заметки после визита, чтобы следующая стрижка начиналась точнее."
+        title="Мастера, которым доверяют свой стиль."
+        text="Познакомьтесь с нашей командой, изучите работы и выберите барбера, который понимает, каким должен быть ваш образ."
       />
       <div className="master-grid">
         {barbers.map((barber) => (
@@ -23,5 +27,5 @@ export function MastersPage() {
         ))}
       </div>
     </main>
-  )
+  );
 }

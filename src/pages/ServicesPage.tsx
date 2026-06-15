@@ -1,9 +1,13 @@
 import { PageIntro } from '../components/PageIntro'
+import servicesBg from '../assets/services-bg.png'
 import { services } from '../data/site'
 
 export function ServicesPage() {
   return (
-    <main className="page-shell">
+    <main
+      className="page-shell page-shell--visual"
+      style={{ backgroundImage: `url(${servicesBg})` }}
+    >
       <PageIntro
         eyebrow="Услуги"
         title="Мужской уход без лишних слов."

@@ -1,9 +1,13 @@
 import { PageIntro } from '../components/PageIntro'
+import bookingBg from '../assets/booking-bg.png'
 import { barbers, schedule, services } from '../data/site'
 
 export function BookingPage() {
   return (
-    <main className="page-shell booking-page">
+    <main
+      className="page-shell page-shell--visual booking-page"
+      style={{ backgroundImage: `url(${bookingBg})` }}
+    >
       <section className="booking-panel">
         <PageIntro
           eyebrow="Запись"
