@@ -315,16 +315,38 @@
 }
 
 .page-shell {
+  position: relative;
   width: min(1180px, calc(100% - 32px));
   min-height: 100svh;
   margin: 0 auto;
   padding: 9.5rem 0 4rem;
 }
 
+.page-shell--visual {
+  width: 100%;
+  max-width: none;
+  isolation: isolate;
+  padding-inline: max(16px, calc((100vw - 1180px) / 2));
+  background-position: center;
+  background-size: cover;
+}
+
+.page-shell--visual::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  content: '';
+  background:
+    linear-gradient(90deg, rgba(9, 10, 9, 0.9) 0%, rgba(9, 10, 9, 0.7) 44%, rgba(9, 10, 9, 0.42) 100%),
+    linear-gradient(0deg, rgba(9, 10, 9, 0.88) 0%, transparent 54%);
+}
+
 .page-intro {
+  position: relative;
   display: grid;
   gap: 0.85rem;
   max-width: 780px;
+  z-index: 1;
 }
 
 .page-intro h1 {
@@ -338,6 +360,8 @@
 }
 
 .service-list {
+  position: relative;
+  z-index: 1;
   display: grid;
   gap: 0.9rem;
   margin-top: 3rem;
@@ -349,7 +373,7 @@
   gap: 1.5rem;
   align-items: end;
   min-height: 150px;
-  padding: 1.35rem;
+  padding: 1.25rem;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface);
@@ -382,6 +406,8 @@
 }
 
 .master-grid {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
@@ -396,9 +422,24 @@
   background: var(--surface);
 }
 
+.page-shell--visual .service-row,
+.page-shell--visual .master-card,
+.page-shell--visual .booking-panel,
+.page-shell--visual .booking-form {
+  border-color: rgba(245, 239, 227, 0.14);
+  background: rgba(18, 20, 18, 0.32);
+  box-shadow: 0 20px 52px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(4px);
+}
+
+.page-shell--visual .service-row:hover,
+.page-shell--visual .master-card:hover {
+  background: rgba(18, 20, 18, 0.44);
+}
+
 .master-card {
   min-height: 330px;
-  padding: 1.25rem;
+  padding: 1.2rem;
 }
 
 .avatar {
@@ -443,9 +484,14 @@
   align-items: start;
 }
 
+.booking-page > * {
+  position: relative;
+  z-index: 1;
+}
+
 .booking-panel,
 .booking-form {
-  padding: clamp(1.25rem, 3vw, 2rem);
+  padding: clamp(1.2rem, 2.6vw, 1.8rem);
 }
 
 .booking-panel .page-intro {
@@ -608,6 +654,11 @@
   .home-hero-content,
   .page-shell {
     width: min(100% - 24px, 1180px);
+  }
+
+  .page-shell--visual {
+    width: 100%;
+    padding-inline: 12px;
   }
 
   .brand {
