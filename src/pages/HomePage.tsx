@@ -13,7 +13,7 @@ export function HomePage() {
         <div className="home-hero-shade" />
         <div className="home-hero-content">
           <div className="hero-copy">
-            <p className="eyebrow">Барбершоп в Москве</p>
+            <p className="eyebrow">Премиальный мужской барбершоп</p>
             <h1>Стиль начинается с характера.</h1>
             <p className="hero-text">
               Профессиональные стрижки, оформление бороды и уход за волосами в
@@ -36,5 +36,5 @@ export function HomePage() {
         </aside>
       </section>
     </main>
-  )
+  );
 }

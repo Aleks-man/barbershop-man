@@ -1,3 +1,4 @@
+import { BookingSelect } from '../components/BookingSelect'
 import { PageIntro } from '../components/PageIntro'
 import bookingBg from '../assets/booking-bg.png'
 import { barbers, schedule, services } from '../data/site'
@@ -29,22 +30,18 @@ export function BookingPage() {
           Имя
           <input type="text" name="name" placeholder="Иван" />
         </label>
-        <label>
-          Услуга
-          <select name="service" defaultValue="Стрижка и борода">
-            {services.map((service) => (
-              <option key={service.title}>{service.title}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Мастер
-          <select name="barber" defaultValue="Антон">
-            {barbers.map((barber) => (
-              <option key={barber.name}>{barber.name}</option>
-            ))}
-          </select>
-        </label>
+        <BookingSelect
+          label="Услуга"
+          name="service"
+          options={services.map((service) => service.title)}
+          defaultValue="Стрижка и борода"
+        />
+        <BookingSelect
+          label="Мастер"
+          name="barber"
+          options={barbers.map((barber) => barber.name)}
+          defaultValue="Антон"
+        />
         <label>
           Телефон
           <input type="tel" name="phone" placeholder="+7 999 000 00 00" />

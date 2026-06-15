@@ -16,6 +16,7 @@
 
   color: var(--text);
   background: var(--bg);
+  accent-color: var(--gold);
   font-family: var(--sans);
   font-size: 16px;
   font-synthesis: none;
