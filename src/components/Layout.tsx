@@ -5,11 +5,10 @@ export function Layout() {
   return (
     <div className="site-shell">
       <header className="topbar" aria-label="Главная навигация">
-        <Link className="brand" to="/" aria-label="На главную Мужской Цех">
-          <span className="brand-mark">МЦ</span>
+        <Link className="brand" to="/" aria-label="На главную Gentleman&apos;s Room">
+          <img className="brand-icon" src="/favicon.png" alt="" aria-hidden="true" />
           <span className="brand-name">
-            <span>Мужской</span>
-            <strong>Цех</strong>
+            Gentlemen&apos;s Room
           </span>
         </Link>
         <a className="phone-link" href="tel:+74951234567">

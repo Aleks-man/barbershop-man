@@ -13,7 +13,13 @@ export function HomePage() {
         <div className="home-hero-shade" />
         <div className="home-hero-content">
           <div className="hero-copy">
-            <p className="eyebrow">Премиальный мужской барбершоп</p>
+            <div className="hero-logo-lockup" aria-label="Gentleman's Room">
+              <img
+                src="/gentlemansroom_full_logo_transparent.png"
+                alt="Gentleman's Room"
+              />
+            </div>
+            <p className="eyebrow">Территория мужского стиля</p>
             <h1>Стиль начинается с характера.</h1>
             <p className="hero-text">
               Профессиональные стрижки, оформление бороды и уход за волосами в
