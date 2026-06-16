@@ -4,7 +4,12 @@ import { BookingPage } from './pages/BookingPage'
 import { HomePage } from './pages/HomePage'
 import { MastersPage } from './pages/MastersPage'
 import { ServicesPage } from './pages/ServicesPage'
-import './App.css'
+import './styles/layout.css'
+import './styles/pages.css'
+import './styles/home.css'
+import './styles/services.css'
+import './styles/masters.css'
+import './styles/booking.css'
 
 function App() {
   return (
