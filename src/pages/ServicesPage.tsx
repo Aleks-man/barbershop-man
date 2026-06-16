@@ -1,5 +1,5 @@
 import { PageIntro } from '../components/PageIntro'
-import servicesBg from '../assets/services-bg-v2.png'
+import servicesBg from '../assets/services-bg-v2.webp'
 import { services } from '../data/site'
 
 export function ServicesPage() {

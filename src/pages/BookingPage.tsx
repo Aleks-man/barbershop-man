@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { BookingSelect } from '../components/BookingSelect'
 import { PageIntro } from '../components/PageIntro'
-import bookingBg from '../assets/booking-bg.png'
+import bookingBg from '../assets/booking-bg.webp'
 import { barbers, schedule, services } from '../data/site'
 
 export function BookingPage() {

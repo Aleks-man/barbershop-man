@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import heroImage from '../assets/barbershop-hero.png'
+import heroImage from '../assets/barbershop-hero.webp'
 
 export function HomePage() {
   return (

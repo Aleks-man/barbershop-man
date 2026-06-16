@@ -1,5 +1,5 @@
 import { PageIntro } from '../components/PageIntro'
-import mastersBg from '../assets/masters-bg.png'
+import mastersBg from '../assets/masters-bg.webp'
 import { barbers } from '../data/site'
 
 export function MastersPage() {
