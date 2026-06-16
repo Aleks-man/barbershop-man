@@ -5,7 +5,7 @@ import { services } from '../data/site'
 export function ServicesPage() {
   return (
     <main
-      className="page-shell page-shell--visual"
+      className="page-shell page-shell--visual services-page"
       style={{ backgroundImage: `url(${servicesBg})` }}
     >
       <PageIntro

@@ -5,7 +5,7 @@ import { barbers } from '../data/site'
 export function MastersPage() {
   return (
     <main
-      className="page-shell page-shell--visual"
+      className="page-shell page-shell--visual masters-page"
       style={{ backgroundImage: `url(${mastersBg})` }}
     >
       <PageIntro

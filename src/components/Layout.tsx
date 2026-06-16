@@ -1,11 +1,10 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
-import { SummaryItem } from './SummaryItem'
 
 export function Layout() {
   return (
     <div className="site-shell">
       <header className="topbar" aria-label="Главная навигация">
-        <Link className="brand" to="/" aria-label="На главную Gentleman&apos;s Room">
+        <Link className="brand" to="/" aria-label="На главную Gentleman's Room">
           <img className="brand-icon" src="/favicon.png" alt="" aria-hidden="true" />
           <span className="brand-name">
             Gentlemen&apos;s Room
@@ -26,16 +25,19 @@ export function Layout() {
         </div>
       </header>
 
+      <nav className="mobile-nav" aria-label="Мобильная навигация">
+        <NavLink to="/" end>
+          Главная
+        </NavLink>
+        <NavLink to="/services">Услуги</NavLink>
+        <NavLink to="/masters">Мастера</NavLink>
+        <NavLink to="/booking">Запись</NavLink>
+      </nav>
+
       <section className="floating-summary" aria-label="Коротко о барбершопе">
-        <SummaryItem value="3" label="кресла" />
-        <span className="summary-divider" aria-hidden="true">
-          |
-        </span>
-        <SummaryItem value="4.9" label="оценка гостей" />
-        <span className="summary-divider" aria-hidden="true">
-          |
-        </span>
-        <SummaryItem value="10-22" label="работаем каждый день" />
+        <span>4.9 оценка гостей</span>
+        <span aria-hidden="true">|</span>
+        <span>10-22 ежедневно</span>
       </section>
 
       <Outlet />
