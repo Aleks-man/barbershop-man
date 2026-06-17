@@ -9,7 +9,7 @@ export function Layout() {
       <header className="topbar" aria-label="Главная навигация">
         <div className="header-brandline">
           <Link className="brand" to="/" aria-label="На главную Gentleman's Room">
-            <img className="brand-icon" src="/favicon.png" alt="" aria-hidden="true" />
+            <img className="brand-icon" src="/favicon-original.png" alt="" aria-hidden="true" />
           </Link>
           <address className="header-address">Москва, Тверская 12</address>
         </div>

@@ -48,7 +48,7 @@
 
 .brand-icon {
   display: block;
-  width: 42px;
+  width: 52px;
   aspect-ratio: 1;
   border: 1px solid rgba(190, 146, 77, 0.26);
   border-radius: 50%;
@@ -75,6 +75,7 @@
 }
 
 .nav-links {
+  padding: 1rem;
   gap: 0.35rem;
 }
 
@@ -98,7 +99,7 @@
 }
 
 .nav-links a {
-  padding: 0.7rem 0.72rem;
+  padding: 0.6rem 0.77rem;
   border-radius: 999px;
   font-size: 0.86rem;
   transition:
@@ -171,13 +172,13 @@
   }
 
   .nav-links {
-    gap: 0.18rem;
+    gap: 0.35rem;
     justify-content: flex-end;
   }
 
   .nav-links a {
-    padding: 0.62rem 0.52rem;
-    font-size: 0.78rem;
+    padding: 0.6rem 0.52rem;
+    font-size: 0.88rem;
   }
 }
 
@@ -202,11 +203,11 @@
   }
 
   .brand-icon {
-    width: 34px;
+    width: 44px;
   }
 
   .header-address {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
   }
 
   .header-actions {
@@ -267,7 +268,7 @@
     justify-content: flex-end;
     min-width: 0;
     width: auto;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     text-align: right;
   }
 
@@ -309,16 +310,16 @@
 
 @media (max-width: 620px) {
   .brand-icon {
-    width: 30px;
+    width: 36px;
   }
 
   .header-address {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
   }
 
   .phone-link {
     width: auto;
-    font-size: 0.76rem;
+    font-size: 0.9rem;
     letter-spacing: 0;
     text-align: right;
   }
@@ -351,7 +352,7 @@
   }
 
   .brand-icon {
-    width: 28px;
+    width: 32px;
   }
 
   .header-brandline {
@@ -359,17 +360,17 @@
   }
 
   .header-address {
-    font-size: 0.7rem;
+    font-size: 0.9rem;
   }
 
   .phone-link {
     width: auto;
-    font-size: 0.7rem;
+    font-size: 0.9rem;
     text-align: right;
   }
 
   .page-text-logo {
-    top: calc(var(--topbar-height) + 8px);
+    top: calc(var(--topbar-height) + 15px);
     width: min(260px, calc(100% - 24px));
   }
 
