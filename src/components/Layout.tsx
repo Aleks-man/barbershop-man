@@ -4,9 +4,10 @@ import { ContactsCta } from './ContactsCta'
 export function Layout() {
   const { pathname } = useLocation()
   const isHomePage = pathname === '/'
+  const isGalleryPage = pathname === '/works' || pathname === '/room'
 
   return (
-    <div className="site-shell">
+    <div className={`site-shell${isGalleryPage ? ' site-shell--gallery' : ''}`}>
       <header className="topbar" aria-label="Главная навигация">
         <div className="header-brandline">
           <Link className="brand" to="/" aria-label="На главную Gentleman's Room">

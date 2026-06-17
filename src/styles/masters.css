@@ -4,13 +4,13 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
-  margin-top: 3rem;
+  margin-top: 2.25rem;
 }
 
 .master-card {
   min-width: 0;
-  min-height: 330px;
-  padding: 1.2rem;
+  min-height: 285px;
+  padding: 1.1rem;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface);
@@ -20,7 +20,7 @@
   display: grid;
   width: 64px;
   aspect-ratio: 1;
-  margin-bottom: 2rem;
+  margin-bottom: 1.35rem;
   place-items: center;
   border-radius: 50%;
   background: var(--olive);
@@ -46,13 +46,13 @@
 
 .master-card span {
   display: block;
-  margin-top: 1rem;
+  margin-top: 0.75rem;
   color: var(--gold);
 }
 
 .master-card strong {
   display: inline-flex;
-  margin-top: 2rem;
+  margin-top: 1.35rem;
   color: var(--heading);
 }
 

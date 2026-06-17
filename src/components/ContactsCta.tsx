@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import bookingBg from '../assets/booking-bg.webp'
+import { SocialLinks } from './SocialLinks'
 
 export function ContactsCta() {
   return (
@@ -23,10 +24,18 @@ export function ContactsCta() {
             <dt>Время работы</dt>
             <dd>ежедневно 10:00-21:00</dd>
           </div>
+          <div className="contacts-list-socials">
+            <SocialLinks />
+          </div>
         </dl>
-        <Link className="primary-action contacts-cta-action" to="/booking">
-          Записаться
-        </Link>
+        <div className="contacts-cta-actions">
+          <Link className="primary-action contacts-cta-action" to="/booking">
+            Записаться
+          </Link>
+          <a className="secondary-action contacts-cta-action" href="tel:+74951234567">
+            Позвонить
+          </a>
+        </div>
       </div>
     </section>
   )

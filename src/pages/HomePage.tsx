@@ -5,7 +5,8 @@ import heroBeardCard from '../assets/home-card-beard.webp'
 import heroClubCard from '../assets/home-card-club.webp'
 import heroHaircutCard from '../assets/home-card-haircut.webp'
 import mastersBg from '../assets/masters-bg.webp'
-import servicesBg from '../assets/services-bg-v2.webp'
+import { SocialLinks } from '../components/SocialLinks'
+import { roomGallery, workGallery } from '../data/gallery'
 
 const heroFeatureCards = [
   {
@@ -25,26 +26,26 @@ const heroFeatureCards = [
   },
 ]
 
-const popularServices = [
-  ['Мужская стрижка', 'от 1 500 ₽'],
-  ['Стрижка + борода', 'от 2 300 ₽'],
-  ['Оформление бороды', 'от 900 ₽'],
-]
-
-const advantages = [
-  [
-    'Точная форма',
-    'Подбираем стрижку под лицо, стиль и образ жизни.',
-  ],
-  ['Чистый контур', 'Аккуратно оформляем бороду и линии.'],
-  ['Без суеты', 'Спокойная атмосфера мужского клуба.'],
-]
-
 const masters = [
   ['Антон', 'Классические формы', '9 лет опыта'],
   ['Макс', 'Фейды и текстура', '6 лет опыта'],
   ['Денис', 'Борода и бритье', '11 лет опыта'],
 ]
+
+const homeGallerySections = [
+  {
+    title: "Наши работы",
+    text: "Стрижки, борода и детали готового образа.",
+    href: "/works",
+    images: workGallery.slice(0, 4),
+  },
+  {
+    title: "Наша мастерская",
+    text: "Интерьер, рабочие места и атмосфера Gentleman’s Room.",
+    href: "/room",
+    images: roomGallery.slice(0, 4),
+  },
+];
 
 export function HomePage() {
   return (
@@ -70,7 +71,10 @@ export function HomePage() {
               Профессиональные стрижки, оформление бороды и уход за волосами в
               атмосфере настоящего мужского клуба.
             </p>
-            <div className="hero-feature-grid" aria-label="Основные направления">
+            <div
+              className="hero-feature-grid"
+              aria-label="Основные направления"
+            >
               {heroFeatureCards.map((card) => (
                 <div className="hero-feature-item" key={card.title}>
                   <div className="hero-feature-title">
@@ -103,39 +107,36 @@ export function HomePage() {
         <span>Москва, Тверская 12</span>
       </section>
 
-      <section
-        className="home-visual-band popular-services-band"
-        style={{ backgroundImage: `url(${servicesBg})` }}
-      >
-        <div className="home-section popular-services-section">
-          <div className="home-section-heading">
-            <p className="eyebrow">Популярные услуги</p>
-            <h2>Базовый уход без лишних слов.</h2>
-          </div>
-          <div className="home-card-grid home-card-grid--services">
-            {popularServices.map(([title, price]) => (
-              <article className="home-card service-preview-card" key={title}>
-                <h3>{title}</h3>
-                <strong>{price}</strong>
-              </article>
-            ))}
-          </div>
-          <Link className="section-link" to="/services">
-            Все услуги
-          </Link>
-        </div>
-      </section>
-
-      <section className="home-section advantages-section">
+      <section className="home-section home-gallery-section">
         <div className="home-section-heading">
-          <p className="eyebrow">Почему выбирают нас</p>
-          <h2>Аккуратность, которая видна сразу.</h2>
+          <p className="eyebrow">Галерея</p>
+          <h2>
+            Мужские стрижки, уход за бородой и атмосфера, в которую хочется
+            возвращаться.
+          </h2>
         </div>
-        <div className="home-card-grid">
-          {advantages.map(([title, text]) => (
-            <article className="home-card advantage-card" key={title}>
-              <h3>{title}</h3>
-              <p>{text}</p>
+        <div className="home-gallery-split">
+          {homeGallerySections.map((section) => (
+            <article className="home-gallery-preview" key={section.title}>
+              <div className="home-gallery-preview-heading">
+                <div>
+                  <h3>{section.title}</h3>
+                  <p>{section.text}</p>
+                </div>
+              </div>
+              <div className="home-gallery-grid">
+                {section.images.map((image) => (
+                  <img
+                    src={image.src}
+                    alt={image.alt}
+                    loading="lazy"
+                    key={image.src}
+                  />
+                ))}
+              </div>
+              <Link className="section-link" to={section.href}>
+                Смотреть далее
+              </Link>
             </article>
           ))}
         </div>
@@ -153,7 +154,9 @@ export function HomePage() {
           <div className="home-card-grid">
             {masters.map(([name, role, experience]) => (
               <article className="home-card master-preview-card" key={name}>
-                <span className="master-preview-avatar">{name.slice(0, 1)}</span>
+                <span className="master-preview-avatar">
+                  {name.slice(0, 1)}
+                </span>
                 <h3>{name}</h3>
                 <p>{role}</p>
                 <strong>{experience}</strong>
@@ -173,9 +176,10 @@ export function HomePage() {
         <div className="home-section contacts-cta">
           <div>
             <p className="eyebrow">Запись</p>
-            <h2>Готовы обновить образ?</h2>
+            <h2>Готовы к новому образу?</h2>
             <p>
-              Запишитесь онлайн или свяжитесь с нами удобным способом.
+              Выберите удобное время или свяжитесь с нами любым удобным
+              способом.
             </p>
           </div>
           <dl className="contacts-list">
@@ -193,12 +197,23 @@ export function HomePage() {
               <dt>Время работы</dt>
               <dd>ежедневно 10:00-21:00</dd>
             </div>
+            <div className="contacts-list-socials">
+              <SocialLinks />
+            </div>
           </dl>
-          <Link className="primary-action contacts-cta-action" to="/booking">
-            Записаться
-          </Link>
+          <div className="contacts-cta-actions">
+            <Link className="primary-action contacts-cta-action" to="/booking">
+              Записаться
+            </Link>
+            <a
+              className="secondary-action contacts-cta-action"
+              href="tel:+74951234567"
+            >
+              Позвонить
+            </a>
+          </div>
         </div>
       </section>
     </main>
-  )
+  );
 }
