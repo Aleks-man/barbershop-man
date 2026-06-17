@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { BookingSelect } from '../components/BookingSelect'
 import { PageIntro } from '../components/PageIntro'
 import bookingBg from '../assets/booking-bg.webp'
-import { barbers, schedule, services } from '../data/site'
+import { barbers, bookingServices, schedule } from '../data/site'
 
 export function BookingPage() {
   const [name, setName] = useState('')
@@ -78,7 +78,7 @@ export function BookingPage() {
         <BookingSelect
           label="Услуга"
           name="service"
-          options={services.map((service) => service.title)}
+          options={bookingServices}
           placeholder="Выберите услугу"
           value={service}
           onChange={(nextService) => {

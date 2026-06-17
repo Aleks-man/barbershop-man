@@ -126,6 +126,10 @@ export function GalleryPage({ eyebrow, title, text, images }: GalleryPageProps) 
         ))}
       </div>
 
+      <button className="gallery-back-button" type="button" onClick={handleBack}>
+        Назад
+      </button>
+
       {activeImage && (
         <div
           className="gallery-lightbox"

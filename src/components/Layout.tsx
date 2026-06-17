@@ -1,5 +1,6 @@
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { ContactsCta } from './ContactsCta'
+import { ScrollToTop } from './ScrollToTop'
 
 export function Layout() {
   const { pathname } = useLocation()
@@ -8,6 +9,8 @@ export function Layout() {
 
   return (
     <div className={`site-shell${isGalleryPage ? ' site-shell--gallery' : ''}`}>
+      <ScrollToTop />
+
       <header className="topbar" aria-label="Главная навигация">
         <div className="header-brandline">
           <Link className="brand" to="/" aria-label="На главную Gentleman's Room">

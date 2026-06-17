@@ -88,6 +88,25 @@
   }
 }
 
+@media (max-width: 760px) {
+  .master-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .master-card {
+    min-height: clamp(335px, 62vw, 390px);
+  }
+
+  .master-card-photo {
+    object-position: 70% 40%;
+    transform: scale(0.98);
+  }
+
+  .master-card-content {
+    max-width: 72%;
+  }
+}
+
 @media (max-width: 620px) {
   .master-grid {
     grid-template-columns: 1fr;
@@ -100,7 +119,11 @@
     width: 100%;
     max-width: 100%;
     min-width: 0;
-    min-height: 330px;
+    min-height: clamp(340px, 78vw, 395px);
+  }
+
+  .master-card-photo {
+    object-position: 72% 39%;
   }
 
   .master-card-content {

@@ -1,8 +1,9 @@
 .booking-page {
+  z-index: 2;
   display: grid;
   grid-template-columns: minmax(0, 0.95fr) minmax(320px, 0.78fr);
   gap: 1rem;
-  align-items: start;
+  align-items: stretch;
 }
 
 .booking-page > * {
@@ -17,6 +18,7 @@
 
 .booking-panel,
 .booking-form {
+  height: 100%;
   padding: clamp(1.2rem, 2.6vw, 1.8rem);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -73,6 +75,8 @@
 
 .booking-form {
   display: grid;
+  position: relative;
+  z-index: 3;
   gap: 1rem;
 }
 
@@ -144,7 +148,10 @@
   left: 0;
   z-index: 50;
   display: grid;
-  overflow: hidden;
+  max-height: min(210px, calc(100svh - 260px));
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   border: 1px solid var(--gold);
   border-radius: 6px;
   background: var(--surface);
@@ -165,7 +172,7 @@
 }
 
 .booking-select-option {
-  min-height: 38px;
+  min-height: 34px;
   border: 0;
   border-bottom: 1px solid rgba(245, 239, 227, 0.08);
   background: var(--surface);
@@ -265,6 +272,12 @@
 @media (max-width: 1040px) {
   .booking-page {
     grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .booking-panel,
+  .booking-form {
+    height: auto;
   }
 
   .booking-form {
@@ -291,8 +304,16 @@
     width: 100%;
     max-width: 100%;
     min-width: 0;
-    overflow: hidden;
     padding: 1rem;
+  }
+
+  .booking-page,
+  .booking-form {
+    overflow: visible;
+  }
+
+  .booking-select-menu {
+    max-height: min(260px, calc(100svh - 190px));
   }
 
   .booking-form label {

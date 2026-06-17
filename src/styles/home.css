@@ -678,6 +678,19 @@
     margin-right: auto;
     margin-left: auto;
   }
+
+  .master-preview-card {
+    min-height: clamp(300px, 54vw, 350px);
+  }
+
+  .master-preview-card img {
+    object-position: 70% 40%;
+    transform: scale(0.98);
+  }
+
+  .master-preview-content {
+    max-width: 72%;
+  }
 }
 
 @media (max-width: 620px) {
@@ -777,6 +790,14 @@
 
   .contacts-cta {
     padding-bottom: calc(9.4rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .master-preview-card {
+    min-height: clamp(320px, 76vw, 370px);
+  }
+
+  .master-preview-card img {
+    object-position: 72% 39%;
   }
 
   .home-hero-image {
