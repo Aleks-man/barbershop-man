@@ -1,4 +1,5 @@
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { ContactsCta } from './ContactsCta'
 
 export function Layout() {
   const { pathname } = useLocation()
@@ -46,6 +47,8 @@ export function Layout() {
       )}
 
       <Outlet />
+
+      {!isHomePage && <ContactsCta />}
     </div>
   )
 }

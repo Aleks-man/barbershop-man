@@ -10,9 +10,9 @@
 .page-shell {
   position: relative;
   width: min(1180px, calc(100% - 32px));
-  min-height: 100svh;
+  min-height: auto;
   margin: 0 auto;
-  padding: 12.75rem 0 4rem;
+  padding: 12.75rem 0 2.6rem;
 }
 
 .page-shell--visual {
@@ -83,7 +83,7 @@
   .page-shell {
     width: min(100% - 32px, 1180px);
     padding-top: 10.75rem;
-    padding-bottom: 8.6rem;
+    padding-bottom: 2.8rem;
   }
 
   .page-shell--visual {
