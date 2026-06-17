@@ -620,6 +620,16 @@
 
 }
 
+@media (min-width: 621px) and (max-width: 1080px) {
+  .home-hero-content {
+    padding-bottom: calc(7.25rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .contacts-cta {
+    padding-bottom: calc(7.25rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 @media (max-width: 760px) {
   .home-hero-content {
     padding-top: 3.8rem;

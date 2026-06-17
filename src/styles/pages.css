@@ -116,6 +116,12 @@
   }
 }
 
+@media (min-width: 621px) and (max-width: 1080px) {
+  .page-shell {
+    padding-bottom: calc(7.25rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 @media (max-width: 620px) {
   .page-shell {
     width: min(100% - 24px, 1180px);
