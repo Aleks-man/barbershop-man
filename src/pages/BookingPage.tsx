@@ -67,7 +67,7 @@ export function BookingPage() {
           <input
             type="text"
             name="name"
-            placeholder="Иван"
+            placeholder="Сергей"
             value={name}
             onChange={(event) => {
               setName(event.target.value)

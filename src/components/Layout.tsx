@@ -13,7 +13,7 @@ export function Layout() {
           <Link className="brand" to="/" aria-label="На главную Gentleman's Room">
             <img className="brand-icon" src="/favicon-original.png" alt="" aria-hidden="true" />
           </Link>
-          <address className="header-address">Москва, Тверская 12</address>
+          <address className="header-address">Симферополь, Смежный 10</address>
         </div>
 
         <div className="header-actions">
@@ -27,8 +27,8 @@ export function Layout() {
           </nav>
         </div>
 
-        <a className="phone-link" href="tel:+74951234567">
-          +7 (495) 123-45-67
+        <a className="phone-link" href="tel:+79781234567">
+          +7 (978) 123-45-67
         </a>
       </header>
 

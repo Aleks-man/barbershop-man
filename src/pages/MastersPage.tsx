@@ -1,6 +1,11 @@
 import { PageIntro } from '../components/PageIntro'
 import mastersBg from '../assets/masters-bg.webp'
+import masterAnton from '../assets/masters/master-anton.webp'
+import masterDenis from '../assets/masters/master-denis.webp'
+import masterMax from '../assets/masters/master-max.webp'
 import { barbers } from '../data/site'
+
+const masterPhotos = [masterAnton, masterMax, masterDenis]
 
 export function MastersPage() {
   return (
@@ -14,18 +19,18 @@ export function MastersPage() {
         text="Познакомьтесь с нашей командой, изучите работы и выберите барбера, который понимает, каким должен быть ваш образ."
       />
       <div className="master-grid">
-        {barbers.map((barber) => (
+        {barbers.map((barber, index) => (
           <article className="master-card" key={barber.name}>
-            <div className="avatar" aria-hidden="true">
-              {barber.name.slice(0, 1)}
+            <img className="master-card-photo" src={masterPhotos[index]} alt="" aria-hidden="true" />
+            <div className="master-card-content">
+              <p>{barber.role}</p>
+              <h2>{barber.name}</h2>
+              <span>{barber.note}</span>
+              <strong>{barber.experience}</strong>
             </div>
-            <p>{barber.role}</p>
-            <h2>{barber.name}</h2>
-            <span>{barber.note}</span>
-            <strong>{barber.experience}</strong>
           </article>
         ))}
       </div>
     </main>
-  );
+  )
 }

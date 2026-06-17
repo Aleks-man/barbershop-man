@@ -12,12 +12,12 @@ export function ContactsCta() {
         <dl className="contacts-list">
           <div>
             <dt>Адрес</dt>
-            <dd>Москва, Тверская 12</dd>
+            <dd>Симферополь, Смежный 10</dd>
           </div>
           <div>
             <dt>Телефон</dt>
             <dd>
-              <a href="tel:+74951234567">+7 (495) 123-45-67</a>
+              <a href="tel:+79781234567">+7 (978) 123-45-67</a>
             </dd>
           </div>
           <div>

@@ -1,36 +1,39 @@
-import { Link } from 'react-router-dom'
-import heroImage from '../assets/barbershop-hero.webp'
-import bookingBg from '../assets/booking-bg.webp'
-import heroBeardCard from '../assets/home-card-beard.webp'
-import heroClubCard from '../assets/home-card-club.webp'
-import heroHaircutCard from '../assets/home-card-haircut.webp'
-import mastersBg from '../assets/masters-bg.webp'
-import { SocialLinks } from '../components/SocialLinks'
-import { roomGallery, workGallery } from '../data/gallery'
+import { Link } from "react-router-dom";
+import heroImage from "../assets/barbershop-hero.webp";
+import bookingBg from "../assets/booking-bg.webp";
+import heroBeardCard from "../assets/home-card-beard.webp";
+import heroClubCard from "../assets/home-card-club.webp";
+import heroHaircutCard from "../assets/home-card-haircut.webp";
+import masterAnton from "../assets/masters/master-anton.webp";
+import masterDenis from "../assets/masters/master-denis.webp";
+import masterMax from "../assets/masters/master-max.webp";
+import mastersBg from "../assets/masters-bg.webp";
+import { SocialLinks } from "../components/SocialLinks";
+import { roomGallery, workGallery } from "../data/gallery";
 
 const heroFeatureCards = [
   {
-    title: 'Мужские стрижки',
-    text: 'Классика и современные техники',
+    title: "Мужские стрижки",
+    text: "Индивидуальный подход к каждому образу",
     image: heroHaircutCard,
   },
   {
-    title: 'Борода и контур',
-    text: 'Четкие линии и аккуратная форма',
+    title: "Борода и контур",
+    text: "Точные линии и внимание к деталям",
     image: heroBeardCard,
   },
   {
-    title: 'Атмосфера клуба',
-    text: 'Комфортный отдых и внимание к деталям',
+    title: "Атмосфера клуба",
+    text: "Пространство для отдыха и комфорта",
     image: heroClubCard,
   },
-]
+];
 
 const masters = [
-  ['Антон', 'Классические формы', '9 лет опыта'],
-  ['Макс', 'Фейды и текстура', '6 лет опыта'],
-  ['Денис', 'Борода и бритье', '11 лет опыта'],
-]
+  ["Антон", "Классические формы", "9 лет опыта", masterAnton],
+  ["Макс", "Фейды и текстура", "6 лет опыта", masterMax],
+  ["Денис", "Борода и бритье", "11 лет опыта", masterDenis],
+];
 
 const homeGallerySections = [
   {
@@ -104,7 +107,7 @@ export function HomePage() {
       <section className="trust-bar" aria-label="Коротко о барбершопе">
         <span>★ 4.9 по отзывам</span>
         <span>Ежедневно 10:00-21:00</span>
-        <span>Москва, Тверская 12</span>
+        <span>Симферополь, Смежный 10</span>
       </section>
 
       <section className="home-section home-gallery-section">
@@ -152,14 +155,14 @@ export function HomePage() {
             <h2>Люди, которым доверяют стиль.</h2>
           </div>
           <div className="home-card-grid">
-            {masters.map(([name, role, experience]) => (
+            {masters.map(([name, role, experience, photo]) => (
               <article className="home-card master-preview-card" key={name}>
-                <span className="master-preview-avatar">
-                  {name.slice(0, 1)}
-                </span>
-                <h3>{name}</h3>
-                <p>{role}</p>
-                <strong>{experience}</strong>
+                <img src={photo} alt="" aria-hidden="true" />
+                <div className="master-preview-content">
+                  <h3>{name}</h3>
+                  <p>{role}</p>
+                  <strong>{experience}</strong>
+                </div>
               </article>
             ))}
           </div>
@@ -185,12 +188,12 @@ export function HomePage() {
           <dl className="contacts-list">
             <div>
               <dt>Адрес</dt>
-              <dd>Москва, Тверская 12</dd>
+              <dd>Симферополь, Смежный 10</dd>
             </div>
             <div>
               <dt>Телефон</dt>
               <dd>
-                <a href="tel:+74951234567">+7 (495) 123-45-67</a>
+                <a href="tel:+74951234567">+7 (978) 123-45-67</a>
               </dd>
             </div>
             <div>

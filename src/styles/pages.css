@@ -55,6 +55,11 @@
   background: rgba(18, 20, 18, 0.44);
 }
 
+.services-page::before,
+.services-page .service-row {
+  backdrop-filter: none;
+}
+
 .page-intro {
   position: relative;
   z-index: 1;
