@@ -25,11 +25,6 @@ export function HomePage() {
               Профессиональные стрижки, оформление бороды и уход за волосами в
               атмосфере настоящего мужского клуба.
             </p>
-            <aside className="hero-status" aria-label="Свободные окна на сегодня">
-              <span>Сегодня</span>
-              <strong>4 свободных окна</strong>
-              <Link to="/booking">Записаться</Link>
-            </aside>
             <div className="hero-actions">
               <Link className="primary-action" to="/booking">
                 Записаться
@@ -42,5 +37,5 @@ export function HomePage() {
         </div>
       </section>
     </main>
-  );
+  )
 }

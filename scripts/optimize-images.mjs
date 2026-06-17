@@ -53,6 +53,24 @@ async function optimizeTransparentLogo() {
     .toFile(output)
 }
 
+async function optimizeTextLogo() {
+  const input = path.join(originals, 'public/gentlemansroom_text_logo_transparent.png')
+  const output = path.join(root, 'public/gentlemansroom_text_logo_transparent.png')
+
+  await sharp(input)
+    .rotate()
+    .resize({
+      width: 760,
+      withoutEnlargement: true,
+    })
+    .png({
+      compressionLevel: 9,
+      palette: true,
+      quality: 95,
+    })
+    .toFile(output)
+}
+
 async function optimizeFavicon() {
   const input = path.join(originals, 'public/favicon.png')
   const output = path.join(root, 'public/favicon.png')
@@ -76,6 +94,7 @@ async function optimizeFavicon() {
 
 await Promise.all(backgroundImages.map(optimizeBackground))
 await optimizeTransparentLogo()
+await optimizeTextLogo()
 await optimizeFavicon()
 
 console.log('Images optimized.')

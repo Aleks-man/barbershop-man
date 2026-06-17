@@ -1,5 +1,4 @@
 .site-shell {
-  --summary-offset: 12px;
   --topbar-height: 76px;
 
   min-height: 100svh;
@@ -13,7 +12,7 @@
   left: 50%;
   z-index: 30;
   display: grid;
-  grid-template-columns: minmax(240px, 1fr) auto minmax(360px, 1fr);
+  grid-template-columns: minmax(220px, 0.8fr) minmax(360px, 1fr) auto;
   align-items: center;
   gap: 1rem;
   width: min(1280px, calc(100% - 32px));
@@ -26,28 +25,30 @@
 }
 
 .brand,
+.header-brandline,
+.header-address,
 .nav-links,
 .header-actions {
   display: flex;
   align-items: center;
 }
 
+.header-brandline {
+  justify-self: start;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
 .brand {
-  gap: 0.65rem;
+  flex: 0 0 auto;
   min-width: 0;
   color: var(--heading);
-  font-family: "Cinzel", var(--display);
-  font-size: clamp(1.15rem, 2vw, 1.55rem);
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: 0.08em;
   text-decoration: none;
-  text-transform: uppercase;
 }
 
 .brand-icon {
   display: block;
-  width: 38px;
+  width: 42px;
   aspect-ratio: 1;
   border: 1px solid rgba(190, 146, 77, 0.26);
   border-radius: 50%;
@@ -55,12 +56,18 @@
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
 }
 
-.brand-name {
-  overflow: hidden;
-  color: var(--heading);
-  text-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+.header-address {
+  min-width: 0;
+  margin: 0;
+  color: var(--soft);
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
+  overflow: hidden;
 }
 
 .header-actions {
@@ -82,10 +89,10 @@
 }
 
 .phone-link {
-  justify-self: center;
+  justify-self: end;
   white-space: nowrap;
   color: var(--heading);
-  font-size: 0.86rem;
+  font-size: 1rem;
   font-weight: 900;
   letter-spacing: 0.02em;
 }
@@ -110,45 +117,57 @@
   background: rgba(255, 255, 255, 0.08);
 }
 
-.floating-summary {
+.page-text-logo {
   position: absolute;
-  top: calc(var(--topbar-height) + var(--summary-offset));
+  top: calc(var(--topbar-height) + 16px);
   left: 50%;
   z-index: 10;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
-  width: fit-content;
-  max-width: calc(100% - 32px);
-  min-height: 28px;
+  width: min(340px, calc(100% - 48px));
   transform: translateX(-50%);
-  color: var(--gold);
-  text-align: center;
-  background: transparent;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  white-space: nowrap;
+  isolation: isolate;
+  pointer-events: none;
+}
+
+.page-text-logo::before {
+  position: absolute;
+  inset: -18% -10%;
+  z-index: 0;
+  content: "";
+  background: radial-gradient(
+    ellipse at center,
+    rgba(5, 6, 5, 0.46) 0%,
+    rgba(5, 6, 5, 0.24) 46%,
+    rgba(5, 6, 5, 0) 74%
+  );
+}
+
+.page-text-logo img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 84px;
+  object-fit: contain;
+  opacity: 0.92;
+  filter: saturate(0.94) brightness(1.08)
+    drop-shadow(0 6px 12px rgba(0, 0, 0, 0.38));
 }
 
 @media (max-width: 1300px) {
   .topbar {
-    grid-template-columns: minmax(220px, 0.95fr) auto minmax(300px, 1fr);
+    grid-template-columns: minmax(190px, 0.72fr) minmax(300px, 1fr) auto;
     width: calc(100% - 24px);
     gap: 0.75rem;
     padding-inline: 0.8rem;
   }
 
-  .brand {
-    font-size: clamp(1rem, 1.45vw, 1.25rem);
-    letter-spacing: 0.06em;
+  .header-address {
+    font-size: 0.88rem;
   }
 
   .phone-link {
-    justify-self: center;
-    font-size: 0.8rem;
+    font-size: 0.88rem;
   }
 
   .nav-links {
@@ -164,7 +183,6 @@
 
 @media (max-width: 1080px) {
   .site-shell {
-    --summary-offset: 8px;
     --topbar-height: 56px;
   }
 
@@ -172,7 +190,7 @@
     inset: 0 0 auto 0;
     z-index: 70;
     display: grid;
-    grid-template-columns: minmax(0, 63fr) minmax(0, 37fr);
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     min-height: var(--topbar-height);
     width: auto;
@@ -181,6 +199,14 @@
     background: #0e0f0e;
     backdrop-filter: none;
     transform: none;
+  }
+
+  .brand-icon {
+    width: 34px;
+  }
+
+  .header-address {
+    font-size: 0.8rem;
   }
 
   .header-actions {
@@ -241,7 +267,7 @@
     justify-content: flex-end;
     min-width: 0;
     width: auto;
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     text-align: right;
   }
 
@@ -271,80 +297,69 @@
     color: var(--heading);
   }
 
+  .page-text-logo {
+    top: calc(var(--topbar-height) + 22px);
+    width: min(300px, calc(100% - 40px));
+  }
+
+  .page-text-logo img {
+    max-height: 66px;
+  }
 }
 
 @media (max-width: 620px) {
-  .brand {
-    width: auto;
-    min-width: 0;
-    padding-right: 0;
-    font-size: 0.78rem;
-    letter-spacing: 0.04em;
-  }
-
-  .brand-name {
-    max-width: 10.5rem;
-  }
-
   .brand-icon {
     width: 30px;
   }
 
+  .header-address {
+    font-size: 0.8rem;
+  }
+
   .phone-link {
     width: auto;
-    font-size: 0.7rem;
+    font-size: 0.76rem;
     letter-spacing: 0;
     text-align: right;
   }
 
-  .floating-summary {
-    position: absolute;
-    right: 12px;
-    left: 12px;
-    z-index: 10;
-    display: inline-flex;
-    gap: 0.48rem;
-    width: auto;
-    max-width: calc(100% - 24px);
-    min-height: 28px;
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
-    backdrop-filter: none;
-    transform: none;
-    font-size: 0.66rem;
+  .page-text-logo {
+    top: calc(var(--topbar-height) + 10px);
+    width: min(300px, calc(100% - 28px));
+  }
+
+  .page-text-logo img {
+    max-height: 60px;
+    opacity: 0.94;
+    filter: saturate(0.96) brightness(1.12)
+      drop-shadow(0 6px 12px rgba(0, 0, 0, 0.44));
   }
 }
 
 @media (max-width: 430px) {
   .site-shell {
-    --summary-offset: 7px;
     --topbar-height: 45px;
   }
 
   .topbar {
     inset: 0 0 auto 0;
     display: grid;
-    grid-template-columns: minmax(0, 63fr) minmax(0, 37fr);
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: 0.42rem;
     width: auto;
     padding: 0.52rem 0.62rem;
   }
 
-  .brand {
-    gap: 0.48rem;
-    padding-right: 0;
-    font-size: 0.67rem;
-  }
-
-  .brand-name {
-    max-width: 9.4rem;
-  }
-
   .brand-icon {
     width: 28px;
+  }
+
+  .header-brandline {
+    gap: 0.5rem;
+  }
+
+  .header-address {
+    font-size: 0.7rem;
   }
 
   .phone-link {
@@ -353,10 +368,9 @@
     text-align: right;
   }
 
-  .floating-summary {
-    right: 10px;
-    left: 10px;
-    width: auto;
+  .page-text-logo {
+    top: calc(var(--topbar-height) + 8px);
+    width: min(260px, calc(100% - 24px));
   }
 
   .mobile-nav {

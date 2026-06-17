@@ -43,6 +43,8 @@ export function BookingPage() {
       className="page-shell page-shell--visual booking-page"
       style={{ backgroundImage: `url(${bookingBg})` }}
     >
+      <p className="eyebrow booking-page-eyebrow">Запись</p>
+
       <section className="booking-panel">
         <PageIntro
           eyebrow="Запись"

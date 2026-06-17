@@ -10,6 +10,11 @@
   z-index: 1;
 }
 
+.booking-page-eyebrow {
+  grid-column: 1 / -1;
+  margin-bottom: -0.15rem;
+}
+
 .booking-panel,
 .booking-form {
   padding: clamp(1.2rem, 2.6vw, 1.8rem);
@@ -20,6 +25,10 @@
 
 .booking-panel .page-intro {
   max-width: 100%;
+}
+
+.booking-panel .eyebrow {
+  display: none;
 }
 
 .booking-panel .page-intro h1 {
