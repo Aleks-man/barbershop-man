@@ -170,7 +170,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.55rem;
   min-height: 48px;
   width: min(100%, 220px);
   margin: 1.15rem auto 0;
@@ -186,18 +185,6 @@
     border-color 180ms ease,
     color 180ms ease,
     transform 180ms ease;
-}
-
-.gallery-back-button::before {
-  display: block;
-  width: 1.7rem;
-  height: 1.25rem;
-  background: currentColor;
-  content: "";
-  -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 32 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.6 4.4 5 12l7.6 7.6M6.2 12h12.6c4.6 0 7.2-2.3 7.2-6.1' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
-    center / contain no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 32 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.6 4.4 5 12l7.6 7.6M6.2 12h12.6c4.6 0 7.2-2.3 7.2-6.1' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
-    center / contain no-repeat;
 }
 
 .gallery-back-button:hover {
