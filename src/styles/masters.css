@@ -27,11 +27,11 @@
   background:
     linear-gradient(
       90deg,
-      rgba(8, 9, 8, 0.84) 0%,
-      rgba(8, 9, 8, 0.58) 42%,
+      rgba(8, 9, 8, 0.76) 0%,
+      rgba(8, 9, 8, 0.48) 42%,
       rgba(8, 9, 8, 0.08) 100%
     ),
-    linear-gradient(0deg, rgba(8, 9, 8, 0.38), transparent 62%);
+    linear-gradient(0deg, rgba(8, 9, 8, 0.3), transparent 62%);
 }
 
 .master-card-photo {

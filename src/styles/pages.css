@@ -33,11 +33,11 @@
   background:
     linear-gradient(
       90deg,
-      rgba(9, 10, 9, 0.9) 0%,
-      rgba(9, 10, 9, 0.7) 44%,
-      rgba(9, 10, 9, 0.42) 100%
+      rgba(9, 10, 9, 0.82) 0%,
+      rgba(9, 10, 9, 0.6) 44%,
+      rgba(9, 10, 9, 0.34) 100%
     ),
-    linear-gradient(0deg, rgba(9, 10, 9, 0.88) 0%, transparent 54%);
+    linear-gradient(0deg, rgba(9, 10, 9, 0.78) 0%, transparent 54%);
 }
 
 .page-shell--visual .service-row,
@@ -45,14 +45,14 @@
 .page-shell--visual .booking-panel,
 .page-shell--visual .booking-form {
   border-color: rgba(245, 239, 227, 0.14);
-  background: rgba(18, 20, 18, 0.32);
+  background: rgba(24, 27, 23, 0.3);
   box-shadow: 0 20px 52px rgba(0, 0, 0, 0.24);
   backdrop-filter: blur(4px);
 }
 
 .page-shell--visual .service-row:hover,
 .page-shell--visual .master-card:hover {
-  background: rgba(18, 20, 18, 0.44);
+  background: rgba(24, 27, 23, 0.4);
 }
 
 .services-page::before,
@@ -101,11 +101,11 @@
     background:
       linear-gradient(
         90deg,
-        rgba(9, 10, 9, 0.72) 0%,
-        rgba(9, 10, 9, 0.5) 54%,
-        rgba(9, 10, 9, 0.26) 100%
+        rgba(9, 10, 9, 0.64) 0%,
+        rgba(9, 10, 9, 0.42) 54%,
+        rgba(9, 10, 9, 0.2) 100%
       ),
-      linear-gradient(0deg, rgba(9, 10, 9, 0.8) 0%, transparent 68%);
+      linear-gradient(0deg, rgba(9, 10, 9, 0.68) 0%, transparent 68%);
     backdrop-filter: blur(1.4px);
   }
 

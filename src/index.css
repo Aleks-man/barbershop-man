@@ -1,7 +1,7 @@
 :root {
-  --bg: #0e0f0e;
-  --surface: #171916;
-  --surface-strong: #20231f;
+  --bg: #121411;
+  --surface: #1d211c;
+  --surface-strong: #282d26;
   --heading: #ffffff;
   --text: #c7beb0;
   --soft: #d8d0c3;
@@ -58,8 +58,8 @@ body {
   min-width: 320px;
   margin: 0;
   background:
-    radial-gradient(circle at 18% 0%, rgba(190, 146, 77, 0.12), transparent 26rem),
-    linear-gradient(180deg, #10120f 0%, #0e0f0e 42rem);
+    radial-gradient(circle at 18% 0%, rgba(190, 146, 77, 0.14), transparent 26rem),
+    linear-gradient(180deg, #151812 0%, #121411 42rem);
 }
 
 button,
