@@ -155,7 +155,7 @@
   max-width: 16ch;
   margin: 0;
     color: var(--gold);
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: 700;
   line-height: 1.45;
 }
@@ -752,7 +752,7 @@
   }
 
   .hero-feature-card p {
-    font-size: 0.74rem;
+    font-size: 0.94rem;
   }
 
   .trust-bar {

@@ -51,10 +51,19 @@ export function GalleryPage({ eyebrow, title, text, images }: GalleryPageProps) 
   }, [])
 
   const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+    if (event.touches.length > 1) {
+      touchStartX.current = null
+      return
+    }
+
     touchStartX.current = event.changedTouches[0]?.clientX ?? null
   }
 
   const handleTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
+    if (event.touches.length > 0) {
+      return
+    }
+
     if (touchStartX.current === null) {
       return
     }

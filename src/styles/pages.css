@@ -140,10 +140,16 @@
   }
 
   .services-page {
+    width: 100vw;
+    margin-right: calc(50% - 50vw);
+    margin-left: calc(50% - 50vw);
     background-position: 62% top;
   }
 
   .masters-page {
+    width: 100vw;
+    margin-right: calc(50% - 50vw);
+    margin-left: calc(50% - 50vw);
     background-position: 45% top;
   }
 

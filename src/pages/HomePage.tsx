@@ -129,12 +129,13 @@ export function HomePage() {
               </div>
               <div className="home-gallery-grid">
                 {section.images.map((image) => (
-                  <img
-                    src={image.src}
-                    alt={image.alt}
-                    loading="lazy"
-                    key={image.src}
-                  />
+                  <Link to={section.href} key={image.src} aria-label={section.title}>
+                    <img
+                      src={image.src}
+                      alt={image.alt}
+                      loading="lazy"
+                    />
+                  </Link>
                 ))}
               </div>
               <Link className="section-link" to={section.href}>

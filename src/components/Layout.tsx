@@ -16,7 +16,10 @@ export function Layout() {
           <Link className="brand" to="/" aria-label="На главную Gentleman's Room">
             <img className="brand-icon" src="/favicon-original.png" alt="" aria-hidden="true" />
           </Link>
-          <address className="header-address">Симферополь, Смежный 10</address>
+          <address className="header-address">
+            <span>Симферополь</span>
+            <span>Смежный 10</span>
+          </address>
         </div>
 
         <div className="header-actions">
