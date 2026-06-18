@@ -169,6 +169,13 @@
     padding-top: 8.55rem;
   }
 
+  .page-shell--visual {
+    width: 100vw;
+    max-width: 100vw;
+    margin-right: calc(50% - 50vw);
+    margin-left: calc(50% - 50vw);
+  }
+
   .booking-page {
     padding-top: 8.95rem;
   }

@@ -292,7 +292,13 @@
 }
 
 @media (max-width: 620px) {
-  .booking-page,
+  .booking-page {
+    width: 100vw;
+    max-width: 100vw;
+    margin-right: calc(50% - 50vw);
+    margin-left: calc(50% - 50vw);
+  }
+
   .schedule-list {
     width: 100%;
     max-width: 100%;

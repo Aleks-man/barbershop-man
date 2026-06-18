@@ -19,9 +19,67 @@
   min-height: 76px;
   padding-inline: 1rem;
   transform: translateX(-50%);
-  border-bottom: 1px solid var(--line);
+  background: transparent;
+  backdrop-filter: none;
+  isolation: isolate;
+}
+
+.topbar::before,
+.topbar::after {
+  position: absolute;
+  right: 0;
+  left: 0;
+  z-index: -1;
+  content: "";
+  -webkit-mask: linear-gradient(
+    90deg,
+    transparent 0,
+    rgba(0, 0, 0, 0) 1px,
+    #000 100px,
+    #000 calc(100% - 100px),
+    rgba(0, 0, 0, 0) calc(100% - 1px),
+    transparent 100%
+  );
+  mask: linear-gradient(
+    90deg,
+    transparent 0,
+    rgba(0, 0, 0, 0) 1px,
+    #000 100px,
+    #000 calc(100% - 100px),
+    rgba(0, 0, 0, 0) calc(100% - 1px),
+    transparent 100%
+  );
+}
+
+.topbar::before {
+  inset: 0;
   background: #0e0f0e;
   backdrop-filter: blur(18px);
+}
+
+.topbar::after {
+  bottom: 0;
+  height: 1px;
+  background: var(--line);
+  opacity: 0.7;
+  -webkit-mask: linear-gradient(
+    90deg,
+    transparent 0,
+    rgba(0, 0, 0, 0) 1px,
+    #000 100px,
+    #000 calc(100% - 100px),
+    rgba(0, 0, 0, 0) calc(100% - 1px),
+    transparent 100%
+  );
+  mask: linear-gradient(
+    90deg,
+    transparent 0,
+    rgba(0, 0, 0, 0) 1px,
+    #000 100px,
+    #000 calc(100% - 100px),
+    rgba(0, 0, 0, 0) calc(100% - 1px),
+    transparent 100%
+  );
 }
 
 .brand,
@@ -210,6 +268,12 @@
     transform: none;
   }
 
+  .topbar::before,
+  .topbar::after {
+    -webkit-mask: none;
+    mask: none;
+  }
+
   .header-address {
     font-size: 0.88rem;
   }
@@ -244,7 +308,6 @@
     width: auto;
     gap: 0.6rem;
     padding: 0.58rem 0.75rem;
-    background: #0e0f0e;
     backdrop-filter: none;
     transform: none;
   }
