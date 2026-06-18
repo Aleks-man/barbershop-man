@@ -11,6 +11,8 @@ import mastersBg from "../assets/masters-bg.webp";
 import { SocialLinks } from "../components/SocialLinks";
 import { roomGallery, workGallery } from "../data/gallery";
 
+const mapUrl = "https://yandex.ru/maps/?text=Симферополь%2C%20Смежный%2010";
+
 const heroFeatureCards = [
   {
     title: "Мужские стрижки",
@@ -189,17 +191,26 @@ export function HomePage() {
           <dl className="contacts-list">
             <div>
               <dt>Адрес</dt>
-              <dd>Симферополь, Смежный 10</dd>
+              <dd>
+                <a className="address-map-link contacts-address-link" href={mapUrl} target="_blank" rel="noreferrer">
+                  <span className="address-lines">
+                    <span>Симферополь</span>
+                    <span>Смежный 10</span>
+                  </span>
+                </a>
+              </dd>
             </div>
             <div>
               <dt>Телефон</dt>
               <dd>
-                <a href="tel:+74951234567">+7 (978) 123-45-67</a>
+                <a className="contacts-phone-link" href="tel:+74951234567">+7 (978) 123-45-67</a>
               </dd>
             </div>
             <div>
               <dt>Время работы</dt>
-              <dd>ежедневно 10:00-21:00</dd>
+              <dd>
+                <span className="contacts-time">ежедневно 10:00-21:00</span>
+              </dd>
             </div>
             <div className="contacts-list-socials">
               <SocialLinks />

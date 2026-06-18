@@ -2,6 +2,8 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { ContactsCta } from './ContactsCta'
 import { ScrollToTop } from './ScrollToTop'
 
+const mapUrl = 'https://yandex.ru/maps/?text=Симферополь%2C%20Смежный%2010'
+
 export function Layout() {
   const { pathname } = useLocation()
   const isHomePage = pathname === '/'
@@ -17,8 +19,12 @@ export function Layout() {
             <img className="brand-icon" src="/favicon-original.png" alt="" aria-hidden="true" />
           </Link>
           <address className="header-address">
-            <span>Симферополь</span>
-            <span>Смежный 10</span>
+            <a className="address-map-link" href={mapUrl} target="_blank" rel="noreferrer">
+              <span className="address-lines">
+                <span>Симферополь</span>
+                <span>Смежный 10</span>
+              </span>
+            </a>
           </address>
         </div>
 
