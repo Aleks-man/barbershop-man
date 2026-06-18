@@ -1,4 +1,5 @@
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { BackToTopButton } from './BackToTopButton'
 import { ContactsCta } from './ContactsCta'
 import { ScrollToTop } from './ScrollToTop'
 
@@ -52,6 +53,8 @@ export function Layout() {
         <NavLink to="/masters">Мастера</NavLink>
         <NavLink to="/booking">Запись</NavLink>
       </nav>
+
+      <BackToTopButton />
 
       {!isHomePage && (
         <div className="page-text-logo" aria-hidden="true">

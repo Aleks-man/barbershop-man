@@ -1,11 +1,12 @@
 import { PageIntro } from '../components/PageIntro'
 import mastersBg from '../assets/masters-bg.webp'
+import masterAlex from '../assets/masters/master-alex.webp'
 import masterAnton from '../assets/masters/master-anton.webp'
 import masterDenis from '../assets/masters/master-denis.webp'
 import masterMax from '../assets/masters/master-max.webp'
 import { barbers } from '../data/site'
 
-const masterPhotos = [masterAnton, masterMax, masterDenis]
+const masterPhotos = [masterAnton, masterMax, masterDenis, masterAlex]
 
 export function MastersPage() {
   return (

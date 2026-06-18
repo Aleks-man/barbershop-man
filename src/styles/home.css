@@ -338,6 +338,48 @@
   }
 }
 
+@media (max-width: 1000px) {
+  .contacts-cta-band:not(.site-footer-cta) .contacts-cta {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .contacts-cta-band:not(.site-footer-cta) .contacts-cta > div:first-child {
+    display: grid;
+    justify-items: center;
+  }
+
+  .contacts-cta-band:not(.site-footer-cta) .contacts-list {
+    grid-template-columns: 1fr;
+    width: min(100%, 420px);
+    justify-items: center;
+    align-self: auto;
+  }
+
+  .contacts-cta-band:not(.site-footer-cta) .contacts-list > div {
+    width: 100%;
+    padding-inline: 0;
+  }
+
+  .contacts-cta-band:not(.site-footer-cta) .contacts-socials {
+    justify-items: center;
+  }
+
+  .contacts-cta-band:not(.site-footer-cta) .contacts-socials-links {
+    justify-content: center;
+  }
+
+  .contacts-cta-band:not(.site-footer-cta) .contacts-cta-actions {
+    justify-self: center;
+    width: min(100%, 460px);
+  }
+
+  .contacts-cta-band:not(.site-footer-cta) .contacts-cta-action {
+    width: 100%;
+  }
+}
+
 .home-section-heading {
   display: grid;
   gap: 0.6rem;
@@ -671,6 +713,21 @@
 
 }
 
+@media (max-width: 1160px) {
+  .masters-preview-section .home-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .master-preview-card {
+    min-height: 320px;
+  }
+
+  .master-preview-card img {
+    object-position: 70% 38%;
+    transform: scale(0.98);
+  }
+}
+
 @media (min-width: 621px) and (max-width: 1080px) {
   .home-hero-content {
     padding-bottom: calc(7.25rem + env(safe-area-inset-bottom, 0px));
@@ -696,6 +753,10 @@
   .home-card-grid,
   .contacts-list,
   .contacts-cta {
+    grid-template-columns: 1fr;
+  }
+
+  .masters-preview-section .home-card-grid {
     grid-template-columns: 1fr;
   }
 
@@ -741,12 +802,12 @@
   }
 
   .master-preview-card {
-    min-height: clamp(300px, 54vw, 350px);
+    min-height: clamp(370px, 58vw, 420px);
   }
 
   .master-preview-card img {
-    object-position: 70% 40%;
-    transform: scale(0.98);
+    object-position: 70% 30%;
+    transform: scale(0.94);
   }
 
   .master-preview-content {

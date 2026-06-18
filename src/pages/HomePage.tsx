@@ -4,6 +4,7 @@ import bookingBg from "../assets/booking-bg.webp";
 import heroBeardCard from "../assets/home-card-beard.webp";
 import heroClubCard from "../assets/home-card-club.webp";
 import heroHaircutCard from "../assets/home-card-haircut.webp";
+import masterAlex from "../assets/masters/master-alex.webp";
 import masterAnton from "../assets/masters/master-anton.webp";
 import masterDenis from "../assets/masters/master-denis.webp";
 import masterMax from "../assets/masters/master-max.webp";
@@ -35,6 +36,7 @@ const masters = [
   ["Антон", "Классические формы", "9 лет опыта", masterAnton],
   ["Макс", "Фейды и текстура", "6 лет опыта", masterMax],
   ["Денис", "Борода и бритье", "11 лет опыта", masterDenis],
+  ["Алекс", "Классические стрижки", "10 лет опыта", masterAlex],
 ];
 
 const homeGallerySections = [

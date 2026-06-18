@@ -82,9 +82,18 @@
   color: var(--heading);
 }
 
-@media (max-width: 1040px) {
+@media (max-width: 1160px) {
   .master-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .master-card {
+    min-height: 390px;
+  }
+
+  .master-card-photo {
+    object-position: 70% 38%;
+    transform: scale(0.98);
   }
 }
 
@@ -94,12 +103,12 @@
   }
 
   .master-card {
-    min-height: clamp(335px, 62vw, 390px);
+    min-height: clamp(390px, 62vw, 430px);
   }
 
   .master-card-photo {
-    object-position: 70% 40%;
-    transform: scale(0.98);
+    object-position: 70% 30%;
+    transform: scale(0.94);
   }
 
   .master-card-content {
@@ -132,7 +141,7 @@
   }
 
   .master-card span {
-    max-width: 30ch;
+    max-width: 20ch;
     overflow-wrap: anywhere;
   }
 
