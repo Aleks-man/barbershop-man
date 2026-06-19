@@ -116,6 +116,11 @@
   text-align: left;
 }
 
+.booking-select-trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
 .booking-select-trigger::after {
   position: absolute;
   top: 50%;
@@ -132,6 +137,16 @@
 .booking-form input::placeholder {
   color: var(--gold);
   opacity: 1;
+}
+
+.booking-form input[type="date"] {
+  color-scheme: dark;
+}
+
+.booking-form input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(65%) sepia(42%) saturate(583%) hue-rotate(358deg)
+    brightness(89%) contrast(88%);
 }
 
 .booking-select:has(.booking-select-menu) .booking-select-trigger,

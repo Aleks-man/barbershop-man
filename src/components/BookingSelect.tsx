@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
 
 type BookingSelectProps = {
+  disabled?: boolean
   label: string
   name: string
   options: string[]
@@ -10,6 +11,7 @@ type BookingSelectProps = {
 }
 
 export function BookingSelect({
+  disabled = false,
   label,
   name,
   options,
@@ -22,7 +24,7 @@ export function BookingSelect({
   const listId = useId()
 
   const closeMenu = () => {
-    if (!isOpen) {
+    if (!isOpen || disabled) {
       return
     }
 
@@ -34,6 +36,10 @@ export function BookingSelect({
   }
 
   const toggleMenu = () => {
+    if (disabled) {
+      return
+    }
+
     if (isOpen) {
       closeMenu()
       return
@@ -51,8 +57,10 @@ export function BookingSelect({
           type="button"
           className="booking-select-trigger"
           aria-controls={listId}
-          aria-expanded={isOpen && !isClosing}
+          aria-disabled={disabled}
+          aria-expanded={!disabled && isOpen && !isClosing}
           aria-haspopup="listbox"
+          disabled={disabled}
           onClick={toggleMenu}
         >
           <span className={value ? undefined : 'booking-select-placeholder'}>
