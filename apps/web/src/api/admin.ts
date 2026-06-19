@@ -10,15 +10,29 @@ export type AdminAppointment = {
   endsAt: string
   status: string
   barber: {
+    id: string
     name: string
   }
   service: {
+    id: string
     title: string
   }
 }
 
+export type AdminAppointmentStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED'
+
+export type AdminBarber = {
+  id: string
+  name: string
+  role: string | null
+}
+
 type AppointmentsResponse = {
   appointments: AdminAppointment[]
+}
+
+type BarbersResponse = {
+  barbers: AdminBarber[]
 }
 
 export const loginAdmin = async (password: string) => {
@@ -51,4 +65,76 @@ export const getAdminAppointments = async (token: string) => {
   const data = (await response.json()) as AppointmentsResponse
 
   return data.appointments
+}
+
+export const getAdminBarbers = async (token: string) => {
+  const response = await fetch('/api/admin/barbers', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to load barbers')
+  }
+
+  const data = (await response.json()) as BarbersResponse
+
+  return data.barbers
+}
+
+export const updateAdminAppointmentStatus = async ({
+  appointmentId,
+  status,
+  token,
+}: {
+  appointmentId: string
+  status: AdminAppointmentStatus
+  token: string
+}) => {
+  const response = await fetch(`/api/admin/appointments/${appointmentId}/status`, {
+    body: JSON.stringify({ status }),
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    method: 'PATCH',
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to update appointment status')
+  }
+}
+
+export const rescheduleAdminAppointment = async ({
+  appointmentId,
+  date,
+  time,
+  token,
+}: {
+  appointmentId: string
+  date: string
+  time: string
+  token: string
+}) => {
+  const response = await fetch(`/api/admin/appointments/${appointmentId}/reschedule`, {
+    body: JSON.stringify({ date, time }),
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    method: 'PATCH',
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to reschedule appointment')
+  }
+
+  return response.json() as Promise<{
+    appointment: {
+      endsAt: string
+      id: string
+      startsAt: string
+    }
+  }>
 }
