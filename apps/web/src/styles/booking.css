@@ -84,6 +84,7 @@
 .booking-select-label {
   display: grid;
   gap: 0.45rem;
+  min-width: 0;
   color: var(--heading);
   font-size: 0.88rem;
   font-weight: 800;
@@ -140,10 +141,21 @@
 }
 
 .booking-form input[type="date"] {
+  position: relative;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
   color-scheme: dark;
+  line-height: normal;
 }
 
 .booking-form input[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 0.85rem;
+  width: 1rem;
+  height: 1rem;
   cursor: pointer;
   filter: invert(65%) sepia(42%) saturate(583%) hue-rotate(358deg)
     brightness(89%) contrast(88%);
