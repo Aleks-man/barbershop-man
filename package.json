@@ -3,23 +3,24 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "workspaces": [
+    "apps/web",
+    "apps/api"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "npm run dev:web",
+    "dev:web": "npm run dev --workspace @barbershop/web",
+    "dev:api": "npm run dev --workspace @barbershop/api",
+    "build": "npm run build --workspaces",
+    "build:web": "npm run build --workspace @barbershop/web",
+    "build:api": "npm run build --workspace @barbershop/api",
     "lint": "eslint .",
-    "optimize:images": "node scripts/optimize-images.mjs",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
-    "react-router-dom": "^7.17.0"
+    "optimize:images": "npm run optimize:images --workspace @barbershop/web",
+    "preview": "npm run preview --workspace @barbershop/web"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^24.12.3",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^10.3.0",
     "eslint-plugin-react-hooks": "^7.1.1",
