@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getAvailability } from '../api/availability'
+import { createAppointment } from '../api/appointments'
 import { getBookingOptions } from '../api/bookingOptions'
 import { BookingDatePicker } from '../components/BookingDatePicker'
 import { BookingSelect, type BookingSelectOption } from '../components/BookingSelect'
@@ -29,6 +30,7 @@ export function BookingPage() {
   const [barber, setBarber] = useState('')
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
   const [barberOptions, setBarberOptions] = useState(fallbackBarberOptions)
   const [serviceOptions, setServiceOptions] = useState(fallbackServiceOptions)
@@ -46,6 +48,7 @@ export function BookingPage() {
       date.trim() &&
       time.trim(),
   )
+  const canSubmit = isFormReady && !isSubmitting
 
   useEffect(() => {
     if (!statusMessage) {
@@ -109,18 +112,38 @@ export function BookingPage() {
     }
   }, [barber, date, service])
 
-  const handleSubmit = () => {
-    if (!isFormReady) {
+  const handleSubmit = async () => {
+    if (!canSubmit) {
       return
     }
 
-    setStatusMessage('Заявка отправлена. Мы скоро свяжемся с вами.')
-    setName('')
-    setPhone('')
-    setService('')
-    setBarber('')
-    setDate('')
-    setTime('')
+    setIsSubmitting(true)
+    setStatusMessage('')
+
+    try {
+      await createAppointment({
+        barberId: barber,
+        customerName: name,
+        customerPhone: phone,
+        date,
+        serviceId: service,
+        time,
+      })
+
+      setStatusMessage('Запись создана. Мы скоро свяжемся с вами для подтверждения.')
+      setName('')
+      setPhone('')
+      setService('')
+      setBarber('')
+      setDate('')
+      setTime('')
+      setAvailableTimeOptions(null)
+    } catch (error: unknown) {
+      console.warn('Failed to create appointment', error)
+      setStatusMessage('Не удалось создать запись. Попробуйте выбрать другое время.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -225,8 +248,8 @@ export function BookingPage() {
             }}
           />
         </label>
-        <button type="button" disabled={!isFormReady} onClick={handleSubmit}>
-          Записаться
+        <button type="button" disabled={!canSubmit} onClick={handleSubmit}>
+          {isSubmitting ? 'Записываем...' : 'Записаться'}
         </button>
       </form>
       {statusMessage && (

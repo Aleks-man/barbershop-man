@@ -1,59 +1,17 @@
 import { AppointmentStatus } from '@prisma/client'
 import { Router } from 'express'
+import {
+  addMinutes,
+  businessHoursByDay,
+  formatTime,
+  hasOverlap,
+  parseDate,
+  setTime,
+  slotStepMin,
+} from '../bookingTime.js'
 import { prisma } from '../prisma.js'
 
 export const availabilityRouter = Router()
-
-const businessHoursByDay = {
-  0: { start: '12:00', end: '20:00' },
-  1: { start: '10:00', end: '22:00' },
-  2: { start: '10:00', end: '22:00' },
-  3: { start: '10:00', end: '22:00' },
-  4: { start: '10:00', end: '22:00' },
-  5: { start: '10:00', end: '22:00' },
-  6: { start: '11:00', end: '21:00' },
-} as const
-
-const slotStepMin = 30
-
-const parseDate = (value: string) => {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
-
-  if (!match) {
-    return null
-  }
-
-  const [, year, month, day] = match
-
-  return new Date(Number(year), Number(month) - 1, Number(day))
-}
-
-const setTime = (date: Date, time: string) => {
-  const [hours, minutes] = time.split(':').map(Number)
-  const nextDate = new Date(date)
-  nextDate.setHours(hours, minutes, 0, 0)
-
-  return nextDate
-}
-
-const addMinutes = (date: Date, minutes: number) =>
-  new Date(date.getTime() + minutes * 60 * 1000)
-
-const formatTime = (date: Date) => {
-  const hours = String(date.getHours()).padStart(2, '0')
-  const minutes = String(date.getMinutes()).padStart(2, '0')
-
-  return `${hours}:${minutes}`
-}
-
-const hasOverlap = (
-  slotStart: Date,
-  slotEnd: Date,
-  appointments: Array<{ startsAt: Date; endsAt: Date }>,
-) =>
-  appointments.some(
-    (appointment) => slotStart < appointment.endsAt && slotEnd > appointment.startsAt,
-  )
 
 availabilityRouter.get('/', async (request, response, next) => {
   try {
@@ -95,6 +53,13 @@ availabilityRouter.get('/', async (request, response, next) => {
       businessHoursByDay[selectedDate.getDay() as keyof typeof businessHoursByDay]
     const dayStart = setTime(selectedDate, businessHours.start)
     const dayEnd = setTime(selectedDate, businessHours.end)
+
+    if (!dayStart || !dayEnd) {
+      response.status(400).json({
+        error: 'Invalid business hours',
+      })
+      return
+    }
     const appointments = await prisma.appointment.findMany({
       where: {
         barberId,
