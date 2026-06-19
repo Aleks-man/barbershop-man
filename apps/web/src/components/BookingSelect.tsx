@@ -1,10 +1,15 @@
 import { useId, useState } from 'react'
 
+export type BookingSelectOption = {
+  label: string
+  value: string
+}
+
 type BookingSelectProps = {
   disabled?: boolean
   label: string
   name: string
-  options: string[]
+  options: BookingSelectOption[]
   placeholder: string
   value: string
   onChange: (value: string) => void
@@ -22,6 +27,7 @@ export function BookingSelect({
   const [isOpen, setIsOpen] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
   const listId = useId()
+  const selectedOption = options.find((option) => option.value === value)
 
   const closeMenu = () => {
     if (!isOpen || disabled) {
@@ -64,7 +70,7 @@ export function BookingSelect({
           onClick={toggleMenu}
         >
           <span className={value ? undefined : 'booking-select-placeholder'}>
-            {value || placeholder}
+            {selectedOption?.label || placeholder}
           </span>
         </button>
         {isOpen && (
@@ -77,16 +83,16 @@ export function BookingSelect({
               <button
                 type="button"
                 className="booking-select-option"
-                aria-selected={option === value}
-                key={option}
+                aria-selected={option.value === value}
+                key={option.value}
                 role="option"
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => {
-                  onChange(option)
+                  onChange(option.value)
                   closeMenu()
                 }}
               >
-                {option}
+                {option.label}
               </button>
             ))}
           </span>

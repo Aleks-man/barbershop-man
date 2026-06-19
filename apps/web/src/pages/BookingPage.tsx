@@ -1,9 +1,20 @@
 import { useEffect, useState } from 'react'
+import { getBookingOptions } from '../api/bookingOptions'
 import { BookingDatePicker } from '../components/BookingDatePicker'
-import { BookingSelect } from '../components/BookingSelect'
+import { BookingSelect, type BookingSelectOption } from '../components/BookingSelect'
 import { PageIntro } from '../components/PageIntro'
 import bookingBg from '../assets/booking-bg.webp'
 import { barbers, bookingServices, bookingTimeSlots, schedule } from '../data/site'
+
+const fallbackBarberOptions: BookingSelectOption[] = barbers.map((barber) => ({
+  label: barber.name,
+  value: barber.name,
+}))
+
+const fallbackServiceOptions: BookingSelectOption[] = bookingServices.map((service) => ({
+  label: service,
+  value: service,
+}))
 
 export function BookingPage() {
   const [name, setName] = useState('')
@@ -13,6 +24,8 @@ export function BookingPage() {
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
   const [statusMessage, setStatusMessage] = useState('')
+  const [barberOptions, setBarberOptions] = useState(fallbackBarberOptions)
+  const [serviceOptions, setServiceOptions] = useState(fallbackServiceOptions)
   const isFormReady = Boolean(
     name.trim() &&
       phone.trim() &&
@@ -33,6 +46,27 @@ export function BookingPage() {
 
     return () => window.clearTimeout(timerId)
   }, [statusMessage])
+
+  useEffect(() => {
+    let isMounted = true
+
+    getBookingOptions()
+      .then((options) => {
+        if (!isMounted) {
+          return
+        }
+
+        setBarberOptions(options.barberOptions)
+        setServiceOptions(options.serviceOptions)
+      })
+      .catch((error: unknown) => {
+        console.warn('Failed to load booking options from API', error)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const handleSubmit = () => {
     if (!isFormReady) {
@@ -75,7 +109,7 @@ export function BookingPage() {
         <BookingSelect
           label="Услуга"
           name="service"
-          options={bookingServices}
+          options={serviceOptions}
           placeholder="Выберите услугу"
           value={service}
           onChange={(nextService) => {
@@ -88,7 +122,7 @@ export function BookingPage() {
         <BookingSelect
           label="Мастер"
           name="barber"
-          options={barbers.map((barber) => barber.name)}
+          options={barberOptions}
           placeholder="Выберите мастера"
           value={barber}
           onChange={(nextBarber) => {
@@ -113,7 +147,7 @@ export function BookingPage() {
           disabled={!date}
           label="Время"
           name="time"
-          options={bookingTimeSlots}
+          options={bookingTimeSlots.map((slot) => ({ label: slot, value: slot }))}
           placeholder={date ? 'Выберите время' : 'Сначала выберите дату'}
           value={time}
           onChange={(nextTime) => {
