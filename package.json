@@ -10,8 +10,10 @@
   "scripts": {
     "dev": "npm run dev:web",
     "dev:web": "npm run dev --workspace @barbershop/web",
+    "dev:web:host": "npm run dev --workspace @barbershop/web -- --host 0.0.0.0",
     "dev:api": "npm run dev --workspace @barbershop/api",
     "dev:all": "concurrently -n web,api -c green,blue \"npm run dev:web\" \"npm run dev:api\"",
+    "dev:all:host": "concurrently -n web,api -c green,blue \"npm run dev:web:host\" \"npm run dev:api\"",
     "build": "npm run build --workspaces",
     "build:web": "npm run build --workspace @barbershop/web",
     "build:api": "npm run build --workspace @barbershop/api",
