@@ -23,6 +23,50 @@ const fallbackTimeOptions: BookingSelectOption[] = bookingTimeSlots.map((slot) =
   value: slot,
 }))
 
+const phoneMask = '+7 (___) ___-__-__'
+
+const getPhoneDigits = (value: string) => {
+  const digits = value.replace(/\D/g, '')
+
+  if (digits.startsWith('8') || digits.startsWith('7')) {
+    return digits.slice(1, 11)
+  }
+
+  return digits.slice(0, 10)
+}
+
+const formatPhoneInput = (value: string) => {
+  const digits = getPhoneDigits(value)
+
+  if (!digits) {
+    return ''
+  }
+
+  if (digits.length <= 3) {
+    return `+7 (${digits}`
+  }
+
+  if (digits.length <= 6) {
+    return `+7 (${digits.slice(0, 3)}) ${digits.slice(3)}`
+  }
+
+  if (digits.length <= 8) {
+    return `+7 (${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
+  }
+
+  return `+7 (${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 8)}-${digits.slice(8, 10)}`
+}
+
+const normalizePhone = (value: string) => {
+  const digits = getPhoneDigits(value)
+
+  if (digits.length !== 10) {
+    return ''
+  }
+
+  return `+7 (${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 8)}-${digits.slice(8, 10)}`
+}
+
 export function BookingPage() {
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
@@ -41,6 +85,7 @@ export function BookingPage() {
   const timeOptions = service && barber && date
     ? availableTimeOptions ?? []
     : fallbackTimeOptions
+  const normalizedPhone = normalizePhone(phone)
   const timePlaceholder = !date
     ? 'Сначала выберите дату'
     : isLoadingAvailability
@@ -50,7 +95,7 @@ export function BookingPage() {
         : 'Нет свободного времени'
   const isFormReady = Boolean(
     name.trim() &&
-      phone.trim() &&
+      normalizedPhone &&
       service.trim() &&
       barber.trim() &&
       date.trim() &&
@@ -132,13 +177,13 @@ export function BookingPage() {
       await createAppointment({
         barberId: barber,
         customerName: name,
-        customerPhone: phone,
+        customerPhone: normalizedPhone,
         date,
         serviceId: service,
         time,
       })
 
-      setStatusMessage('Запись создана. Мы скоро свяжемся с вами для подтверждения.')
+      setStatusMessage('Вы успешно записались. До встречи!')
       setName('')
       setPhone('')
       setService('')
@@ -248,10 +293,12 @@ export function BookingPage() {
           <input
             type="tel"
             name="phone"
-            placeholder="+7 999 000 00 00"
+            autoComplete="tel"
+            inputMode="numeric"
+            placeholder={phoneMask}
             value={phone}
             onChange={(event) => {
-              setPhone(event.target.value)
+              setPhone(formatPhoneInput(event.currentTarget.value))
               setStatusMessage('')
             }}
           />
