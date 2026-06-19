@@ -73,7 +73,13 @@ export function AdminPage() {
   if (!token) {
     return (
       <main className="admin-page">
-        <form className="admin-login" onSubmit={(event) => event.preventDefault()}>
+        <form
+          className="admin-login"
+          onSubmit={(event) => {
+            event.preventDefault()
+            void handleLogin()
+          }}
+        >
           <span className="admin-eyebrow">Gentleman's Room</span>
           <h1>Вход в админку</h1>
           <label>
