@@ -1,6 +1,7 @@
 import cors from 'cors'
 import type { ErrorRequestHandler } from 'express'
 import express from 'express'
+import { availabilityRouter } from './routes/availability.js'
 import { barbersRouter } from './routes/barbers.js'
 import { servicesRouter } from './routes/services.js'
 
@@ -23,6 +24,7 @@ app.get('/api/health', (_request, response) => {
 
 app.use('/api/barbers', barbersRouter)
 app.use('/api/services', servicesRouter)
+app.use('/api/availability', availabilityRouter)
 
 const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => {
   void _next

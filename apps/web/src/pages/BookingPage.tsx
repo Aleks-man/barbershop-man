@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { getAvailability } from '../api/availability'
 import { getBookingOptions } from '../api/bookingOptions'
 import { BookingDatePicker } from '../components/BookingDatePicker'
 import { BookingSelect, type BookingSelectOption } from '../components/BookingSelect'
@@ -16,6 +17,11 @@ const fallbackServiceOptions: BookingSelectOption[] = bookingServices.map((servi
   value: service,
 }))
 
+const fallbackTimeOptions: BookingSelectOption[] = bookingTimeSlots.map((slot) => ({
+  label: slot,
+  value: slot,
+}))
+
 export function BookingPage() {
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
@@ -26,6 +32,12 @@ export function BookingPage() {
   const [statusMessage, setStatusMessage] = useState('')
   const [barberOptions, setBarberOptions] = useState(fallbackBarberOptions)
   const [serviceOptions, setServiceOptions] = useState(fallbackServiceOptions)
+  const [availableTimeOptions, setAvailableTimeOptions] = useState<BookingSelectOption[] | null>(
+    null,
+  )
+  const timeOptions = service && barber && date
+    ? availableTimeOptions ?? fallbackTimeOptions
+    : fallbackTimeOptions
   const isFormReady = Boolean(
     name.trim() &&
       phone.trim() &&
@@ -67,6 +79,35 @@ export function BookingPage() {
       isMounted = false
     }
   }, [])
+
+  useEffect(() => {
+    if (!service || !barber || !date) {
+      return
+    }
+
+    let isMounted = true
+
+    getAvailability({
+      barberId: barber,
+      date,
+      serviceId: service,
+    })
+      .then((slots) => {
+        if (!isMounted) {
+          return
+        }
+
+        setAvailableTimeOptions(slots)
+      })
+      .catch((error: unknown) => {
+        console.warn('Failed to load availability from API', error)
+        setAvailableTimeOptions(null)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [barber, date, service])
 
   const handleSubmit = () => {
     if (!isFormReady) {
@@ -116,6 +157,7 @@ export function BookingPage() {
             setService(nextService)
             setDate('')
             setTime('')
+            setAvailableTimeOptions(null)
             setStatusMessage('')
           }}
         />
@@ -129,6 +171,7 @@ export function BookingPage() {
             setBarber(nextBarber)
             setDate('')
             setTime('')
+            setAvailableTimeOptions(null)
             setStatusMessage('')
           }}
         />
@@ -140,6 +183,7 @@ export function BookingPage() {
           onChange={(nextDate) => {
             setDate(nextDate)
             setTime('')
+            setAvailableTimeOptions(null)
             setStatusMessage('')
           }}
         />
@@ -147,7 +191,7 @@ export function BookingPage() {
           disabled={!date}
           label="Время"
           name="time"
-          options={bookingTimeSlots.map((slot) => ({ label: slot, value: slot }))}
+          options={timeOptions}
           placeholder={date ? 'Выберите время' : 'Сначала выберите дату'}
           value={time}
           onChange={(nextTime) => {
