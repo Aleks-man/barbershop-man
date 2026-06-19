@@ -2,7 +2,6 @@ import { useId, useMemo, useState } from 'react'
 
 type BookingDatePickerProps = {
   label: string
-  name: string
   placeholder: string
   value: string
   onChange: (value: string) => void
@@ -58,7 +57,6 @@ const formatDisplayDate = (value: string) => {
 
 export function BookingDatePicker({
   label,
-  name,
   placeholder,
   value,
   onChange,
@@ -89,9 +87,8 @@ export function BookingDatePicker({
   }
 
   return (
-    <label className="booking-date-label">
-      {label}
-      <input type="hidden" name={name} value={value} />
+    <div className="booking-date-label">
+      <span>{label}</span>
       <span
         className="booking-date"
         onBlur={(event) => {
@@ -153,8 +150,8 @@ export function BookingDatePicker({
               })}
             </span>
           </span>
-        )}
+          )}
       </span>
-    </label>
+    </div>
   )
 }

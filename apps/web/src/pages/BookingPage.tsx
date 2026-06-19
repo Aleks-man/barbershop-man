@@ -110,7 +110,6 @@ export function BookingPage() {
         />
         <BookingDatePicker
           label="Дата"
-          name="date"
           placeholder="Выберите дату"
           value={date}
           onChange={(nextDate) => {

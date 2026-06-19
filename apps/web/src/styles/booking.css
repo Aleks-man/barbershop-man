@@ -91,6 +91,10 @@
   font-weight: 800;
 }
 
+.booking-date-label > span:first-child {
+  min-width: 0;
+}
+
 .booking-form input:not([type="hidden"]),
 .booking-select-trigger {
   width: 100%;
