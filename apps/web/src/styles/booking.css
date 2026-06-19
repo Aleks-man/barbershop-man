@@ -116,6 +116,45 @@
   display: block;
 }
 
+.booking-date-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  min-width: 0;
+  min-height: 50px;
+  box-sizing: border-box;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--heading);
+  cursor: pointer;
+  font: inherit;
+  outline: none;
+  padding: 0 0.85rem;
+  text-align: left;
+}
+
+.booking-date-trigger span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.booking-date-trigger::after {
+  flex: 0 0 auto;
+  width: 1.08rem;
+  height: 1.08rem;
+  background: var(--gold);
+  content: "";
+  -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1.2A2.8 2.8 0 0 1 22 6.8v12.4a2.8 2.8 0 0 1-2.8 2.8H4.8A2.8 2.8 0 0 1 2 19.2V6.8A2.8 2.8 0 0 1 4.8 4H6V3a1 1 0 0 1 1-1Zm13 8H4v9.2c0 .44.36.8.8.8h14.4c.44 0 .8-.36.8-.8V10ZM4.8 6a.8.8 0 0 0-.8.8V8h16V6.8a.8.8 0 0 0-.8-.8H18v1a1 1 0 1 1-2 0V6H8v1a1 1 0 0 1-2 0V6H4.8Z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1.2A2.8 2.8 0 0 1 22 6.8v12.4a2.8 2.8 0 0 1-2.8 2.8H4.8A2.8 2.8 0 0 1 2 19.2V6.8A2.8 2.8 0 0 1 4.8 4H6V3a1 1 0 0 1 1-1Zm13 8H4v9.2c0 .44.36.8.8.8h14.4c.44 0 .8-.36.8-.8V10ZM4.8 6a.8.8 0 0 0-.8.8V8h16V6.8a.8.8 0 0 0-.8-.8H18v1a1 1 0 1 1-2 0V6H8v1a1 1 0 0 1-2 0V6H4.8Z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
 .booking-select-trigger {
   position: relative;
   cursor: pointer;
@@ -138,20 +177,6 @@
   border-bottom: 2px solid var(--gold);
   content: "";
   transform: translateY(-65%) rotate(45deg);
-}
-
-.booking-date-trigger::after {
-  top: 50%;
-  right: 0.92rem;
-  width: 1.08rem;
-  height: 1.08rem;
-  border: 0;
-  background: var(--gold);
-  -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1.2A2.8 2.8 0 0 1 22 6.8v12.4a2.8 2.8 0 0 1-2.8 2.8H4.8A2.8 2.8 0 0 1 2 19.2V6.8A2.8 2.8 0 0 1 4.8 4H6V3a1 1 0 0 1 1-1Zm13 8H4v9.2c0 .44.36.8.8.8h14.4c.44 0 .8-.36.8-.8V10ZM4.8 6a.8.8 0 0 0-.8.8V8h16V6.8a.8.8 0 0 0-.8-.8H18v1a1 1 0 1 1-2 0V6H8v1a1 1 0 0 1-2 0V6H4.8Z'/%3E%3C/svg%3E")
-    center / contain no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1.2A2.8 2.8 0 0 1 22 6.8v12.4a2.8 2.8 0 0 1-2.8 2.8H4.8A2.8 2.8 0 0 1 2 19.2V6.8A2.8 2.8 0 0 1 4.8 4H6V3a1 1 0 0 1 1-1Zm13 8H4v9.2c0 .44.36.8.8.8h14.4c.44 0 .8-.36.8-.8V10ZM4.8 6a.8.8 0 0 0-.8.8V8h16V6.8a.8.8 0 0 0-.8-.8H18v1a1 1 0 1 1-2 0V6H8v1a1 1 0 0 1-2 0V6H4.8Z'/%3E%3C/svg%3E")
-    center / contain no-repeat;
-  transform: translateY(-50%);
 }
 
 .booking-select-placeholder,
@@ -262,7 +287,8 @@
 .booking-select:has(.booking-select-menu) .booking-select-trigger,
 .booking-date:has(.booking-calendar) .booking-date-trigger,
 .booking-form input:focus,
-.booking-select-trigger:focus {
+.booking-select-trigger:focus,
+.booking-date-trigger:focus {
   border-color: var(--gold);
   box-shadow: 0 0 0 3px rgba(190, 146, 77, 0.16);
 }

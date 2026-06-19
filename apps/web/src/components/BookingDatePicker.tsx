@@ -102,7 +102,7 @@ export function BookingDatePicker({
       >
         <button
           type="button"
-          className="booking-select-trigger booking-date-trigger"
+          className="booking-date-trigger"
           aria-controls={menuId}
           aria-expanded={isOpen}
           aria-haspopup="dialog"
