@@ -72,19 +72,6 @@ export function BookingPage() {
       </section>
 
       <form className="booking-form" onSubmit={(event) => event.preventDefault()}>
-        <label>
-          Имя
-          <input
-            type="text"
-            name="name"
-            placeholder="Сергей"
-            value={name}
-            onChange={(event) => {
-              setName(event.target.value)
-              setStatusMessage('')
-            }}
-          />
-        </label>
         <BookingSelect
           label="Услуга"
           name="service"
@@ -93,6 +80,8 @@ export function BookingPage() {
           value={service}
           onChange={(nextService) => {
             setService(nextService)
+            setDate('')
+            setTime('')
             setStatusMessage('')
           }}
         />
@@ -104,13 +93,15 @@ export function BookingPage() {
           value={barber}
           onChange={(nextBarber) => {
             setBarber(nextBarber)
+            setDate('')
             setTime('')
             setStatusMessage('')
           }}
         />
         <BookingDatePicker
+          disabled={!barber}
           label="Дата"
-          placeholder="Выберите дату"
+          placeholder={barber ? 'Выберите дату' : 'Сначала выберите мастера'}
           value={date}
           onChange={(nextDate) => {
             setDate(nextDate)
@@ -131,6 +122,19 @@ export function BookingPage() {
           }}
         />
         <label>
+          Имя
+          <input
+            type="text"
+            name="name"
+            placeholder="Сергей"
+            value={name}
+            onChange={(event) => {
+              setName(event.target.value)
+              setStatusMessage('')
+            }}
+          />
+        </label>
+        <label>
           Телефон
           <input
             type="tel"
@@ -144,7 +148,7 @@ export function BookingPage() {
           />
         </label>
         <button type="button" disabled={!isFormReady} onClick={handleSubmit}>
-          Оставить заявку
+          Записаться
         </button>
       </form>
       {statusMessage && (

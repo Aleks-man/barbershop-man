@@ -1,6 +1,7 @@
 import { useId, useMemo, useState } from 'react'
 
 type BookingDatePickerProps = {
+  disabled?: boolean
   label: string
   placeholder: string
   value: string
@@ -56,6 +57,7 @@ const formatDisplayDate = (value: string) => {
 }
 
 export function BookingDatePicker({
+  disabled = false,
   label,
   placeholder,
   value,
@@ -69,6 +71,10 @@ export function BookingDatePicker({
   const selectedText = formatDisplayDate(value)
 
   const closeCalendar = () => {
+    if (disabled) {
+      return
+    }
+
     setIsOpen(false)
   }
 
@@ -101,9 +107,17 @@ export function BookingDatePicker({
           type="button"
           className="booking-date-trigger"
           aria-controls={menuId}
-          aria-expanded={isOpen}
+          aria-disabled={disabled}
+          aria-expanded={!disabled && isOpen}
           aria-haspopup="dialog"
-          onClick={() => setIsOpen((currentValue) => !currentValue)}
+          disabled={disabled}
+          onClick={() => {
+            if (disabled) {
+              return
+            }
+
+            setIsOpen((currentValue) => !currentValue)
+          }}
         >
           <span className={selectedText ? undefined : 'booking-select-placeholder'}>
             {selectedText || placeholder}
