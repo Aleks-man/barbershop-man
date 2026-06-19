@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
+import { AdminPage } from './pages/AdminPage'
 import { BookingPage } from './pages/BookingPage'
 import { GalleryPage } from './pages/GalleryPage'
 import { HomePage } from './pages/HomePage'
@@ -13,10 +14,12 @@ import './styles/services.css'
 import './styles/masters.css'
 import './styles/booking.css'
 import './styles/gallery.css'
+import './styles/admin.css'
 
 function App() {
   return (
     <Routes>
+      <Route path="admin" element={<AdminPage />} />
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path="services" element={<ServicesPage />} />

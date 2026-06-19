@@ -37,9 +37,17 @@ export function BookingPage() {
   const [availableTimeOptions, setAvailableTimeOptions] = useState<BookingSelectOption[] | null>(
     null,
   )
+  const isLoadingAvailability = Boolean(service && barber && date && availableTimeOptions === null)
   const timeOptions = service && barber && date
-    ? availableTimeOptions ?? fallbackTimeOptions
+    ? availableTimeOptions ?? []
     : fallbackTimeOptions
+  const timePlaceholder = !date
+    ? 'Сначала выберите дату'
+    : isLoadingAvailability
+      ? 'Загружаем свободное время'
+      : timeOptions.length > 0
+        ? 'Выберите время'
+        : 'Нет свободного времени'
   const isFormReady = Boolean(
     name.trim() &&
       phone.trim() &&
@@ -104,7 +112,7 @@ export function BookingPage() {
       })
       .catch((error: unknown) => {
         console.warn('Failed to load availability from API', error)
-        setAvailableTimeOptions(null)
+        setAvailableTimeOptions([])
       })
 
     return () => {
@@ -211,11 +219,11 @@ export function BookingPage() {
           }}
         />
         <BookingSelect
-          disabled={!date}
+          disabled={!date || isLoadingAvailability || timeOptions.length === 0}
           label="Время"
           name="time"
           options={timeOptions}
-          placeholder={date ? 'Выберите время' : 'Сначала выберите дату'}
+          placeholder={timePlaceholder}
           value={time}
           onChange={(nextTime) => {
             setTime(nextTime)
