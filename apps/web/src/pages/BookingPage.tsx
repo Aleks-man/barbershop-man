@@ -1,16 +1,9 @@
 import { useEffect, useState } from 'react'
+import { BookingDatePicker } from '../components/BookingDatePicker'
 import { BookingSelect } from '../components/BookingSelect'
 import { PageIntro } from '../components/PageIntro'
 import bookingBg from '../assets/booking-bg.webp'
 import { barbers, bookingServices, bookingTimeSlots, schedule } from '../data/site'
-
-const getLocalDateValue = (date: Date) => {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-
-  return `${year}-${month}-${day}`
-}
 
 export function BookingPage() {
   const [name, setName] = useState('')
@@ -20,7 +13,6 @@ export function BookingPage() {
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
   const [statusMessage, setStatusMessage] = useState('')
-  const minBookingDate = getLocalDateValue(new Date())
   const isFormReady = Boolean(
     name.trim() &&
       phone.trim() &&
@@ -116,20 +108,17 @@ export function BookingPage() {
             setStatusMessage('')
           }}
         />
-        <label>
-          Дата
-          <input
-            type="date"
-            name="date"
-            min={minBookingDate}
-            value={date}
-            onChange={(event) => {
-              setDate(event.target.value)
-              setTime('')
-              setStatusMessage('')
-            }}
-          />
-        </label>
+        <BookingDatePicker
+          label="Дата"
+          name="date"
+          placeholder="Выберите дату"
+          value={date}
+          onChange={(nextDate) => {
+            setDate(nextDate)
+            setTime('')
+            setStatusMessage('')
+          }}
+        />
         <BookingSelect
           disabled={!date}
           label="Время"
