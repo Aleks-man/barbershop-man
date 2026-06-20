@@ -50,11 +50,25 @@ const readStoredSession = () => {
 }
 
 type AdminTab = 'upcoming' | 'completed' | 'cancelled'
+type AppointmentPeriod = 'all' | 'today' | 'tomorrow'
+type AppointmentScope = 'selected' | 'all'
+type AdminView = 'schedule' | 'clients'
 
 const tabs: Array<{ label: string; value: AdminTab }> = [
   { label: 'Ожидают', value: 'upcoming' },
   { label: 'Выполнено', value: 'completed' },
   { label: 'Отменены', value: 'cancelled' },
+]
+
+const periods: Array<{ label: string; value: AppointmentPeriod }> = [
+  { label: 'Все', value: 'all' },
+  { label: 'Сегодня', value: 'today' },
+  { label: 'Завтра', value: 'tomorrow' },
+]
+
+const adminViews: Array<{ label: string; value: AdminView }> = [
+  { label: 'Расписание', value: 'schedule' },
+  { label: 'Клиенты', value: 'clients' },
 ]
 
 const dateTimeFormatter = new Intl.DateTimeFormat('ru-RU', {
@@ -99,6 +113,32 @@ const getStatusTone = (appointment: AdminAppointment) => {
   return 'upcoming'
 }
 
+const getDayStart = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate())
+
+const addDays = (date: Date, days: number) => {
+  const nextDate = new Date(date)
+  nextDate.setDate(nextDate.getDate() + days)
+
+  return nextDate
+}
+
+const isSameDay = (date: Date, targetDate: Date) =>
+  date.getFullYear() === targetDate.getFullYear() &&
+  date.getMonth() === targetDate.getMonth() &&
+  date.getDate() === targetDate.getDate()
+
+const matchesPeriod = (appointment: AdminAppointment, period: AppointmentPeriod) => {
+  if (period === 'all') {
+    return true
+  }
+
+  const appointmentDate = new Date(appointment.startsAt)
+  const today = getDayStart(new Date())
+  const targetDate = period === 'today' ? today : addDays(today, 1)
+
+  return isSameDay(appointmentDate, targetDate)
+}
+
 export function AdminPage() {
   const [appointments, setAppointments] = useState<AdminAppointment[]>([])
   const [barbers, setBarbers] = useState<AdminBarber[]>([])
@@ -118,6 +158,10 @@ export function AdminPage() {
   const [newBarberPhotoUrl, setNewBarberPhotoUrl] = useState('')
   const [newBarberRole, setNewBarberRole] = useState('')
   const [password, setPassword] = useState('')
+  const [adminView, setAdminView] = useState<AdminView>('schedule')
+  const [appointmentPeriod, setAppointmentPeriod] = useState<AppointmentPeriod>('all')
+  const [appointmentScope, setAppointmentScope] = useState<AppointmentScope>('selected')
+  const [clientSearch, setClientSearch] = useState('')
   const [selectedBarberId, setSelectedBarberId] = useState('')
   const [selectedTab, setSelectedTab] = useState<AdminTab>('upcoming')
   const [rescheduleAppointmentId, setRescheduleAppointmentId] = useState('')
@@ -226,23 +270,30 @@ export function AdminPage() {
   }, [session])
 
   const selectedBarber = barbers.find((barber) => barber.id === selectedBarberId)
-  const selectedBarberAppointments = useMemo(
-    () => appointments.filter((appointment) => appointment.barber.id === selectedBarberId),
-    [appointments, selectedBarberId],
+  const canViewAllBarbers = isAdminSession && appointmentScope === 'all'
+  const scopedAppointments = useMemo(
+    () =>
+      canViewAllBarbers
+        ? appointments
+        : appointments.filter((appointment) => appointment.barber.id === selectedBarberId),
+    [appointments, canViewAllBarbers, selectedBarberId],
+  )
+  const periodAppointments = useMemo(
+    () => scopedAppointments.filter((appointment) => matchesPeriod(appointment, appointmentPeriod)),
+    [appointmentPeriod, scopedAppointments],
   )
   const filteredAppointments = useMemo(
     () =>
-      selectedBarberAppointments.filter((appointment) => getAppointmentTab(appointment) === selectedTab),
-    [selectedBarberAppointments, selectedTab],
+      periodAppointments.filter((appointment) => getAppointmentTab(appointment) === selectedTab),
+    [periodAppointments, selectedTab],
   )
   const tabCounts = useMemo(
     () =>
       tabs.reduce<Record<AdminTab, number>>(
         (counts, tab) => ({
           ...counts,
-          [tab.value]: selectedBarberAppointments.filter(
-            (appointment) => getAppointmentTab(appointment) === tab.value,
-          ).length,
+          [tab.value]: periodAppointments.filter((appointment) => getAppointmentTab(appointment) === tab.value)
+            .length,
         }),
         {
           cancelled: 0,
@@ -250,8 +301,71 @@ export function AdminPage() {
           upcoming: 0,
         },
       ),
-    [selectedBarberAppointments],
+    [periodAppointments],
   )
+  const clientSourceAppointments = useMemo(
+    () =>
+      isAdminSession
+        ? appointments
+        : appointments.filter((appointment) => appointment.barber.id === selectedBarberId),
+    [appointments, isAdminSession, selectedBarberId],
+  )
+  const clients = useMemo(() => {
+    const clientsByPhone = new Map<
+      string,
+      { barberNames: Set<string>; lastVisit: string; name: string; phone: string; visits: number }
+    >()
+
+    clientSourceAppointments.forEach((appointment) => {
+      const existingClient = clientsByPhone.get(appointment.customerPhone)
+      const nextVisitTime = new Date(appointment.startsAt).getTime()
+
+      if (!existingClient) {
+        clientsByPhone.set(appointment.customerPhone, {
+          barberNames: new Set([appointment.barber.name]),
+          lastVisit: appointment.startsAt,
+          name: appointment.customerName,
+          phone: appointment.customerPhone,
+          visits: 1,
+        })
+        return
+      }
+
+      clientsByPhone.set(appointment.customerPhone, {
+        barberNames: new Set([...existingClient.barberNames, appointment.barber.name]),
+        lastVisit:
+          nextVisitTime > new Date(existingClient.lastVisit).getTime()
+            ? appointment.startsAt
+            : existingClient.lastVisit,
+        name: existingClient.name || appointment.customerName,
+        phone: appointment.customerPhone,
+        visits: existingClient.visits + 1,
+      })
+    })
+
+    return Array.from(clientsByPhone.values()).sort((firstClient, secondClient) =>
+      firstClient.name.localeCompare(secondClient.name, 'ru'),
+    )
+  }, [clientSourceAppointments])
+  const filteredClients = useMemo(() => {
+    const searchValue = clientSearch.trim().toLowerCase()
+
+    if (!searchValue) {
+      return clients
+    }
+
+    const searchDigits = searchValue.replace(/\D/g, '')
+
+    return clients.filter((client) => {
+      const clientDigits = client.phone.replace(/\D/g, '')
+
+      return (
+        client.name.toLowerCase().includes(searchValue) ||
+        client.phone.toLowerCase().includes(searchValue) ||
+        (Boolean(searchDigits) && clientDigits.includes(searchDigits))
+      )
+    })
+  }, [clientSearch, clients])
   const loginBarberOptions = useMemo(
     () =>
       loginBarbers.map((barber) => ({
@@ -300,6 +414,10 @@ export function AdminPage() {
     setSession(null)
     setAppointments([])
     setBarbers([])
+    setAdminView('schedule')
+    setAppointmentPeriod('all')
+    setAppointmentScope('selected')
+    setClientSearch('')
     setSelectedBarberId('')
   }
 
@@ -616,10 +734,23 @@ export function AdminPage() {
           </button>
         </header>
 
+        <nav className="admin-view-tabs" aria-label="Разделы админки">
+          {adminViews.map((view) => (
+            <button
+              type="button"
+              aria-pressed={adminView === view.value}
+              key={view.value}
+              onClick={() => setAdminView(view.value)}
+            >
+              {view.label}
+            </button>
+          ))}
+        </nav>
+
         {isCheckingSession && <p className="admin-muted">Загружаем расписание...</p>}
         {errorMessage && <p className="admin-alert">{errorMessage}</p>}
 
-        {!isCheckingSession && barbers.length > 0 && (
+        {!isCheckingSession && barbers.length > 0 && adminView === 'schedule' && (
           <>
             {isAdminSession && (
               <>
@@ -706,6 +837,7 @@ export function AdminPage() {
                       aria-pressed={barber.id === selectedBarberId}
                       key={barber.id}
                       onClick={() => {
+                        setAppointmentScope('selected')
                         setSelectedBarberId(barber.id)
                         setSelectedTab('upcoming')
                       }}
@@ -722,10 +854,10 @@ export function AdminPage() {
             <section className="admin-schedule">
               <header className="admin-schedule-header">
                 <div>
-                  <span className="admin-eyebrow">Мастер</span>
-                  <h2>{selectedBarber?.name}</h2>
+                  <span className="admin-eyebrow">{canViewAllBarbers ? 'Обзор' : 'Мастер'}</span>
+                  <h2>{canViewAllBarbers ? 'Все мастера' : selectedBarber?.name}</h2>
                 </div>
-                {isAdminSession && selectedBarber && (
+                {isAdminSession && selectedBarber && !canViewAllBarbers && (
                   <button
                     type="button"
                     className="admin-danger-button"
@@ -736,6 +868,39 @@ export function AdminPage() {
                   </button>
                 )}
               </header>
+
+              <div className="admin-schedule-tools">
+                {isAdminSession && (
+                  <div className="admin-segmented" aria-label="Область записей">
+                    <button
+                      type="button"
+                      aria-pressed={appointmentScope === 'selected'}
+                      onClick={() => setAppointmentScope('selected')}
+                    >
+                      Выбранный мастер
+                    </button>
+                    <button
+                      type="button"
+                      aria-pressed={appointmentScope === 'all'}
+                      onClick={() => setAppointmentScope('all')}
+                    >
+                      Все мастера
+                    </button>
+                  </div>
+                )}
+                <div className="admin-segmented" aria-label="Период записей">
+                  {periods.map((period) => (
+                    <button
+                      type="button"
+                      aria-pressed={appointmentPeriod === period.value}
+                      key={period.value}
+                      onClick={() => setAppointmentPeriod(period.value)}
+                    >
+                      {period.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               <div className="admin-stats" role="tablist" aria-label="Статус записей">
                 {tabs.map((tab) => (
@@ -763,6 +928,7 @@ export function AdminPage() {
                       <thead>
                         <tr>
                           <th>Время</th>
+                          {canViewAllBarbers && <th>Мастер</th>}
                           <th>Клиент</th>
                           <th>Телефон</th>
                           <th>Услуга</th>
@@ -774,6 +940,7 @@ export function AdminPage() {
                         {filteredAppointments.map((appointment) => (
                           <tr key={appointment.id}>
                             <td>{dateTimeFormatter.format(new Date(appointment.startsAt))}</td>
+                            {canViewAllBarbers && <td>{appointment.barber.name}</td>}
                             <td>{appointment.customerName}</td>
                             <td>{appointment.customerPhone}</td>
                             <td>{appointment.service.title}</td>
@@ -801,6 +968,12 @@ export function AdminPage() {
                           </span>
                         </header>
                         <dl>
+                          {canViewAllBarbers && (
+                            <div>
+                              <dt>Мастер</dt>
+                              <dd>{appointment.barber.name}</dd>
+                            </div>
+                          )}
                           <div>
                             <dt>Клиент</dt>
                             <dd>{appointment.customerName}</dd>
@@ -820,8 +993,91 @@ export function AdminPage() {
                   </div>
                 </>
               )}
+
             </section>
           </>
+        )}
+
+        {!isCheckingSession && adminView === 'clients' && (
+          <section className="admin-clients-page">
+            <header className="admin-section-header">
+              <div>
+                <span className="admin-eyebrow">Клиенты</span>
+                <h2>{isAdminSession ? 'Список клиентов' : 'Мои клиенты'}</h2>
+              </div>
+              <strong>{filteredClients.length}</strong>
+            </header>
+
+            <label className="admin-client-search">
+              Поиск
+              <input
+                type="search"
+                placeholder="Имя или телефон"
+                value={clientSearch}
+                onChange={(event) => setClientSearch(event.target.value)}
+              />
+            </label>
+
+            {filteredClients.length === 0 ? (
+              <p className="admin-muted">Клиенты не найдены.</p>
+            ) : (
+              <>
+                <div className="admin-table-wrap admin-clients-table-wrap">
+                  <table className="admin-table admin-clients-table">
+                    <thead>
+                      <tr>
+                        <th>Клиент</th>
+                        <th>Телефон</th>
+                        <th>Визиты</th>
+                        <th>Последний визит</th>
+                        {isAdminSession && <th>Мастера</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredClients.map((client) => (
+                        <tr key={client.phone}>
+                          <td>{client.name}</td>
+                          <td>
+                            <a href={`tel:${client.phone}`}>{client.phone}</a>
+                          </td>
+                          <td>{client.visits}</td>
+                          <td>{dateTimeFormatter.format(new Date(client.lastVisit))}</td>
+                          {isAdminSession && <td>{Array.from(client.barberNames).join(', ')}</td>}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="admin-client-list">
+                  {filteredClients.map((client) => (
+                    <article className="admin-client-card" key={client.phone}>
+                      <div>
+                        <strong>{client.name}</strong>
+                        <a href={`tel:${client.phone}`}>{client.phone}</a>
+                      </div>
+                      <dl>
+                        <div>
+                          <dt>Визиты</dt>
+                          <dd>{client.visits}</dd>
+                        </div>
+                        <div>
+                          <dt>Последний визит</dt>
+                          <dd>{dateTimeFormatter.format(new Date(client.lastVisit))}</dd>
+                        </div>
+                        {isAdminSession && (
+                          <div>
+                            <dt>Мастера</dt>
+                            <dd>{Array.from(client.barberNames).join(', ')}</dd>
+                          </div>
+                        )}
+                      </dl>
+                    </article>
+                  ))}
+                </div>
+              </>
+            )}
+          </section>
         )}
 
         {!isCheckingSession && barbers.length === 0 && (

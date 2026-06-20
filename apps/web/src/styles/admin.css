@@ -164,9 +164,40 @@
 
 .admin-header > div,
 .admin-manager header > div,
-.admin-schedule-header > div {
+.admin-schedule-header > div,
+.admin-section-header > div {
   display: grid;
   gap: 0.38rem;
+}
+
+.admin-view-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-view-tabs button {
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--heading);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+  padding: 0 0.95rem;
+}
+
+.admin-view-tabs button:hover,
+.admin-view-tabs button[aria-pressed="true"] {
+  border-color: rgba(190, 146, 77, 0.72);
+  background: rgba(190, 146, 77, 0.14);
+}
+
+.admin-view-tabs button:focus-visible {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(190, 146, 77, 0.16);
+  outline: none;
 }
 
 .admin-manager {
@@ -358,6 +389,44 @@
   font-family: var(--display);
   font-size: clamp(1.65rem, 3vw, 2.4rem);
   line-height: 1;
+}
+
+.admin-schedule-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  justify-content: space-between;
+}
+
+.admin-segmented {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.admin-segmented button {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--heading);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 800;
+  padding: 0 0.75rem;
+}
+
+.admin-segmented button:hover,
+.admin-segmented button[aria-pressed="true"] {
+  border-color: rgba(190, 146, 77, 0.72);
+  background: rgba(190, 146, 77, 0.14);
+}
+
+.admin-segmented button:focus-visible {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(190, 146, 77, 0.16);
+  outline: none;
 }
 
 .admin-stats {
@@ -562,6 +631,142 @@
   opacity: 0.42;
 }
 
+.admin-clients-page {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(24, 27, 23, 0.3);
+  backdrop-filter: blur(4px);
+  padding: 1rem;
+}
+
+.admin-section-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-section-header h2 {
+  margin: 0;
+  color: var(--heading);
+  font-family: var(--display);
+  font-size: clamp(1.65rem, 3vw, 2.4rem);
+  line-height: 1;
+}
+
+.admin-section-header > strong {
+  color: var(--gold);
+  font-family: var(--display);
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.admin-client-search {
+  display: grid;
+  gap: 0.48rem;
+  max-width: 420px;
+  color: var(--heading);
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.admin-client-search input {
+  min-height: 46px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--heading);
+  font: inherit;
+  outline: none;
+  padding: 0 0.85rem;
+}
+
+.admin-client-search input::placeholder {
+  color: var(--gold);
+  opacity: 1;
+}
+
+.admin-client-search input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(190, 146, 77, 0.16);
+}
+
+.admin-clients-table {
+  min-width: 760px;
+}
+
+.admin-clients-table a {
+  color: var(--gold);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.admin-client-list {
+  display: none;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 0.6rem;
+}
+
+.admin-client-card {
+  display: grid;
+  gap: 0.8rem;
+  min-width: 0;
+  border: 1px solid rgba(245, 239, 227, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+  padding: 0.8rem;
+}
+
+.admin-client-card div {
+  display: grid;
+  gap: 0.22rem;
+  min-width: 0;
+}
+
+.admin-client-card strong,
+.admin-client-card a {
+  overflow-wrap: anywhere;
+}
+
+.admin-client-card strong {
+  color: var(--heading);
+}
+
+.admin-client-card a {
+  color: var(--gold);
+  font-size: 0.88rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.admin-client-card dl {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+}
+
+.admin-client-card dl div {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.admin-client-card dt {
+  color: var(--soft);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-client-card dd {
+  margin: 0;
+  color: var(--heading);
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
+}
+
 .admin-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -636,6 +841,10 @@
     display: grid;
     gap: 0.75rem;
   }
+
+  .admin-clients-page .admin-client-list {
+    display: grid;
+  }
 }
 
 @media (max-width: 620px) {
@@ -657,6 +866,15 @@
   .admin-schedule-header {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .admin-schedule-tools {
+    flex-direction: column;
+  }
+
+  .admin-segmented {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
   .admin-manager-form {

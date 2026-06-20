@@ -30,8 +30,9 @@
 }
 
 html {
-  overflow-y: auto;
+  overflow-y: scroll;
   scrollbar-color: rgba(190, 146, 77, 0.5) transparent;
+  scrollbar-gutter: stable;
   scroll-behavior: smooth;
 }
 
