@@ -1,6 +1,7 @@
 import cors from 'cors'
 import type { ErrorRequestHandler } from 'express'
 import express from 'express'
+import { fileURLToPath } from 'node:url'
 import { adminRouter } from './routes/admin.js'
 import { appointmentsRouter } from './routes/appointments.js'
 import { availabilityRouter } from './routes/availability.js'
@@ -15,7 +16,8 @@ app.use(
     credentials: true,
   }),
 )
-app.use(express.json({ limit: '2mb' }))
+app.use(express.json({ limit: '6mb' }))
+app.use('/uploads', express.static(fileURLToPath(new URL('../uploads', import.meta.url))))
 
 app.get('/api/health', (_request, response) => {
   response.json({

@@ -1,5 +1,8 @@
 import { Router } from 'express'
 import { AppointmentStatus } from '@prisma/client'
+import { mkdir, writeFile } from 'node:fs/promises'
+import { randomUUID } from 'node:crypto'
+import { fileURLToPath } from 'node:url'
 import {
   canManageBarber,
   createAdminToken,
@@ -36,7 +39,17 @@ type BarberBody = {
   role?: unknown
 }
 
+type BarberPhotoBody = {
+  dataUrl?: unknown
+}
+
 const appointmentStatusValues = Object.values(AppointmentStatus)
+const barberPhotoUploadDir = fileURLToPath(new URL('../../uploads/barbers', import.meta.url))
+const allowedPhotoTypes = new Map([
+  ['image/jpeg', 'jpg'],
+  ['image/png', 'png'],
+  ['image/webp', 'webp'],
+])
 
 export const adminRouter = Router()
 
@@ -315,6 +328,43 @@ adminRouter.post('/barbers', requireAdmin, async (request, response, next) => {
     })
 
     response.status(201).json({ barber })
+  } catch (error) {
+    next(error)
+  }
+})
+
+adminRouter.post('/barbers/photo', requireAdmin, async (request, response, next) => {
+  try {
+    const body = request.body as BarberPhotoBody
+    const dataUrl = typeof body.dataUrl === 'string' ? body.dataUrl : ''
+    const match = /^data:(image\/(?:jpeg|png|webp));base64,([a-zA-Z0-9+/=]+)$/.exec(dataUrl)
+
+    if (!match) {
+      response.status(400).json({
+        error: 'Invalid image',
+      })
+      return
+    }
+
+    const mimeType = match[1]
+    const extension = allowedPhotoTypes.get(mimeType)
+    const imageBuffer = Buffer.from(match[2], 'base64')
+
+    if (!extension || imageBuffer.length > 3 * 1024 * 1024) {
+      response.status(400).json({
+        error: 'Image is too large or unsupported',
+      })
+      return
+    }
+
+    await mkdir(barberPhotoUploadDir, { recursive: true })
+
+    const fileName = `${randomUUID()}.${extension}`
+    await writeFile(new URL(`../../uploads/barbers/${fileName}`, import.meta.url), imageBuffer)
+
+    response.status(201).json({
+      photoUrl: `/uploads/barbers/${fileName}`,
+    })
   } catch (error) {
     next(error)
   }

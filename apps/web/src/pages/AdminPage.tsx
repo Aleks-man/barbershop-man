@@ -2,11 +2,12 @@ import { type CSSProperties, useEffect, useMemo, useState } from 'react'
 import { getAvailability } from '../api/availability'
 import {
   createAdminBarber,
-  deleteAdminBarber,
   getAdminAppointments,
   getAdminBarbers,
+  hideAdminBarber,
   loginAdmin,
   rescheduleAdminAppointment,
+  uploadAdminBarberPhoto,
   updateAdminAppointmentStatus,
   type AdminAppointment,
   type AdminBarber,
@@ -311,12 +312,19 @@ export function AdminPage() {
     setErrorMessage('')
 
     try {
+      const uploadedPhoto =
+        newBarberPhotoUrl.startsWith('data:image/')
+          ? await uploadAdminBarberPhoto({
+              dataUrl: newBarberPhotoUrl,
+              token,
+            })
+          : null
       const response = await createAdminBarber({
         description: newBarberDescription,
         experience: newBarberExperience,
         name: newBarberName,
         password: newBarberPassword || defaultBarberPassword,
-        photoUrl: newBarberPhotoUrl,
+        photoUrl: uploadedPhoto?.photoUrl ?? newBarberPhotoUrl,
         role: newBarberRole,
         token,
       })
@@ -352,7 +360,7 @@ export function AdminPage() {
     reader.readAsDataURL(file)
   }
 
-  const handleDeleteBarber = async (barberId: string) => {
+  const handleHideBarber = async (barberId: string) => {
     if (!isAdminSession) {
       return
     }
@@ -361,7 +369,7 @@ export function AdminPage() {
     setErrorMessage('')
 
     try {
-      await deleteAdminBarber({
+      await hideAdminBarber({
         barberId,
         token,
       })
@@ -376,7 +384,7 @@ export function AdminPage() {
         return nextBarbers
       })
     } catch {
-      setErrorMessage('Не удалось удалить мастера. Проверьте, что у него нет будущих записей.')
+      setErrorMessage('Не удалось скрыть мастера. Проверьте, что у него нет будущих записей.')
     } finally {
       setIsLoading(false)
     }
@@ -664,13 +672,14 @@ export function AdminPage() {
                         onChange={(event) => setNewBarberDescription(event.target.value)}
                       />
                     </label>
-                    <label>
+                    <label className="admin-photo-upload">
                       Фото
                       <input
                         type="file"
                         accept="image/*"
                         onChange={(event) => handleBarberPhotoChange(event.target.files?.[0])}
                       />
+                      <span>{newBarberPhotoUrl ? 'Заменить фото' : 'Добавить фото'}</span>
                     </label>
                     {newBarberPhotoUrl && (
                       <img
@@ -721,9 +730,9 @@ export function AdminPage() {
                     type="button"
                     className="admin-danger-button"
                     disabled={isLoading}
-                    onClick={() => void handleDeleteBarber(selectedBarber.id)}
+                    onClick={() => void handleHideBarber(selectedBarber.id)}
                   >
-                    Удалить мастера
+                    Скрыть мастера
                   </button>
                 )}
               </header>

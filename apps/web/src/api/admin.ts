@@ -101,7 +101,30 @@ export const createAdminBarber = async ({
   return response.json() as Promise<{ barber: AdminBarber }>
 }
 
-export const deleteAdminBarber = async ({
+export const uploadAdminBarberPhoto = async ({
+  dataUrl,
+  token,
+}: {
+  dataUrl: string
+  token: string
+}) => {
+  const response = await fetch('/api/admin/barbers/photo', {
+    body: JSON.stringify({ dataUrl }),
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to upload barber photo')
+  }
+
+  return response.json() as Promise<{ photoUrl: string }>
+}
+
+export const hideAdminBarber = async ({
   barberId,
   token,
 }: {
@@ -116,7 +139,7 @@ export const deleteAdminBarber = async ({
   })
 
   if (!response.ok) {
-    throw new Error('Failed to delete barber')
+    throw new Error('Failed to hide barber')
   }
 }
 

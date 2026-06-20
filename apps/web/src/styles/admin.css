@@ -189,7 +189,7 @@
 
 .admin-manager-form {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
   gap: 0.78rem;
   align-items: end;
 }
@@ -220,10 +220,6 @@
   resize: vertical;
 }
 
-.admin-manager-form input[type="file"] {
-  padding: 0.55rem;
-}
-
 .admin-manager-form input:focus,
 .admin-manager-form textarea:focus {
   border-color: var(--gold);
@@ -232,6 +228,47 @@
 
 .admin-manager-form-wide {
   grid-column: span 2;
+}
+
+.admin-photo-upload input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.admin-photo-upload span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 42px;
+  border: 1px solid rgba(190, 146, 77, 0.36);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--heading);
+  cursor: pointer;
+  font-weight: 900;
+  padding: 0 0.8rem;
+}
+
+.admin-photo-upload span::before {
+  width: 1rem;
+  height: 1rem;
+  background: var(--gold);
+  content: "";
+  -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M9 3 7.2 5H5a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V8a3 3 0 0 0-3-3h-2.2L15 3H9Zm3 6a4 4 0 1 1 0 8 4 4 0 0 1 0-8Zm0 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M9 3 7.2 5H5a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V8a3 3 0 0 0-3-3h-2.2L15 3H9Zm3 6a4 4 0 1 1 0 8 4 4 0 0 1 0-8Zm0 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+.admin-photo-upload:focus-within span {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(190, 146, 77, 0.16);
 }
 
 .admin-manager-photo-preview {
