@@ -513,6 +513,9 @@ export function AdminPage() {
   if (!session) {
     return (
       <main className="admin-page" style={adminPageStyle}>
+        <div className="page-text-logo admin-text-logo" aria-hidden="true">
+          <img src="/gentlemansroom_text_logo_transparent.png" alt="" />
+        </div>
         <form
           className="admin-login"
           onSubmit={(event) => {
@@ -591,6 +594,9 @@ export function AdminPage() {
 
   return (
     <main className="admin-page" style={adminPageStyle}>
+      <div className="page-text-logo admin-text-logo" aria-hidden="true">
+        <img src="/gentlemansroom_text_logo_transparent.png" alt="" />
+      </div>
       <section className="admin-shell">
         <header className="admin-header">
           <div>
