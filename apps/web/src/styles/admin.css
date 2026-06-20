@@ -323,50 +323,44 @@
   line-height: 1;
 }
 
-.admin-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-.admin-tabs button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  min-height: 40px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--heading);
-  cursor: pointer;
-  font: inherit;
-  font-weight: 800;
-  padding: 0 0.7rem;
-}
-
-.admin-tabs button[aria-selected="true"] {
-  border-color: var(--gold);
-  background: rgba(190, 146, 77, 0.18);
-}
-
-.admin-tabs span {
-  color: var(--gold);
-}
-
 .admin-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.6rem;
 }
 
-.admin-stats div {
+.admin-stats button {
   display: grid;
   gap: 0.35rem;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(24, 27, 23, 0.3);
   backdrop-filter: blur(4px);
+  cursor: pointer;
+  font: inherit;
   padding: 0.9rem;
+  text-align: left;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.admin-stats button:hover,
+.admin-stats button[aria-selected="true"] {
+  border-color: rgba(190, 146, 77, 0.72);
+  background: rgba(190, 146, 77, 0.14);
+}
+
+.admin-stats button[aria-selected="true"] {
+  box-shadow: 0 0 0 3px rgba(190, 146, 77, 0.12);
+}
+
+.admin-stats button:focus-visible {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(190, 146, 77, 0.18);
+  outline: none;
 }
 
 .admin-stats span {

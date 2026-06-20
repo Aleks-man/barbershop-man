@@ -726,28 +726,20 @@ export function AdminPage() {
                     Удалить мастера
                   </button>
                 )}
-                <div className="admin-tabs" role="tablist" aria-label="Статус записей">
-                  {tabs.map((tab) => (
-                    <button
-                      type="button"
-                      aria-selected={selectedTab === tab.value}
-                      key={tab.value}
-                      role="tab"
-                      onClick={() => setSelectedTab(tab.value)}
-                    >
-                      {tab.label}
-                      <span>{tabCounts[tab.value]}</span>
-                    </button>
-                  ))}
-                </div>
               </header>
 
-              <div className="admin-stats" aria-label="Статистика записей">
+              <div className="admin-stats" role="tablist" aria-label="Статус записей">
                 {tabs.map((tab) => (
-                  <div key={tab.value}>
+                  <button
+                    type="button"
+                    aria-selected={selectedTab === tab.value}
+                    key={tab.value}
+                    role="tab"
+                    onClick={() => setSelectedTab(tab.value)}
+                  >
                     <span>{tab.label}</span>
                     <strong>{tabCounts[tab.value]}</strong>
-                  </div>
+                  </button>
                 ))}
               </div>
 
