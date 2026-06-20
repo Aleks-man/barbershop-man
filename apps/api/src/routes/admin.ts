@@ -1,12 +1,21 @@
 import { Router } from 'express'
 import { AppointmentStatus } from '@prisma/client'
-import { createAdminToken, requireAdmin } from '../adminAuth.js'
+import {
+  canManageBarber,
+  createAdminToken,
+  createBarberToken,
+  getResponseSession,
+  requireAdmin,
+  requireStaff,
+} from '../adminAuth.js'
 import { addMinutes, businessHoursByDay, hasOverlap, parseDate, setTime } from '../bookingTime.js'
 import { config } from '../config.js'
 import { prisma } from '../prisma.js'
 
 type LoginBody = {
+  barberId?: unknown
   password?: unknown
+  role?: unknown
 }
 
 type AppointmentStatusBody = {
@@ -18,29 +27,81 @@ type AppointmentRescheduleBody = {
   time?: unknown
 }
 
+type BarberBody = {
+  description?: unknown
+  experience?: unknown
+  name?: unknown
+  password?: unknown
+  photoUrl?: unknown
+  role?: unknown
+}
+
 const appointmentStatusValues = Object.values(AppointmentStatus)
 
 export const adminRouter = Router()
 
-adminRouter.post('/login', (request, response) => {
-  const body = request.body as LoginBody
-  const password = typeof body.password === 'string' ? body.password : ''
+adminRouter.post('/login', async (request, response, next) => {
+  try {
+    const body = request.body as LoginBody
+    const barberId = typeof body.barberId === 'string' ? body.barberId.trim() : ''
+    const password = typeof body.password === 'string' ? body.password : ''
+    const role = body.role === 'barber' ? 'barber' : 'admin'
 
-  if (password !== config.adminPassword) {
-    response.status(401).json({
-      error: 'Invalid password',
+    if (role === 'admin') {
+      if (password !== config.adminPassword) {
+        response.status(401).json({
+          error: 'Invalid password',
+        })
+        return
+      }
+
+      response.json({
+        role: 'admin',
+        token: createAdminToken(),
+      })
+      return
+    }
+
+    const barber = await prisma.barber.findFirst({
+      where: {
+        id: barberId,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        password: true,
+      },
     })
-    return
-  }
 
-  response.json({
-    token: createAdminToken(),
-  })
+    if (!barber || barber.password !== password) {
+      response.status(401).json({
+        error: 'Invalid password',
+      })
+      return
+    }
+
+    response.json({
+      barberId: barber.id,
+      name: barber.name,
+      role: 'barber',
+      token: createBarberToken(barber.id),
+    })
+  } catch (error) {
+    next(error)
+  }
 })
 
-adminRouter.get('/appointments', requireAdmin, async (_request, response, next) => {
+adminRouter.get('/appointments', requireStaff, async (_request, response, next) => {
   try {
+    const session = getResponseSession(response.locals)
     const appointments = await prisma.appointment.findMany({
+      where:
+        session.role === 'barber'
+          ? {
+              barberId: session.barberId,
+            }
+          : undefined,
       orderBy: {
         startsAt: 'asc',
       },
@@ -72,8 +133,9 @@ adminRouter.get('/appointments', requireAdmin, async (_request, response, next) 
   }
 })
 
-adminRouter.patch('/appointments/:id/reschedule', requireAdmin, async (request, response, next) => {
+adminRouter.patch('/appointments/:id/reschedule', requireStaff, async (request, response, next) => {
   try {
+    const session = getResponseSession(response.locals)
     const appointmentId = String(request.params.id ?? '')
     const body = request.body as AppointmentRescheduleBody
     const date = typeof body.date === 'string' ? body.date.trim() : ''
@@ -99,6 +161,13 @@ adminRouter.patch('/appointments/:id/reschedule', requireAdmin, async (request, 
     if (!appointment || appointment.status === AppointmentStatus.CANCELLED) {
       response.status(404).json({
         error: 'Appointment not found',
+      })
+      return
+    }
+
+    if (!canManageBarber(session, appointment.barberId)) {
+      response.status(403).json({
+        error: 'Forbidden',
       })
       return
     }
@@ -175,18 +244,29 @@ adminRouter.patch('/appointments/:id/reschedule', requireAdmin, async (request, 
   }
 })
 
-adminRouter.get('/barbers', requireAdmin, async (_request, response, next) => {
+adminRouter.get('/barbers', requireStaff, async (_request, response, next) => {
   try {
+    const session = getResponseSession(response.locals)
     const barbers = await prisma.barber.findMany({
-      where: {
-        isActive: true,
-      },
+      where:
+        session.role === 'barber'
+          ? {
+              id: session.barberId,
+              isActive: true,
+            }
+          : {
+              isActive: true,
+            },
       orderBy: {
         name: 'asc',
       },
       select: {
         id: true,
         name: true,
+        password: session.role === 'admin',
+        description: true,
+        experience: true,
+        photoUrl: true,
         role: true,
       },
     })
@@ -197,8 +277,89 @@ adminRouter.get('/barbers', requireAdmin, async (_request, response, next) => {
   }
 })
 
-adminRouter.patch('/appointments/:id/status', requireAdmin, async (request, response, next) => {
+adminRouter.post('/barbers', requireAdmin, async (request, response, next) => {
   try {
+    const body = request.body as BarberBody
+    const description = typeof body.description === 'string' ? body.description.trim() : ''
+    const experience = typeof body.experience === 'string' ? body.experience.trim() : ''
+    const name = typeof body.name === 'string' ? body.name.trim() : ''
+    const password = typeof body.password === 'string' ? body.password.trim() : ''
+    const photoUrl = typeof body.photoUrl === 'string' ? body.photoUrl.trim() : ''
+    const role = typeof body.role === 'string' ? body.role.trim() : ''
+
+    if (!name) {
+      response.status(400).json({
+        error: 'Name is required',
+      })
+      return
+    }
+
+    const barber = await prisma.barber.create({
+      data: {
+        description: description || null,
+        experience: experience || null,
+        name,
+        password: password || '111111',
+        photoUrl: photoUrl || null,
+        role: role || null,
+      },
+      select: {
+        description: true,
+        experience: true,
+        id: true,
+        name: true,
+        password: true,
+        photoUrl: true,
+        role: true,
+      },
+    })
+
+    response.status(201).json({ barber })
+  } catch (error) {
+    next(error)
+  }
+})
+
+adminRouter.delete('/barbers/:id', requireAdmin, async (request, response, next) => {
+  try {
+    const barberId = String(request.params.id ?? '')
+    const activeAppointments = await prisma.appointment.count({
+      where: {
+        barberId,
+        status: {
+          in: [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED],
+        },
+        startsAt: {
+          gt: new Date(),
+        },
+      },
+    })
+
+    if (activeAppointments > 0) {
+      response.status(409).json({
+        error: 'Barber has active appointments',
+      })
+      return
+    }
+
+    await prisma.barber.update({
+      where: {
+        id: barberId,
+      },
+      data: {
+        isActive: false,
+      },
+    })
+
+    response.status(204).send()
+  } catch (error) {
+    next(error)
+  }
+})
+
+adminRouter.patch('/appointments/:id/status', requireStaff, async (request, response, next) => {
+  try {
+    const session = getResponseSession(response.locals)
     const appointmentId = String(request.params.id ?? '')
     const body = request.body as AppointmentStatusBody
     const status = typeof body.status === 'string' ? body.status : ''
@@ -206,6 +367,29 @@ adminRouter.patch('/appointments/:id/status', requireAdmin, async (request, resp
     if (!appointmentStatusValues.includes(status as AppointmentStatus)) {
       response.status(400).json({
         error: 'Invalid status',
+      })
+      return
+    }
+
+    const currentAppointment = await prisma.appointment.findUnique({
+      where: {
+        id: appointmentId,
+      },
+      select: {
+        barberId: true,
+      },
+    })
+
+    if (!currentAppointment) {
+      response.status(404).json({
+        error: 'Appointment not found',
+      })
+      return
+    }
+
+    if (!canManageBarber(session, currentAppointment.barberId)) {
+      response.status(403).json({
+        error: 'Forbidden',
       })
       return
     }

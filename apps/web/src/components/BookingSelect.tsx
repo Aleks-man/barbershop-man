@@ -55,7 +55,7 @@ export function BookingSelect({
   }
 
   return (
-    <label className="booking-select-label">
+    <label className={`booking-select-label${isOpen && !isClosing ? ' is-open' : ''}`}>
       {label}
       <input type="hidden" name={name} value={value} />
       <span className="booking-select" onBlur={closeMenu}>

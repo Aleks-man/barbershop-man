@@ -29,7 +29,7 @@ const statuses = [
   AppointmentStatus.CANCELLED,
   AppointmentStatus.CONFIRMED,
   AppointmentStatus.PENDING,
-  AppointmentStatus.COMPLETED,
+  AppointmentStatus.CONFIRMED,
   AppointmentStatus.CONFIRMED,
   AppointmentStatus.PENDING,
   AppointmentStatus.CONFIRMED,

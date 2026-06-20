@@ -12,6 +12,26 @@ type AppointmentRequestBody = {
   time?: unknown
 }
 
+const getRussianPhoneDigits = (value: string) => {
+  const digits = value.replace(/\D/g, '')
+
+  if (digits.startsWith('8') || digits.startsWith('7')) {
+    return digits.slice(1)
+  }
+
+  return digits
+}
+
+const normalizeRussianPhone = (value: string) => {
+  const digits = getRussianPhoneDigits(value)
+
+  if (digits.length !== 10) {
+    return ''
+  }
+
+  return `+7 (${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 8)}-${digits.slice(8, 10)}`
+}
+
 export const appointmentsRouter = Router()
 
 appointmentsRouter.post('/', async (request, response, next) => {
@@ -22,6 +42,7 @@ appointmentsRouter.post('/', async (request, response, next) => {
       typeof body.customerName === 'string' ? body.customerName.trim() : ''
     const customerPhone =
       typeof body.customerPhone === 'string' ? body.customerPhone.trim() : ''
+    const normalizedCustomerPhone = normalizeRussianPhone(customerPhone)
     const date = typeof body.date === 'string' ? body.date.trim() : ''
     const serviceId = typeof body.serviceId === 'string' ? body.serviceId.trim() : ''
     const time = typeof body.time === 'string' ? body.time.trim() : ''
@@ -30,7 +51,7 @@ appointmentsRouter.post('/', async (request, response, next) => {
     if (
       !barberId ||
       !customerName ||
-      !customerPhone ||
+      !normalizedCustomerPhone ||
       !selectedDate ||
       !serviceId ||
       !time
@@ -115,7 +136,7 @@ appointmentsRouter.post('/', async (request, response, next) => {
       data: {
         barberId,
         customerName,
-        customerPhone,
+        customerPhone: normalizedCustomerPhone,
         endsAt,
         serviceId,
         startsAt,

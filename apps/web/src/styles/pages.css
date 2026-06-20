@@ -155,6 +155,7 @@
 
   .booking-page {
     background-position: 58% top;
+    overflow: visible;
   }
 
   .page-intro span {

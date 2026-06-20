@@ -13,10 +13,12 @@ barbersRouter.get('/', async (_request, response, next) => {
         name: 'asc',
       },
       select: {
+        description: true,
+        experience: true,
         id: true,
         name: true,
+        photoUrl: true,
         role: true,
-        description: true,
       },
     })
 

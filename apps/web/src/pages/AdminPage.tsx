@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { type CSSProperties, useEffect, useMemo, useState } from 'react'
 import { getAvailability } from '../api/availability'
 import {
+  createAdminBarber,
+  deleteAdminBarber,
   getAdminAppointments,
   getAdminBarbers,
   loginAdmin,
@@ -8,11 +10,43 @@ import {
   updateAdminAppointmentStatus,
   type AdminAppointment,
   type AdminBarber,
+  type AdminSessionRole,
 } from '../api/admin'
 import { BookingDatePicker } from '../components/BookingDatePicker'
 import { BookingSelect, type BookingSelectOption } from '../components/BookingSelect'
+import adminBg from '../assets/admin-bg.webp'
 
 const tokenStorageKey = 'barbershop-admin-token'
+const sessionStorageKey = 'barbershop-admin-session'
+const defaultBarberPassword = '111111'
+
+const adminPageStyle = {
+  '--admin-bg': `url(${adminBg})`,
+} as CSSProperties
+
+type AdminSession = {
+  barberId?: string
+  name?: string
+  role: AdminSessionRole
+  token: string
+}
+
+const readStoredSession = () => {
+  const storedSession = sessionStorage.getItem(sessionStorageKey)
+
+  if (!storedSession) {
+    const legacyToken = sessionStorage.getItem(tokenStorageKey)
+
+    return legacyToken ? { role: 'admin' as const, token: legacyToken } : null
+  }
+
+  try {
+    return JSON.parse(storedSession) as AdminSession
+  } catch {
+    sessionStorage.removeItem(sessionStorageKey)
+    return null
+  }
+}
 
 type AdminTab = 'upcoming' | 'completed' | 'cancelled'
 
@@ -40,7 +74,7 @@ const getAppointmentTab = (appointment: AdminAppointment): AdminTab => {
 
 const statusLabels: Record<string, string> = {
   CANCELLED: 'Отменена',
-  COMPLETED: 'Выполнена',
+  COMPLETED: 'Ожидает',
   CONFIRMED: 'Активна',
   PENDING: 'Ожидает',
 }
@@ -50,14 +84,38 @@ const getStatusLabel = (appointment: AdminAppointment) =>
     ? 'Выполнена'
     : statusLabels[appointment.status] ?? appointment.status
 
+const getStatusTone = (appointment: AdminAppointment) => {
+  const tab = getAppointmentTab(appointment)
+
+  if (tab === 'completed') {
+    return 'completed'
+  }
+
+  if (tab === 'cancelled') {
+    return 'cancelled'
+  }
+
+  return 'upcoming'
+}
+
 export function AdminPage() {
   const [appointments, setAppointments] = useState<AdminAppointment[]>([])
   const [barbers, setBarbers] = useState<AdminBarber[]>([])
   const [errorMessage, setErrorMessage] = useState('')
-  const [isCheckingSession, setIsCheckingSession] = useState(
-    Boolean(sessionStorage.getItem(tokenStorageKey)),
-  )
+  const [session, setSession] = useState<AdminSession | null>(() => readStoredSession())
+  const [isCheckingSession, setIsCheckingSession] = useState(Boolean(session))
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingLoginBarbers, setIsLoadingLoginBarbers] = useState(false)
+  const [loginBarbersMessage, setLoginBarbersMessage] = useState('')
+  const [loginBarbers, setLoginBarbers] = useState<AdminBarber[]>([])
+  const [loginBarberId, setLoginBarberId] = useState('')
+  const [loginRole, setLoginRole] = useState<AdminSessionRole>('admin')
+  const [newBarberDescription, setNewBarberDescription] = useState('')
+  const [newBarberExperience, setNewBarberExperience] = useState('')
+  const [newBarberName, setNewBarberName] = useState('')
+  const [newBarberPassword, setNewBarberPassword] = useState(defaultBarberPassword)
+  const [newBarberPhotoUrl, setNewBarberPhotoUrl] = useState('')
+  const [newBarberRole, setNewBarberRole] = useState('')
   const [password, setPassword] = useState('')
   const [selectedBarberId, setSelectedBarberId] = useState('')
   const [selectedTab, setSelectedTab] = useState<AdminTab>('upcoming')
@@ -66,27 +124,97 @@ export function AdminPage() {
   const [rescheduleTime, setRescheduleTime] = useState('')
   const [rescheduleTimeOptions, setRescheduleTimeOptions] = useState<BookingSelectOption[]>([])
   const [updatingAppointmentId, setUpdatingAppointmentId] = useState('')
-  const [token, setToken] = useState(() => sessionStorage.getItem(tokenStorageKey) ?? '')
+  const token = session?.token ?? ''
+  const isAdminSession = session?.role === 'admin'
 
   const rescheduleAppointment = appointments.find(
     (appointment) => appointment.id === rescheduleAppointmentId,
   )
 
+  const loadLoginBarbers = () => {
+    setIsLoadingLoginBarbers(true)
+    setLoginBarbersMessage('')
+
+    fetch('/api/barbers')
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Failed to load barbers')
+        }
+
+        return response.json() as Promise<{ barbers: AdminBarber[] }>
+      })
+      .then((data) => {
+        setLoginBarbers(data.barbers)
+        setLoginBarberId((currentBarberId) => currentBarberId || data.barbers[0]?.id || '')
+        setLoginBarbersMessage(data.barbers.length === 0 ? 'В базе пока нет активных мастеров.' : '')
+      })
+      .catch(() => {
+        setLoginBarbers([])
+        setLoginBarberId('')
+        setLoginBarbersMessage('Не удалось загрузить мастеров из базы. Проверьте, что backend запущен.')
+      })
+      .finally(() => {
+        setIsLoadingLoginBarbers(false)
+      })
+  }
+
   useEffect(() => {
-    if (!token) {
+    if (session) {
       return
     }
 
-    Promise.all([getAdminBarbers(token), getAdminAppointments(token)])
+    let isMounted = true
+
+    fetch('/api/barbers')
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Failed to load barbers')
+        }
+
+        return response.json() as Promise<{ barbers: AdminBarber[] }>
+      })
+      .then((data) => {
+        if (!isMounted) {
+          return
+        }
+
+        setLoginBarbers(data.barbers)
+        setLoginBarberId((currentBarberId) => currentBarberId || data.barbers[0]?.id || '')
+        setLoginBarbersMessage(data.barbers.length === 0 ? 'В базе пока нет активных мастеров.' : '')
+      })
+      .catch(() => {
+        if (isMounted) {
+          setLoginBarbers([])
+          setLoginBarberId('')
+          setLoginBarbersMessage('Не удалось загрузить мастеров из базы. Проверьте, что backend запущен.')
+        }
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [session])
+
+  useEffect(() => {
+    if (!session) {
+      return
+    }
+
+    Promise.all([getAdminBarbers(session.token), getAdminAppointments(session.token)])
       .then(([nextBarbers, nextAppointments]) => {
         setBarbers(nextBarbers)
         setAppointments(nextAppointments)
-        setSelectedBarberId((currentBarberId) => currentBarberId || nextBarbers[0]?.id || '')
+        setSelectedBarberId((currentBarberId) =>
+          session.role === 'barber'
+            ? session.barberId || nextBarbers[0]?.id || ''
+            : currentBarberId || nextBarbers[0]?.id || '',
+        )
         setErrorMessage('')
       })
       .catch(() => {
         sessionStorage.removeItem(tokenStorageKey)
-        setToken('')
+        sessionStorage.removeItem(sessionStorageKey)
+        setSession(null)
         setAppointments([])
         setBarbers([])
         setErrorMessage('Сессия истекла. Войдите снова.')
@@ -94,27 +222,25 @@ export function AdminPage() {
       .finally(() => {
         setIsCheckingSession(false)
       })
-  }, [token])
+  }, [session])
 
   const selectedBarber = barbers.find((barber) => barber.id === selectedBarberId)
+  const selectedBarberAppointments = useMemo(
+    () => appointments.filter((appointment) => appointment.barber.id === selectedBarberId),
+    [appointments, selectedBarberId],
+  )
   const filteredAppointments = useMemo(
     () =>
-      appointments.filter(
-        (appointment) =>
-          appointment.barber.id === selectedBarberId &&
-          getAppointmentTab(appointment) === selectedTab,
-      ),
-    [appointments, selectedBarberId, selectedTab],
+      selectedBarberAppointments.filter((appointment) => getAppointmentTab(appointment) === selectedTab),
+    [selectedBarberAppointments, selectedTab],
   )
   const tabCounts = useMemo(
     () =>
       tabs.reduce<Record<AdminTab, number>>(
         (counts, tab) => ({
           ...counts,
-          [tab.value]: appointments.filter(
-            (appointment) =>
-              appointment.barber.id === selectedBarberId &&
-              getAppointmentTab(appointment) === tab.value,
+          [tab.value]: selectedBarberAppointments.filter(
+            (appointment) => getAppointmentTab(appointment) === tab.value,
           ).length,
         }),
         {
@@ -123,11 +249,19 @@ export function AdminPage() {
           upcoming: 0,
         },
       ),
-    [appointments, selectedBarberId],
+    [selectedBarberAppointments],
+  )
+  const loginBarberOptions = useMemo(
+    () =>
+      loginBarbers.map((barber) => ({
+        label: barber.name,
+        value: barber.id,
+      })),
+    [loginBarbers],
   )
 
   const handleLogin = async () => {
-    if (!password.trim()) {
+    if (!password.trim() || (loginRole === 'barber' && !loginBarberId)) {
       return
     }
 
@@ -135,9 +269,22 @@ export function AdminPage() {
     setErrorMessage('')
 
     try {
-      const response = await loginAdmin(password)
-      sessionStorage.setItem(tokenStorageKey, response.token)
-      setToken(response.token)
+      const response = await loginAdmin({
+        barberId: loginRole === 'barber' ? loginBarberId : undefined,
+        password,
+        role: loginRole,
+      })
+      const nextSession: AdminSession = {
+        barberId: response.barberId,
+        name: response.name,
+        role: response.role,
+        token: response.token,
+      }
+
+      sessionStorage.removeItem(tokenStorageKey)
+      sessionStorage.setItem(sessionStorageKey, JSON.stringify(nextSession))
+      setSession(nextSession)
+      setIsCheckingSession(true)
       setPassword('')
     } catch {
       setErrorMessage('Неверный пароль.')
@@ -148,10 +295,91 @@ export function AdminPage() {
 
   const handleLogout = () => {
     sessionStorage.removeItem(tokenStorageKey)
-    setToken('')
+    sessionStorage.removeItem(sessionStorageKey)
+    setSession(null)
     setAppointments([])
     setBarbers([])
     setSelectedBarberId('')
+  }
+
+  const handleCreateBarber = async () => {
+    if (!isAdminSession || !newBarberName.trim()) {
+      return
+    }
+
+    setIsLoading(true)
+    setErrorMessage('')
+
+    try {
+      const response = await createAdminBarber({
+        description: newBarberDescription,
+        experience: newBarberExperience,
+        name: newBarberName,
+        password: newBarberPassword || defaultBarberPassword,
+        photoUrl: newBarberPhotoUrl,
+        role: newBarberRole,
+        token,
+      })
+
+      setBarbers((currentBarbers) => [...currentBarbers, response.barber])
+      setSelectedBarberId((currentBarberId) => currentBarberId || response.barber.id)
+      setNewBarberDescription('')
+      setNewBarberExperience('')
+      setNewBarberName('')
+      setNewBarberPassword(defaultBarberPassword)
+      setNewBarberPhotoUrl('')
+      setNewBarberRole('')
+    } catch {
+      setErrorMessage('Не удалось добавить мастера.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleBarberPhotoChange = (file: File | undefined) => {
+    if (!file) {
+      setNewBarberPhotoUrl('')
+      return
+    }
+
+    const reader = new FileReader()
+
+    reader.addEventListener('load', () => {
+      if (typeof reader.result === 'string') {
+        setNewBarberPhotoUrl(reader.result)
+      }
+    })
+    reader.readAsDataURL(file)
+  }
+
+  const handleDeleteBarber = async (barberId: string) => {
+    if (!isAdminSession) {
+      return
+    }
+
+    setIsLoading(true)
+    setErrorMessage('')
+
+    try {
+      await deleteAdminBarber({
+        barberId,
+        token,
+      })
+
+      setBarbers((currentBarbers) => {
+        const nextBarbers = currentBarbers.filter((barber) => barber.id !== barberId)
+
+        if (selectedBarberId === barberId) {
+          setSelectedBarberId(nextBarbers[0]?.id || '')
+        }
+
+        return nextBarbers
+      })
+    } catch {
+      setErrorMessage('Не удалось удалить мастера. Проверьте, что у него нет будущих записей.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleCancelAppointment = async (appointmentId: string) => {
@@ -282,9 +510,9 @@ export function AdminPage() {
     )
   }
 
-  if (!token) {
+  if (!session) {
     return (
-      <main className="admin-page">
+      <main className="admin-page" style={adminPageStyle}>
         <form
           className="admin-login"
           onSubmit={(event) => {
@@ -294,6 +522,48 @@ export function AdminPage() {
         >
           <span className="admin-eyebrow">Gentleman's Room</span>
           <h1>Вход в админку</h1>
+          <div className="admin-login-roles" role="tablist" aria-label="Роль входа">
+            <button
+              type="button"
+              aria-selected={loginRole === 'admin'}
+              onClick={() => {
+                setLoginRole('admin')
+                setErrorMessage('')
+              }}
+            >
+              Админ
+            </button>
+            <button
+              type="button"
+              aria-selected={loginRole === 'barber'}
+              onClick={() => {
+                setLoginRole('barber')
+                setErrorMessage('')
+                loadLoginBarbers()
+              }}
+            >
+              Мастер
+            </button>
+          </div>
+          {loginRole === 'barber' && (
+            <>
+              <BookingSelect
+                disabled={isLoadingLoginBarbers}
+                label="Мастер"
+                name="loginBarber"
+                options={loginBarberOptions}
+                placeholder={
+                  isLoadingLoginBarbers ? 'Загружаем мастеров' : 'Выберите мастера'
+                }
+                value={loginBarberId}
+                onChange={(nextBarberId) => {
+                  setLoginBarberId(nextBarberId)
+                  setErrorMessage('')
+                }}
+              />
+              {loginBarbersMessage && <p className="admin-login-note">{loginBarbersMessage}</p>}
+            </>
+          )}
           <label>
             Пароль
             <input
@@ -305,7 +575,12 @@ export function AdminPage() {
               }}
             />
           </label>
-          <button type="button" disabled={isLoading || !password.trim()} onClick={handleLogin}>
+          <button
+            type="button"
+            className="admin-login-submit"
+            disabled={isLoading || !password.trim() || (loginRole === 'barber' && !loginBarberId)}
+            onClick={handleLogin}
+          >
             Войти
           </button>
           {errorMessage && <p role="status">{errorMessage}</p>}
@@ -315,12 +590,12 @@ export function AdminPage() {
   }
 
   return (
-    <main className="admin-page">
+    <main className="admin-page" style={adminPageStyle}>
       <section className="admin-shell">
         <header className="admin-header">
           <div>
-            <span className="admin-eyebrow">Админка</span>
-            <h1>Расписание мастеров</h1>
+            <span className="admin-eyebrow">{isAdminSession ? 'Админка' : 'Кабинет мастера'}</span>
+            <h1>{isAdminSession ? 'Расписание мастеров' : 'Мои записи'}</h1>
           </div>
           <button type="button" onClick={handleLogout}>
             Выйти
@@ -332,22 +607,102 @@ export function AdminPage() {
 
         {!isCheckingSession && barbers.length > 0 && (
           <>
-            <nav className="admin-barbers" aria-label="Мастера">
-              {barbers.map((barber) => (
-                <button
-                  type="button"
-                  aria-pressed={barber.id === selectedBarberId}
-                  key={barber.id}
-                  onClick={() => {
-                    setSelectedBarberId(barber.id)
-                    setSelectedTab('upcoming')
-                  }}
-                >
-                  <span>{barber.name}</span>
-                  {barber.role && <small>{barber.role}</small>}
-                </button>
-              ))}
-            </nav>
+            {isAdminSession && (
+              <>
+                <section className="admin-manager">
+                  <header>
+                    <div>
+                      <span className="admin-eyebrow">Мастера</span>
+                      <h2>Управление доступом</h2>
+                    </div>
+                  </header>
+                  <div className="admin-manager-form">
+                    <label>
+                      Имя
+                      <input
+                        type="text"
+                        value={newBarberName}
+                        onChange={(event) => setNewBarberName(event.target.value)}
+                      />
+                    </label>
+                    <label>
+                      Специализация
+                      <input
+                        type="text"
+                        value={newBarberRole}
+                        onChange={(event) => setNewBarberRole(event.target.value)}
+                      />
+                    </label>
+                    <label>
+                      Опыт
+                      <input
+                        type="text"
+                        placeholder="Например: 7 лет опыта"
+                        value={newBarberExperience}
+                        onChange={(event) => setNewBarberExperience(event.target.value)}
+                      />
+                    </label>
+                    <label>
+                      Пароль
+                      <input
+                        type="text"
+                        value={newBarberPassword}
+                        onChange={(event) => setNewBarberPassword(event.target.value)}
+                      />
+                    </label>
+                    <label className="admin-manager-form-wide">
+                      Описание
+                      <textarea
+                        rows={3}
+                        value={newBarberDescription}
+                        onChange={(event) => setNewBarberDescription(event.target.value)}
+                      />
+                    </label>
+                    <label>
+                      Фото
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(event) => handleBarberPhotoChange(event.target.files?.[0])}
+                      />
+                    </label>
+                    {newBarberPhotoUrl && (
+                      <img
+                        className="admin-manager-photo-preview"
+                        src={newBarberPhotoUrl}
+                        alt=""
+                        aria-hidden="true"
+                      />
+                    )}
+                    <button
+                      type="button"
+                      disabled={isLoading || !newBarberName.trim()}
+                      onClick={() => void handleCreateBarber()}
+                    >
+                      Добавить мастера
+                    </button>
+                  </div>
+                </section>
+
+                <nav className="admin-barbers" aria-label="Мастера">
+                  {barbers.map((barber) => (
+                    <button
+                      type="button"
+                      aria-pressed={barber.id === selectedBarberId}
+                      key={barber.id}
+                      onClick={() => {
+                        setSelectedBarberId(barber.id)
+                        setSelectedTab('upcoming')
+                      }}
+                    >
+                      <span>{barber.name}</span>
+                      {barber.role && <small>{barber.role}</small>}
+                      {barber.password && <small>Пароль: {barber.password}</small>}
+                    </button>
+                  ))}
+                </nav>
+              </>
+            )}
 
             <section className="admin-schedule">
               <header className="admin-schedule-header">
@@ -355,6 +710,16 @@ export function AdminPage() {
                   <span className="admin-eyebrow">Мастер</span>
                   <h2>{selectedBarber?.name}</h2>
                 </div>
+                {isAdminSession && selectedBarber && (
+                  <button
+                    type="button"
+                    className="admin-danger-button"
+                    disabled={isLoading}
+                    onClick={() => void handleDeleteBarber(selectedBarber.id)}
+                  >
+                    Удалить мастера
+                  </button>
+                )}
                 <div className="admin-tabs" role="tablist" aria-label="Статус записей">
                   {tabs.map((tab) => (
                     <button
@@ -370,6 +735,15 @@ export function AdminPage() {
                   ))}
                 </div>
               </header>
+
+              <div className="admin-stats" aria-label="Статистика записей">
+                {tabs.map((tab) => (
+                  <div key={tab.value}>
+                    <span>{tab.label}</span>
+                    <strong>{tabCounts[tab.value]}</strong>
+                  </div>
+                ))}
+              </div>
 
               {filteredAppointments.length === 0 && (
                 <p className="admin-muted">Записей в этой вкладке пока нет.</p>
@@ -396,7 +770,11 @@ export function AdminPage() {
                             <td>{appointment.customerName}</td>
                             <td>{appointment.customerPhone}</td>
                             <td>{appointment.service.title}</td>
-                            <td>{getStatusLabel(appointment)}</td>
+                            <td>
+                              <span className={`admin-status admin-status--${getStatusTone(appointment)}`}>
+                                {getStatusLabel(appointment)}
+                              </span>
+                            </td>
                             <td>{renderAppointmentActions(appointment)}</td>
                           </tr>
                         ))}
@@ -411,7 +789,9 @@ export function AdminPage() {
                           <strong>
                             {dateTimeFormatter.format(new Date(appointment.startsAt))}
                           </strong>
-                          <span>{getStatusLabel(appointment)}</span>
+                          <span className={`admin-status admin-status--${getStatusTone(appointment)}`}>
+                            {getStatusLabel(appointment)}
+                          </span>
                         </header>
                         <dl>
                           <div>

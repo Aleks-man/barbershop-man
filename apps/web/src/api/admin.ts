@@ -1,6 +1,11 @@
 type LoginResponse = {
+  barberId?: string
+  name?: string
+  role: AdminSessionRole
   token: string
 }
+
+export type AdminSessionRole = 'admin' | 'barber'
 
 export type AdminAppointment = {
   id: string
@@ -22,8 +27,12 @@ export type AdminAppointment = {
 export type AdminAppointmentStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED'
 
 export type AdminBarber = {
+  description?: string | null
+  experience?: string | null
   id: string
   name: string
+  password?: string
+  photoUrl?: string | null
   role: string | null
 }
 
@@ -35,9 +44,17 @@ type BarbersResponse = {
   barbers: AdminBarber[]
 }
 
-export const loginAdmin = async (password: string) => {
+export const loginAdmin = async ({
+  barberId,
+  password,
+  role,
+}: {
+  barberId?: string
+  password: string
+  role: AdminSessionRole
+}) => {
   const response = await fetch('/api/admin/login', {
-    body: JSON.stringify({ password }),
+    body: JSON.stringify({ barberId, password, role }),
     headers: {
       'Content-Type': 'application/json',
     },
@@ -49,6 +66,58 @@ export const loginAdmin = async (password: string) => {
   }
 
   return (await response.json()) as LoginResponse
+}
+
+export const createAdminBarber = async ({
+  name,
+  password,
+  description,
+  experience,
+  photoUrl,
+  role,
+  token,
+}: {
+  description: string
+  experience: string
+  name: string
+  password: string
+  photoUrl: string
+  role: string
+  token: string
+}) => {
+  const response = await fetch('/api/admin/barbers', {
+    body: JSON.stringify({ description, experience, name, password, photoUrl, role }),
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to create barber')
+  }
+
+  return response.json() as Promise<{ barber: AdminBarber }>
+}
+
+export const deleteAdminBarber = async ({
+  barberId,
+  token,
+}: {
+  barberId: string
+  token: string
+}) => {
+  const response = await fetch(`/api/admin/barbers/${barberId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    method: 'DELETE',
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to delete barber')
+  }
 }
 
 export const getAdminAppointments = async (token: string) => {

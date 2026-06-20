@@ -16,8 +16,11 @@ enum AppointmentStatus {
 model Barber {
   id           String        @id @default(cuid())
   name         String
+  password     String        @default("111111")
   role         String?
   description  String?
+  experience   String?
+  photoUrl     String?
   isActive     Boolean       @default(true)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt

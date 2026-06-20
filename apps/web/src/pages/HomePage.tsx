@@ -1,4 +1,6 @@
+﻿import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { getPublicBarbers, type PublicBarber } from "../api/barbers";
 import heroImage from "../assets/barbershop-hero.webp";
 import bookingBg from "../assets/booking-bg.webp";
 import heroBeardCard from "../assets/home-card-beard.webp";
@@ -12,56 +14,106 @@ import mastersBg from "../assets/masters-bg.webp";
 import { SocialLinks } from "../components/SocialLinks";
 import { roomGallery, workGallery } from "../data/gallery";
 
-const mapUrl = "https://yandex.ru/maps/?text=Симферополь%2C%20Смежный%2010";
+const mapUrl = "https://yandex.ru/maps/?text=РЎРёРјС„РµСЂРѕРїРѕР»СЊ%2C%20РЎРјРµР¶РЅС‹Р№%2010";
 
 const heroFeatureCards = [
   {
-    title: "Мужские стрижки",
-    text: "Индивидуальный подход к каждому образу",
+    title: "РњСѓР¶СЃРєРёРµ СЃС‚СЂРёР¶РєРё",
+    text: "РРЅРґРёРІРёРґСѓР°Р»СЊРЅС‹Р№ РїРѕРґС…РѕРґ Рє РєР°Р¶РґРѕРјСѓ РѕР±СЂР°Р·Сѓ",
     image: heroHaircutCard,
   },
   {
-    title: "Борода и контур",
-    text: "Точные линии и внимание к деталям",
+    title: "Р‘РѕСЂРѕРґР° Рё РєРѕРЅС‚СѓСЂ",
+    text: "РўРѕС‡РЅС‹Рµ Р»РёРЅРёРё Рё РІРЅРёРјР°РЅРёРµ Рє РґРµС‚Р°Р»СЏРј",
     image: heroBeardCard,
   },
   {
-    title: "Атмосфера клуба",
-    text: "Пространство для отдыха и комфорта",
+    title: "РђС‚РјРѕСЃС„РµСЂР° РєР»СѓР±Р°",
+    text: "РџСЂРѕСЃС‚СЂР°РЅСЃС‚РІРѕ РґР»СЏ РѕС‚РґС‹С…Р° Рё РєРѕРјС„РѕСЂС‚Р°",
     image: heroClubCard,
   },
 ];
+const masterPhotos = [masterAnton, masterMax, masterDenis, masterAlex]
 
-const masters = [
-  ["Антон", "Классические формы", "9 лет опыта", masterAnton],
-  ["Макс", "Фейды и текстура", "6 лет опыта", masterMax],
-  ["Денис", "Борода и бритье", "11 лет опыта", masterDenis],
-  ["Алекс", "Классические стрижки", "10 лет опыта", masterAlex],
+const fallbackMasters: PublicBarber[] = [
+  {
+    description: null,
+    experience: "9 лет опыта",
+    id: "anton",
+    name: "Антон",
+    photoUrl: masterAnton,
+    role: "Классические формы",
+  },
+  {
+    description: null,
+    experience: "6 лет опыта",
+    id: "max",
+    name: "Макс",
+    photoUrl: masterMax,
+    role: "Фейды и текстура",
+  },
+  {
+    description: null,
+    experience: "11 лет опыта",
+    id: "denis",
+    name: "Денис",
+    photoUrl: masterDenis,
+    role: "Борода и бритье",
+  },
+  {
+    description: null,
+    experience: "10 лет опыта",
+    id: "alex",
+    name: "Алекс",
+    photoUrl: masterAlex,
+    role: "Классические стрижки",
+  },
 ];
-
 const homeGallerySections = [
   {
-    title: "Наши работы",
-    text: "Стрижки, борода и детали готового образа.",
+    title: "РќР°С€Рё СЂР°Р±РѕС‚С‹",
+    text: "РЎС‚СЂРёР¶РєРё, Р±РѕСЂРѕРґР° Рё РґРµС‚Р°Р»Рё РіРѕС‚РѕРІРѕРіРѕ РѕР±СЂР°Р·Р°.",
     href: "/works",
     images: workGallery.slice(0, 4),
   },
   {
-    title: "Наша мастерская",
-    text: "Интерьер, рабочие места и атмосфера Gentleman’s Room.",
+    title: "РќР°С€Р° РјР°СЃС‚РµСЂСЃРєР°СЏ",
+    text: "РРЅС‚РµСЂСЊРµСЂ, СЂР°Р±РѕС‡РёРµ РјРµСЃС‚Р° Рё Р°С‚РјРѕСЃС„РµСЂР° GentlemanвЂ™s Room.",
     href: "/room",
     images: roomGallery.slice(0, 4),
   },
 ];
 
 export function HomePage() {
+  const [masters, setMasters] = useState(fallbackMasters)
+
+  useEffect(() => {
+    let isMounted = true
+
+    getPublicBarbers()
+      .then((nextBarbers) => {
+        if (!isMounted || nextBarbers.length === 0) {
+          return
+        }
+
+        setMasters(nextBarbers.slice(0, 4))
+      })
+      .catch((error: unknown) => {
+        console.warn('Failed to load public barbers', error)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
   return (
     <main>
       <section className="home-hero">
         <img
           className="home-hero-image"
           src={heroImage}
-          alt="Интерьер современного барбершопа с кожаным креслом и зеркальной стеной"
+          alt="РРЅС‚РµСЂСЊРµСЂ СЃРѕРІСЂРµРјРµРЅРЅРѕРіРѕ Р±Р°СЂР±РµСЂС€РѕРїР° СЃ РєРѕР¶Р°РЅС‹Рј РєСЂРµСЃР»РѕРј Рё Р·РµСЂРєР°Р»СЊРЅРѕР№ СЃС‚РµРЅРѕР№"
         />
         <div className="home-hero-shade" />
         <div className="home-hero-content">
@@ -72,15 +124,15 @@ export function HomePage() {
                 alt="Gentleman's Room"
               />
             </div>
-            <p className="eyebrow">Территория мужского стиля</p>
-            <h1>Стиль начинается с характера.</h1>
+            <p className="eyebrow">РўРµСЂСЂРёС‚РѕСЂРёСЏ РјСѓР¶СЃРєРѕРіРѕ СЃС‚РёР»СЏ</p>
+            <h1>РЎС‚РёР»СЊ РЅР°С‡РёРЅР°РµС‚СЃСЏ СЃ С…Р°СЂР°РєС‚РµСЂР°.</h1>
             <p className="hero-text">
-              Профессиональные стрижки, оформление бороды и уход за волосами в
-              атмосфере настоящего мужского клуба.
+              РџСЂРѕС„РµСЃСЃРёРѕРЅР°Р»СЊРЅС‹Рµ СЃС‚СЂРёР¶РєРё, РѕС„РѕСЂРјР»РµРЅРёРµ Р±РѕСЂРѕРґС‹ Рё СѓС…РѕРґ Р·Р° РІРѕР»РѕСЃР°РјРё РІ
+              Р°С‚РјРѕСЃС„РµСЂРµ РЅР°СЃС‚РѕСЏС‰РµРіРѕ РјСѓР¶СЃРєРѕРіРѕ РєР»СѓР±Р°.
             </p>
             <div
               className="hero-feature-grid"
-              aria-label="Основные направления"
+              aria-label="РћСЃРЅРѕРІРЅС‹Рµ РЅР°РїСЂР°РІР»РµРЅРёСЏ"
             >
               {heroFeatureCards.map((card) => (
                 <div className="hero-feature-item" key={card.title}>
@@ -98,28 +150,28 @@ export function HomePage() {
             </div>
             <div className="hero-actions">
               <Link className="primary-action" to="/booking">
-                Записаться
+                Р—Р°РїРёСЃР°С‚СЊСЃСЏ
               </Link>
               <Link className="secondary-action" to="/services">
-                Смотреть услуги
+                РЎРјРѕС‚СЂРµС‚СЊ СѓСЃР»СѓРіРё
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="trust-bar" aria-label="Коротко о барбершопе">
-        <span>★ 4.9 по отзывам</span>
-        <span>Ежедневно 10:00-21:00</span>
-        <span>Симферополь, Смежный 10</span>
+      <section className="trust-bar" aria-label="РљРѕСЂРѕС‚РєРѕ Рѕ Р±Р°СЂР±РµСЂС€РѕРїРµ">
+        <span>в… 4.9 РїРѕ РѕС‚Р·С‹РІР°Рј</span>
+        <span>Р•Р¶РµРґРЅРµРІРЅРѕ 10:00-21:00</span>
+        <span>РЎРёРјС„РµСЂРѕРїРѕР»СЊ, РЎРјРµР¶РЅС‹Р№ 10</span>
       </section>
 
       <section className="home-section home-gallery-section">
         <div className="home-section-heading">
-          <p className="eyebrow">Галерея</p>
+          <p className="eyebrow">Р“Р°Р»РµСЂРµСЏ</p>
           <h2>
-            Мужские стрижки, уход за бородой и атмосфера, в которую хочется
-            возвращаться.
+            РњСѓР¶СЃРєРёРµ СЃС‚СЂРёР¶РєРё, СѓС…РѕРґ Р·Р° Р±РѕСЂРѕРґРѕР№ Рё Р°С‚РјРѕСЃС„РµСЂР°, РІ РєРѕС‚РѕСЂСѓСЋ С…РѕС‡РµС‚СЃСЏ
+            РІРѕР·РІСЂР°С‰Р°С‚СЊСЃСЏ.
           </h2>
         </div>
         <div className="home-gallery-split">
@@ -143,7 +195,7 @@ export function HomePage() {
                 ))}
               </div>
               <Link className="section-link" to={section.href}>
-                Смотреть далее
+                РЎРјРѕС‚СЂРµС‚СЊ РґР°Р»РµРµ
               </Link>
             </article>
           ))}
@@ -156,23 +208,27 @@ export function HomePage() {
       >
         <div className="home-section masters-preview-section">
           <div className="home-section-heading">
-            <p className="eyebrow">Мастера</p>
-            <h2>Люди, которым доверяют стиль.</h2>
+            <p className="eyebrow">РњР°СЃС‚РµСЂР°</p>
+            <h2>Р›СЋРґРё, РєРѕС‚РѕСЂС‹Рј РґРѕРІРµСЂСЏСЋС‚ СЃС‚РёР»СЊ.</h2>
           </div>
           <div className="home-card-grid">
-            {masters.map(([name, role, experience, photo]) => (
-              <article className="home-card master-preview-card" key={name}>
-                <img src={photo} alt="" aria-hidden="true" />
+            {masters.map((master, index) => (
+              <article className="home-card master-preview-card" key={master.id}>
+                <img
+                  src={master.photoUrl || masterPhotos[index % masterPhotos.length]}
+                  alt=""
+                  aria-hidden="true"
+                />
                 <div className="master-preview-content">
-                  <h3>{name}</h3>
-                  <p>{role}</p>
-                  <strong>{experience}</strong>
+                  <h3>{master.name}</h3>
+                  <p>{master.role}</p>
+                  {master.experience && <strong>{master.experience}</strong>}
                 </div>
               </article>
             ))}
           </div>
           <Link className="section-link" to="/masters">
-            Выбрать мастера
+            Р’С‹Р±СЂР°С‚СЊ РјР°СЃС‚РµСЂР°
           </Link>
         </div>
       </section>
@@ -183,35 +239,35 @@ export function HomePage() {
       >
         <div className="home-section contacts-cta">
           <div>
-            <p className="eyebrow">Запись</p>
-            <h2>Готовы к новому образу?</h2>
+            <p className="eyebrow">Р—Р°РїРёСЃСЊ</p>
+            <h2>Р“РѕС‚РѕРІС‹ Рє РЅРѕРІРѕРјСѓ РѕР±СЂР°Р·Сѓ?</h2>
             <p>
-              Выберите удобное время или свяжитесь с нами любым удобным
-              способом.
+              Р’С‹Р±РµСЂРёС‚Рµ СѓРґРѕР±РЅРѕРµ РІСЂРµРјСЏ РёР»Рё СЃРІСЏР¶РёС‚РµСЃСЊ СЃ РЅР°РјРё Р»СЋР±С‹Рј СѓРґРѕР±РЅС‹Рј
+              СЃРїРѕСЃРѕР±РѕРј.
             </p>
           </div>
           <dl className="contacts-list">
             <div>
-              <dt>Адрес</dt>
+              <dt>РђРґСЂРµСЃ</dt>
               <dd>
                 <a className="address-map-link contacts-address-link" href={mapUrl} target="_blank" rel="noreferrer">
                   <span className="address-lines">
-                    <span>Симферополь</span>
-                    <span>Смежный 10</span>
+                    <span>РЎРёРјС„РµСЂРѕРїРѕР»СЊ</span>
+                    <span>РЎРјРµР¶РЅС‹Р№ 10</span>
                   </span>
                 </a>
               </dd>
             </div>
             <div>
-              <dt>Телефон</dt>
+              <dt>РўРµР»РµС„РѕРЅ</dt>
               <dd>
                 <a className="contacts-phone-link" href="tel:+74951234567">+7 (978) 123-45-67</a>
               </dd>
             </div>
             <div>
-              <dt>Время работы</dt>
+              <dt>Р’СЂРµРјСЏ СЂР°Р±РѕС‚С‹</dt>
               <dd>
-                <span className="contacts-time">ежедневно 10:00-21:00</span>
+                <span className="contacts-time">РµР¶РµРґРЅРµРІРЅРѕ 10:00-21:00</span>
               </dd>
             </div>
             <div className="contacts-list-socials">
@@ -220,13 +276,13 @@ export function HomePage() {
           </dl>
           <div className="contacts-cta-actions">
             <Link className="primary-action contacts-cta-action" to="/booking">
-              Записаться
+              Р—Р°РїРёСЃР°С‚СЊСЃСЏ
             </Link>
             <a
               className="secondary-action contacts-cta-action"
               href="tel:+74951234567"
             >
-              Позвонить
+              РџРѕР·РІРѕРЅРёС‚СЊ
             </a>
           </div>
         </div>
