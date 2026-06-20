@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { PageIntro } from '../components/PageIntro'
 import servicesBg from '../assets/services-bg-v2-sharp.webp'
 
@@ -110,14 +111,18 @@ export function ServicesPage() {
             </div>
             <div className="service-list">
               {group.items.map((service) => (
-                <article className="service-row" key={service.title}>
+                <Link
+                  className="service-row"
+                  key={service.title}
+                  to={`/booking?service=${encodeURIComponent(service.title)}`}
+                >
                   <div>
                     <p>{service.duration}</p>
                     <h2>{service.title}</h2>
                     <span>{service.details}</span>
                   </div>
                   <strong>{service.price}</strong>
-                </article>
+                </Link>
               ))}
             </div>
           </section>

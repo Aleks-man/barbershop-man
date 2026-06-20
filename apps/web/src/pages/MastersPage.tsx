@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { getPublicBarbers, type PublicBarber } from '../api/barbers'
 import { PageIntro } from '../components/PageIntro'
 import mastersBg from '../assets/masters-bg.webp'
@@ -54,7 +55,11 @@ export function MastersPage() {
       />
       <div className="master-grid">
         {pageBarbers.map((barber, index) => (
-          <article className="master-card" key={barber.id}>
+          <Link
+            className="master-card"
+            key={barber.id}
+            to={`/booking?barber=${encodeURIComponent(barber.id)}`}
+          >
             <img
               className="master-card-photo"
               src={barber.photoUrl || masterPhotos[index % masterPhotos.length]}
@@ -67,7 +72,7 @@ export function MastersPage() {
               {barber.description && <span>{barber.description}</span>}
               {barber.experience && <strong>{barber.experience}</strong>}
             </div>
-          </article>
+          </Link>
         ))}
       </div>
     </main>

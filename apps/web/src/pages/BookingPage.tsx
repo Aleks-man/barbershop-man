@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { getAvailability } from '../api/availability'
 import { createAppointment } from '../api/appointments'
 import { getBookingOptions } from '../api/bookingOptions'
@@ -6,7 +7,7 @@ import { BookingDatePicker } from '../components/BookingDatePicker'
 import { BookingSelect, type BookingSelectOption } from '../components/BookingSelect'
 import { PageIntro } from '../components/PageIntro'
 import bookingBg from '../assets/booking-bg.webp'
-import { barbers, bookingServices, bookingTimeSlots, schedule } from '../data/site'
+import { barbers, bookingServices, schedule } from '../data/site'
 
 const fallbackBarberOptions: BookingSelectOption[] = barbers.map((barber) => ({
   label: barber.name,
@@ -18,12 +19,26 @@ const fallbackServiceOptions: BookingSelectOption[] = bookingServices.map((servi
   value: service,
 }))
 
-const fallbackTimeOptions: BookingSelectOption[] = bookingTimeSlots.map((slot) => ({
-  label: slot,
-  value: slot,
-}))
-
 const phoneMask = '+7 (___) ___-__-__'
+
+const normalizeOptionText = (value: string) => value.trim().toLowerCase().replaceAll('ё', 'е')
+
+const findOptionValue = (options: BookingSelectOption[], requestedValue: string) => {
+  if (!requestedValue) {
+    return ''
+  }
+
+  const normalizedRequestedValue = normalizeOptionText(requestedValue)
+  const option = options.find(
+    (item) =>
+      item.value === requestedValue ||
+      item.label === requestedValue ||
+      normalizeOptionText(item.value) === normalizedRequestedValue ||
+      normalizeOptionText(item.label) === normalizedRequestedValue,
+  )
+
+  return option?.value ?? ''
+}
 
 const getPhoneDigits = (value: string) => {
   const digits = value.replace(/\D/g, '')
@@ -68,10 +83,15 @@ const normalizePhone = (value: string) => {
 }
 
 export function BookingPage() {
+  const [searchParams] = useSearchParams()
+  const requestedService = searchParams.get('service') ?? ''
+  const requestedBarber = searchParams.get('barber') ?? ''
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
-  const [service, setService] = useState('')
-  const [barber, setBarber] = useState('')
+  const [service, setService] = useState(() =>
+    findOptionValue(fallbackServiceOptions, requestedService),
+  )
+  const [barber, setBarber] = useState(() => findOptionValue(fallbackBarberOptions, requestedBarber))
   const [date, setDate] = useState('')
   const [time, setTime] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -84,15 +104,19 @@ export function BookingPage() {
   const isLoadingAvailability = Boolean(service && barber && date && availableTimeOptions === null)
   const timeOptions = service && barber && date
     ? availableTimeOptions ?? []
-    : fallbackTimeOptions
+    : []
   const normalizedPhone = normalizePhone(phone)
-  const timePlaceholder = !date
-    ? 'Сначала выберите дату'
-    : isLoadingAvailability
-      ? 'Загружаем свободное время'
-      : timeOptions.length > 0
-        ? 'Выберите время'
-        : 'Нет свободного времени'
+  const timePlaceholder = !service
+    ? 'Сначала выберите услугу'
+    : !barber
+      ? 'Сначала выберите мастера'
+      : !date
+        ? 'Сначала выберите дату'
+        : isLoadingAvailability
+          ? 'Загружаем свободное время'
+          : timeOptions.length > 0
+            ? 'Выберите время'
+            : 'Нет свободного времени'
   const isFormReady = Boolean(
     name.trim() &&
       normalizedPhone &&
@@ -102,6 +126,13 @@ export function BookingPage() {
       time.trim(),
   )
   const canSubmit = isFormReady && !isSubmitting
+  const submitButtonText = isSubmitting
+    ? 'Записываем...'
+    : !service
+      ? 'Сначала выберите услугу'
+      : !barber
+        ? 'Сначала выберите мастера'
+        : 'Записаться'
 
   useEffect(() => {
     if (!statusMessage) {
@@ -126,6 +157,18 @@ export function BookingPage() {
 
         setBarberOptions(options.barberOptions)
         setServiceOptions(options.serviceOptions)
+        setService(
+          (currentService) =>
+            findOptionValue(options.serviceOptions, currentService) ||
+            findOptionValue(options.serviceOptions, requestedService) ||
+            currentService,
+        )
+        setBarber(
+          (currentBarber) =>
+            findOptionValue(options.barberOptions, currentBarber) ||
+            findOptionValue(options.barberOptions, requestedBarber) ||
+            currentBarber,
+        )
       })
       .catch((error: unknown) => {
         console.warn('Failed to load booking options from API', error)
@@ -134,7 +177,7 @@ export function BookingPage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [requestedBarber, requestedService])
 
   useEffect(() => {
     if (!service || !barber || !date) {
@@ -252,9 +295,15 @@ export function BookingPage() {
           }}
         />
         <BookingDatePicker
-          disabled={!barber}
+          disabled={!service || !barber}
           label="Дата"
-          placeholder={barber ? 'Выберите дату' : 'Сначала выберите мастера'}
+          placeholder={
+            !service
+              ? 'Сначала выберите услугу'
+              : barber
+                ? 'Выберите дату'
+                : 'Сначала выберите мастера'
+          }
           value={date}
           onChange={(nextDate) => {
             setDate(nextDate)
@@ -264,7 +313,7 @@ export function BookingPage() {
           }}
         />
         <BookingSelect
-          disabled={!date || isLoadingAvailability || timeOptions.length === 0}
+          disabled={!service || !barber || !date || isLoadingAvailability || timeOptions.length === 0}
           label="Время"
           name="time"
           options={timeOptions}
@@ -304,7 +353,7 @@ export function BookingPage() {
           />
         </label>
         <button type="button" disabled={!canSubmit} onClick={handleSubmit}>
-          {isSubmitting ? 'Записываем...' : 'Записаться'}
+          {submitButtonText}
         </button>
       </form>
       {statusMessage && (

@@ -16,7 +16,16 @@
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface);
+  color: inherit;
+  cursor: pointer;
   isolation: isolate;
+  text-decoration: none;
+}
+
+.master-card:focus-visible {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(190, 146, 77, 0.18);
+  outline: none;
 }
 
 .master-card::before {
