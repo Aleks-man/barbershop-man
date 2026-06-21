@@ -1176,47 +1176,53 @@ export function AdminPage() {
                     <input type="text" value={timeOffBarber?.name ?? session.name ?? ''} readOnly />
                   </label>
                 )}
-                <BookingDatePicker
-                  label="Дата начала"
-                  placeholder="Выберите дату"
-                  value={timeOffStartDate}
-                  onChange={(nextDate) => {
-                    setTimeOffStartDate(nextDate)
-                    setTimeOffEndDate((currentDate) => currentDate || nextDate)
-                    setErrorMessage('')
-                  }}
-                />
-                <BookingSelect
-                  label="Время начала"
-                  name="timeOffStart"
-                  options={timeOptions}
-                  placeholder="Начало"
-                  value={timeOffStartTime}
-                  onChange={(nextTime) => {
-                    setTimeOffStartTime(nextTime)
-                    setErrorMessage('')
-                  }}
-                />
-                <BookingDatePicker
-                  label="Дата конца"
-                  placeholder="Выберите дату"
-                  value={timeOffEndDate}
-                  onChange={(nextDate) => {
-                    setTimeOffEndDate(nextDate)
-                    setErrorMessage('')
-                  }}
-                />
-                <BookingSelect
-                  label="Время конца"
-                  name="timeOffEnd"
-                  options={timeOptions}
-                  placeholder="Конец"
-                  value={timeOffEndTime}
-                  onChange={(nextTime) => {
-                    setTimeOffEndTime(nextTime)
-                    setErrorMessage('')
-                  }}
-                />
+                <fieldset className="admin-availability-period">
+                  <legend>Начало периода</legend>
+                  <BookingDatePicker
+                    label="Дата"
+                    placeholder="Выберите дату"
+                    value={timeOffStartDate}
+                    onChange={(nextDate) => {
+                      setTimeOffStartDate(nextDate)
+                      setTimeOffEndDate((currentDate) => currentDate || nextDate)
+                      setErrorMessage('')
+                    }}
+                  />
+                  <BookingSelect
+                    label="Время"
+                    name="timeOffStart"
+                    options={timeOptions}
+                    placeholder="Начало"
+                    value={timeOffStartTime}
+                    onChange={(nextTime) => {
+                      setTimeOffStartTime(nextTime)
+                      setErrorMessage('')
+                    }}
+                  />
+                </fieldset>
+                <fieldset className="admin-availability-period">
+                  <legend>Конец периода</legend>
+                  <BookingDatePicker
+                    label="Дата"
+                    placeholder="Выберите дату"
+                    value={timeOffEndDate}
+                    onChange={(nextDate) => {
+                      setTimeOffEndDate(nextDate)
+                      setErrorMessage('')
+                    }}
+                  />
+                  <BookingSelect
+                    label="Время"
+                    name="timeOffEnd"
+                    options={timeOptions}
+                    placeholder="Конец"
+                    value={timeOffEndTime}
+                    onChange={(nextTime) => {
+                      setTimeOffEndTime(nextTime)
+                      setErrorMessage('')
+                    }}
+                  />
+                </fieldset>
                 <label className="admin-availability-reason">
                   Причина
                   <input

@@ -715,6 +715,28 @@
   line-height: 1.4;
 }
 
+.admin-availability-period {
+  display: grid;
+  grid-column: span 2;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 0.48fr);
+  gap: 0.72rem;
+  min-width: 0;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(18, 20, 18, 0.22);
+  padding: 0.82rem;
+}
+
+.admin-availability-period legend {
+  color: var(--gold);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  padding: 0 0.32rem;
+  text-transform: uppercase;
+}
+
 .admin-availability-form input {
   min-height: 42px;
   border: 1px solid var(--line);
@@ -1076,6 +1098,11 @@
   }
 
   .admin-availability-form {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-availability-period {
+    grid-column: auto;
     grid-template-columns: 1fr;
   }
 
