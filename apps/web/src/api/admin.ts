@@ -30,6 +30,7 @@ export type AdminBarber = {
   description?: string | null
   experience?: string | null
   id: string
+  isActive?: boolean
   name: string
   password?: string
   photoUrl?: string | null
@@ -141,6 +142,27 @@ export const hideAdminBarber = async ({
   if (!response.ok) {
     throw new Error('Failed to hide barber')
   }
+}
+
+export const restoreAdminBarber = async ({
+  barberId,
+  token,
+}: {
+  barberId: string
+  token: string
+}) => {
+  const response = await fetch(`/api/admin/barbers/${barberId}/restore`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    method: 'PATCH',
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to restore barber')
+  }
+
+  return response.json() as Promise<{ barber: AdminBarber }>
 }
 
 export const getAdminAppointments = async (token: string) => {

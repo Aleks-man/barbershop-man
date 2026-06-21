@@ -497,6 +497,10 @@
   max-width: 70%;
 }
 
+.master-preview-content p {
+max-width: 15ch;
+}
+
 .contacts-cta {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(280px, 0.8fr);
@@ -510,7 +514,7 @@
 }
 
 .contacts-cta p:not(.eyebrow) {
-  max-width: 48ch;
+  max-width: 38ch;
   margin: 0.75rem 0 0;
   color: var(--soft);
 }

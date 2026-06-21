@@ -3,22 +3,9 @@ import { Link } from 'react-router-dom'
 import { getPublicBarbers, type PublicBarber } from '../api/barbers'
 import { PageIntro } from '../components/PageIntro'
 import mastersBg from '../assets/masters-bg.webp'
-import masterAlex from '../assets/masters/master-alex.webp'
-import masterAnton from '../assets/masters/master-anton.webp'
-import masterDenis from '../assets/masters/master-denis.webp'
-import masterMax from '../assets/masters/master-max.webp'
-import { barbers } from '../data/site'
+import { fallbackPublicBarbers, getBarberPhoto } from '../data/barberPresentation'
 
-const masterPhotos = [masterAnton, masterMax, masterDenis, masterAlex]
-
-const fallbackBarbers: PublicBarber[] = barbers.map((barber, index) => ({
-  description: barber.note,
-  experience: barber.experience,
-  id: barber.name,
-  name: barber.name,
-  photoUrl: masterPhotos[index] ?? masterAnton,
-  role: barber.role,
-}))
+const fallbackBarbers: PublicBarber[] = fallbackPublicBarbers
 
 export function MastersPage() {
   const [pageBarbers, setPageBarbers] = useState(fallbackBarbers)
@@ -28,7 +15,7 @@ export function MastersPage() {
 
     getPublicBarbers()
       .then((nextBarbers) => {
-        if (!isMounted || nextBarbers.length === 0) {
+        if (!isMounted) {
           return
         }
 
@@ -54,7 +41,7 @@ export function MastersPage() {
         text="Познакомьтесь с нашей командой, изучите работы и выберите барбера, который понимает, каким должен быть ваш образ."
       />
       <div className="master-grid">
-        {pageBarbers.map((barber, index) => (
+        {pageBarbers.map((barber) => (
           <Link
             className="master-card"
             key={barber.id}
@@ -62,7 +49,7 @@ export function MastersPage() {
           >
             <img
               className="master-card-photo"
-              src={barber.photoUrl || masterPhotos[index % masterPhotos.length]}
+              src={getBarberPhoto(barber)}
               alt=""
               aria-hidden="true"
             />

@@ -7,6 +7,7 @@ import {
   hideAdminBarber,
   loginAdmin,
   rescheduleAdminAppointment,
+  restoreAdminBarber,
   uploadAdminBarberPhoto,
   updateAdminAppointmentStatus,
   type AdminAppointment,
@@ -51,7 +52,6 @@ const readStoredSession = () => {
 
 type AdminTab = 'upcoming' | 'completed' | 'cancelled'
 type AppointmentPeriod = 'all' | 'today' | 'tomorrow' | 'custom'
-type AppointmentScope = 'selected' | 'all'
 type AdminView = 'schedule' | 'clients' | 'barbers'
 
 const tabs: Array<{ label: string; value: AdminTab }> = [
@@ -171,7 +171,6 @@ export function AdminPage() {
   const [adminView, setAdminView] = useState<AdminView>('schedule')
   const [appointmentDate, setAppointmentDate] = useState('')
   const [appointmentPeriod, setAppointmentPeriod] = useState<AppointmentPeriod>('all')
-  const [appointmentScope, setAppointmentScope] = useState<AppointmentScope>('selected')
   const [clientSearch, setClientSearch] = useState('')
   const [selectedBarberId, setSelectedBarberId] = useState('')
   const [selectedTab, setSelectedTab] = useState<AdminTab>('upcoming')
@@ -263,7 +262,7 @@ export function AdminPage() {
         setSelectedBarberId((currentBarberId) =>
           session.role === 'barber'
             ? session.barberId || nextBarbers[0]?.id || ''
-            : currentBarberId || nextBarbers[0]?.id || '',
+            : currentBarberId,
         )
         setErrorMessage('')
       })
@@ -280,8 +279,10 @@ export function AdminPage() {
       })
   }, [session])
 
-  const selectedBarber = barbers.find((barber) => barber.id === selectedBarberId)
-  const canViewAllBarbers = isAdminSession && appointmentScope === 'all'
+  const activeBarbers = useMemo(() => barbers.filter((barber) => barber.isActive !== false), [barbers])
+  const hiddenBarbers = useMemo(() => barbers.filter((barber) => barber.isActive === false), [barbers])
+  const selectedBarber = activeBarbers.find((barber) => barber.id === selectedBarberId)
+  const canViewAllBarbers = isAdminSession && !selectedBarberId
   const scopedAppointments = useMemo(
     () =>
       canViewAllBarbers
@@ -431,7 +432,6 @@ export function AdminPage() {
     setAdminView('schedule')
     setAppointmentDate('')
     setAppointmentPeriod('all')
-    setAppointmentScope('selected')
     setClientSearch('')
     setSelectedBarberId('')
   }
@@ -508,16 +508,40 @@ export function AdminPage() {
       })
 
       setBarbers((currentBarbers) => {
-        const nextBarbers = currentBarbers.filter((barber) => barber.id !== barberId)
-
         if (selectedBarberId === barberId) {
-          setSelectedBarberId(nextBarbers[0]?.id || '')
+          setSelectedBarberId('')
         }
 
-        return nextBarbers
+        return currentBarbers.map((barber) =>
+          barber.id === barberId ? { ...barber, isActive: false } : barber,
+        )
       })
     } catch {
       setErrorMessage('Не удалось скрыть мастера. Проверьте, что у него нет будущих записей.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleRestoreBarber = async (barberId: string) => {
+    if (!isAdminSession) {
+      return
+    }
+
+    setIsLoading(true)
+    setErrorMessage('')
+
+    try {
+      const response = await restoreAdminBarber({
+        barberId,
+        token,
+      })
+
+      setBarbers((currentBarbers) =>
+        currentBarbers.map((barber) => (barber.id === barberId ? response.barber : barber)),
+      )
+    } catch {
+      setErrorMessage('Не удалось восстановить мастера.')
     } finally {
       setIsLoading(false)
     }
@@ -765,17 +789,27 @@ export function AdminPage() {
         {isCheckingSession && <p className="admin-muted">Загружаем расписание...</p>}
         {errorMessage && <p className="admin-alert">{errorMessage}</p>}
 
-        {!isCheckingSession && barbers.length > 0 && adminView === 'schedule' && (
+        {!isCheckingSession && activeBarbers.length > 0 && adminView === 'schedule' && (
           <>
             {isAdminSession && (
               <nav className="admin-barbers" aria-label="Мастера">
-                {barbers.map((barber) => (
+                <button
+                  type="button"
+                  aria-pressed={!selectedBarberId}
+                  onClick={() => {
+                    setSelectedBarberId('')
+                    setSelectedTab('upcoming')
+                  }}
+                >
+                  <span>Все мастера</span>
+                  <small>Общее расписание</small>
+                </button>
+                {activeBarbers.map((barber) => (
                   <button
                     type="button"
                     aria-pressed={barber.id === selectedBarberId}
                     key={barber.id}
                     onClick={() => {
-                      setAppointmentScope('selected')
                       setSelectedBarberId(barber.id)
                       setSelectedTab('upcoming')
                     }}
@@ -806,27 +840,6 @@ export function AdminPage() {
               </header>
 
               <div className="admin-schedule-tools">
-                {isAdminSession && (
-                  <div className="admin-filter-group">
-                    <span>Показывать</span>
-                    <div className="admin-segmented" aria-label="Область записей">
-                      <button
-                        type="button"
-                        aria-pressed={appointmentScope === 'selected'}
-                        onClick={() => setAppointmentScope('selected')}
-                      >
-                        Выбранный мастер
-                      </button>
-                      <button
-                        type="button"
-                        aria-pressed={appointmentScope === 'all'}
-                        onClick={() => setAppointmentScope('all')}
-                      >
-                        Все мастера
-                      </button>
-                    </div>
-                  </div>
-                )}
                 <div className="admin-filter-group">
                   <span>Период</span>
                   <div className="admin-segmented" aria-label="Период записей">
@@ -1123,13 +1136,12 @@ export function AdminPage() {
                 </div>
               </header>
               <nav className="admin-barbers" aria-label="Мастера">
-                {barbers.map((barber) => (
+                {activeBarbers.map((barber) => (
                   <button
                     type="button"
                     aria-pressed={barber.id === selectedBarberId}
                     key={barber.id}
                     onClick={() => {
-                      setAppointmentScope('selected')
                       setSelectedBarberId(barber.id)
                       setAdminView('schedule')
                       setSelectedTab('upcoming')
@@ -1142,10 +1154,37 @@ export function AdminPage() {
                 ))}
               </nav>
             </section>
+
+            <section className="admin-manager">
+              <header>
+                <div>
+                  <span className="admin-eyebrow">Архив</span>
+                  <h2>Скрытые мастера</h2>
+                </div>
+              </header>
+              {hiddenBarbers.length === 0 ? (
+                <p className="admin-muted">Скрытых мастеров пока нет.</p>
+              ) : (
+                <nav className="admin-barbers" aria-label="Скрытые мастера">
+                  {hiddenBarbers.map((barber) => (
+                    <button
+                      type="button"
+                      aria-pressed="false"
+                      key={barber.id}
+                      onClick={() => void handleRestoreBarber(barber.id)}
+                    >
+                      <span>{barber.name}</span>
+                      {barber.role && <small>{barber.role}</small>}
+                      <small>Нажмите, чтобы восстановить</small>
+                    </button>
+                  ))}
+                </nav>
+              )}
+            </section>
           </section>
         )}
 
-        {!isCheckingSession && barbers.length === 0 && (
+        {!isCheckingSession && activeBarbers.length === 0 && adminView !== 'barbers' && (
           <p className="admin-muted">Мастера пока не добавлены.</p>
         )}
       </section>

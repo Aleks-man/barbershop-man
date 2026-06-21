@@ -1,15 +1,14 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { getPublicBarbers, type PublicBarber } from "../api/barbers";
 import heroImage from "../assets/barbershop-hero.webp";
 import bookingBg from "../assets/booking-bg.webp";
 import heroBeardCard from "../assets/home-card-beard.webp";
 import heroClubCard from "../assets/home-card-club.webp";
 import heroHaircutCard from "../assets/home-card-haircut.webp";
-import masterAlex from "../assets/masters/master-alex.webp";
-import masterAnton from "../assets/masters/master-anton.webp";
-import masterDenis from "../assets/masters/master-denis.webp";
-import masterMax from "../assets/masters/master-max.webp";
 import mastersBg from "../assets/masters-bg.webp";
 import { SocialLinks } from "../components/SocialLinks";
+import { fallbackPublicBarbers, getBarberPhoto } from "../data/barberPresentation";
 import { roomGallery, workGallery } from "../data/gallery";
 
 const mapUrl = "https://yandex.ru/maps/?text=Симферополь%2C%20Смежный%2010";
@@ -32,13 +31,6 @@ const heroFeatureCards = [
   },
 ];
 
-const masters = [
-  ["Антон", "Классические формы", "9 лет опыта", masterAnton],
-  ["Макс", "Фейды и текстура", "6 лет опыта", masterMax],
-  ["Денис", "Борода и бритье", "11 лет опыта", masterDenis],
-  ["Алекс", "Классические стрижки", "10 лет опыта", masterAlex],
-];
-
 const homeGallerySections = [
   {
     title: "Наши работы",
@@ -55,6 +47,28 @@ const homeGallerySections = [
 ];
 
 export function HomePage() {
+  const [previewBarbers, setPreviewBarbers] = useState<PublicBarber[]>(fallbackPublicBarbers)
+
+  useEffect(() => {
+    let isMounted = true
+
+    getPublicBarbers()
+      .then((nextBarbers) => {
+        if (!isMounted) {
+          return
+        }
+
+        setPreviewBarbers(nextBarbers)
+      })
+      .catch((error: unknown) => {
+        console.warn('Failed to load public barbers', error)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
   return (
     <main>
       <section className="home-hero">
@@ -160,13 +174,13 @@ export function HomePage() {
             <h2>Люди, которым доверяют стиль.</h2>
           </div>
           <div className="home-card-grid">
-            {masters.map(([name, role, experience, photo]) => (
-              <article className="home-card master-preview-card" key={name}>
-                <img src={photo} alt="" aria-hidden="true" />
+            {previewBarbers.map((barber) => (
+              <article className="home-card master-preview-card" key={barber.id}>
+                <img src={getBarberPhoto(barber)} alt="" aria-hidden="true" />
                 <div className="master-preview-content">
-                  <h3>{name}</h3>
-                  <p>{role}</p>
-                  <strong>{experience}</strong>
+                  <h3>{barber.name}</h3>
+                  {barber.role && <p>{barber.role}</p>}
+                  {barber.experience && <strong>{barber.experience}</strong>}
                 </div>
               </article>
             ))}

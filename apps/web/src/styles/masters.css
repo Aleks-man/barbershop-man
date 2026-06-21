@@ -67,6 +67,7 @@
 
 .master-card p {
   margin: 0 0 0.35rem;
+  max-width: 20ch;
   color: var(--gold);
   font-size: 0.84rem;
 }
@@ -81,6 +82,7 @@
 
 .master-card span {
   display: block;
+  max-width: 20ch;
   margin-top: 0.75rem;
   color: var(--gold);
 }
@@ -150,7 +152,6 @@
   }
 
   .master-card span {
-    max-width: 20ch;
     overflow-wrap: anywhere;
   }
 
@@ -165,3 +166,7 @@
     overflow-wrap: anywhere;
   }
 }
+
+  .master-card span {
+    max-width: 15ch;
+  }

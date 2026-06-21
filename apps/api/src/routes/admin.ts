@@ -267,9 +267,7 @@ adminRouter.get('/barbers', requireStaff, async (_request, response, next) => {
               id: session.barberId,
               isActive: true,
             }
-          : {
-              isActive: true,
-            },
+          : undefined,
       orderBy: {
         name: 'asc',
       },
@@ -280,6 +278,7 @@ adminRouter.get('/barbers', requireStaff, async (_request, response, next) => {
         description: true,
         experience: true,
         photoUrl: true,
+        isActive: true,
         role: true,
       },
     })
@@ -320,6 +319,7 @@ adminRouter.post('/barbers', requireAdmin, async (request, response, next) => {
         description: true,
         experience: true,
         id: true,
+        isActive: true,
         name: true,
         password: true,
         photoUrl: true,
@@ -402,6 +402,35 @@ adminRouter.delete('/barbers/:id', requireAdmin, async (request, response, next)
     })
 
     response.status(204).send()
+  } catch (error) {
+    next(error)
+  }
+})
+
+adminRouter.patch('/barbers/:id/restore', requireAdmin, async (request, response, next) => {
+  try {
+    const barberId = String(request.params.id ?? '')
+
+    const barber = await prisma.barber.update({
+      where: {
+        id: barberId,
+      },
+      data: {
+        isActive: true,
+      },
+      select: {
+        description: true,
+        experience: true,
+        id: true,
+        isActive: true,
+        name: true,
+        password: true,
+        photoUrl: true,
+        role: true,
+      },
+    })
+
+    response.json({ barber })
   } catch (error) {
     next(error)
   }
