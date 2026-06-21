@@ -50,9 +50,9 @@ const readStoredSession = () => {
 }
 
 type AdminTab = 'upcoming' | 'completed' | 'cancelled'
-type AppointmentPeriod = 'all' | 'today' | 'tomorrow'
+type AppointmentPeriod = 'all' | 'today' | 'tomorrow' | 'custom'
 type AppointmentScope = 'selected' | 'all'
-type AdminView = 'schedule' | 'clients'
+type AdminView = 'schedule' | 'clients' | 'barbers'
 
 const tabs: Array<{ label: string; value: AdminTab }> = [
   { label: 'Ожидают', value: 'upcoming' },
@@ -69,6 +69,7 @@ const periods: Array<{ label: string; value: AppointmentPeriod }> = [
 const adminViews: Array<{ label: string; value: AdminView }> = [
   { label: 'Расписание', value: 'schedule' },
   { label: 'Клиенты', value: 'clients' },
+  { label: 'Мастера', value: 'barbers' },
 ]
 
 const dateTimeFormatter = new Intl.DateTimeFormat('ru-RU', {
@@ -127,14 +128,23 @@ const isSameDay = (date: Date, targetDate: Date) =>
   date.getMonth() === targetDate.getMonth() &&
   date.getDate() === targetDate.getDate()
 
-const matchesPeriod = (appointment: AdminAppointment, period: AppointmentPeriod) => {
+const matchesPeriod = (
+  appointment: AdminAppointment,
+  period: AppointmentPeriod,
+  customDate: string,
+) => {
   if (period === 'all') {
     return true
   }
 
   const appointmentDate = new Date(appointment.startsAt)
   const today = getDayStart(new Date())
-  const targetDate = period === 'today' ? today : addDays(today, 1)
+  const targetDate =
+    period === 'custom' && customDate
+      ? getDayStart(new Date(`${customDate}T00:00:00`))
+      : period === 'today'
+        ? today
+        : addDays(today, 1)
 
   return isSameDay(appointmentDate, targetDate)
 }
@@ -159,6 +169,7 @@ export function AdminPage() {
   const [newBarberRole, setNewBarberRole] = useState('')
   const [password, setPassword] = useState('')
   const [adminView, setAdminView] = useState<AdminView>('schedule')
+  const [appointmentDate, setAppointmentDate] = useState('')
   const [appointmentPeriod, setAppointmentPeriod] = useState<AppointmentPeriod>('all')
   const [appointmentScope, setAppointmentScope] = useState<AppointmentScope>('selected')
   const [clientSearch, setClientSearch] = useState('')
@@ -279,8 +290,11 @@ export function AdminPage() {
     [appointments, canViewAllBarbers, selectedBarberId],
   )
   const periodAppointments = useMemo(
-    () => scopedAppointments.filter((appointment) => matchesPeriod(appointment, appointmentPeriod)),
-    [appointmentPeriod, scopedAppointments],
+    () =>
+      scopedAppointments.filter((appointment) =>
+        matchesPeriod(appointment, appointmentPeriod, appointmentDate),
+      ),
+    [appointmentDate, appointmentPeriod, scopedAppointments],
   )
   const filteredAppointments = useMemo(
     () =>
@@ -415,6 +429,7 @@ export function AdminPage() {
     setAppointments([])
     setBarbers([])
     setAdminView('schedule')
+    setAppointmentDate('')
     setAppointmentPeriod('all')
     setAppointmentScope('selected')
     setClientSearch('')
@@ -753,102 +768,23 @@ export function AdminPage() {
         {!isCheckingSession && barbers.length > 0 && adminView === 'schedule' && (
           <>
             {isAdminSession && (
-              <>
-                <section className="admin-manager">
-                  <header>
-                    <div>
-                      <span className="admin-eyebrow">Мастера</span>
-                      <h2>Управление доступом</h2>
-                    </div>
-                  </header>
-                  <div className="admin-manager-form">
-                    <label>
-                      Имя
-                      <input
-                        type="text"
-                        value={newBarberName}
-                        onChange={(event) => setNewBarberName(event.target.value)}
-                      />
-                    </label>
-                    <label>
-                      Специализация
-                      <input
-                        type="text"
-                        value={newBarberRole}
-                        onChange={(event) => setNewBarberRole(event.target.value)}
-                      />
-                    </label>
-                    <label>
-                      Опыт
-                      <input
-                        type="text"
-                        placeholder="Например: 7 лет опыта"
-                        value={newBarberExperience}
-                        onChange={(event) => setNewBarberExperience(event.target.value)}
-                      />
-                    </label>
-                    <label>
-                      Пароль
-                      <input
-                        type="text"
-                        value={newBarberPassword}
-                        onChange={(event) => setNewBarberPassword(event.target.value)}
-                      />
-                    </label>
-                    <label className="admin-manager-form-wide">
-                      Описание
-                      <textarea
-                        rows={3}
-                        value={newBarberDescription}
-                        onChange={(event) => setNewBarberDescription(event.target.value)}
-                      />
-                    </label>
-                    <label className="admin-photo-upload">
-                      Фото
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(event) => handleBarberPhotoChange(event.target.files?.[0])}
-                      />
-                      <span>{newBarberPhotoUrl ? 'Заменить фото' : 'Добавить фото'}</span>
-                    </label>
-                    {newBarberPhotoUrl && (
-                      <img
-                        className="admin-manager-photo-preview"
-                        src={newBarberPhotoUrl}
-                        alt=""
-                        aria-hidden="true"
-                      />
-                    )}
-                    <button
-                      type="button"
-                      disabled={isLoading || !newBarberName.trim()}
-                      onClick={() => void handleCreateBarber()}
-                    >
-                      Добавить мастера
-                    </button>
-                  </div>
-                </section>
-
-                <nav className="admin-barbers" aria-label="Мастера">
-                  {barbers.map((barber) => (
-                    <button
-                      type="button"
-                      aria-pressed={barber.id === selectedBarberId}
-                      key={barber.id}
-                      onClick={() => {
-                        setAppointmentScope('selected')
-                        setSelectedBarberId(barber.id)
-                        setSelectedTab('upcoming')
-                      }}
-                    >
-                      <span>{barber.name}</span>
-                      {barber.role && <small>{barber.role}</small>}
-                      {barber.password && <small>Пароль: {barber.password}</small>}
-                    </button>
-                  ))}
-                </nav>
-              </>
+              <nav className="admin-barbers" aria-label="Мастера">
+                {barbers.map((barber) => (
+                  <button
+                    type="button"
+                    aria-pressed={barber.id === selectedBarberId}
+                    key={barber.id}
+                    onClick={() => {
+                      setAppointmentScope('selected')
+                      setSelectedBarberId(barber.id)
+                      setSelectedTab('upcoming')
+                    }}
+                  >
+                    <span>{barber.name}</span>
+                    {barber.role && <small>{barber.role}</small>}
+                  </button>
+                ))}
+              </nav>
             )}
 
             <section className="admin-schedule">
@@ -871,34 +807,55 @@ export function AdminPage() {
 
               <div className="admin-schedule-tools">
                 {isAdminSession && (
-                  <div className="admin-segmented" aria-label="Область записей">
-                    <button
-                      type="button"
-                      aria-pressed={appointmentScope === 'selected'}
-                      onClick={() => setAppointmentScope('selected')}
-                    >
-                      Выбранный мастер
-                    </button>
-                    <button
-                      type="button"
-                      aria-pressed={appointmentScope === 'all'}
-                      onClick={() => setAppointmentScope('all')}
-                    >
-                      Все мастера
-                    </button>
+                  <div className="admin-filter-group">
+                    <span>Показывать</span>
+                    <div className="admin-segmented" aria-label="Область записей">
+                      <button
+                        type="button"
+                        aria-pressed={appointmentScope === 'selected'}
+                        onClick={() => setAppointmentScope('selected')}
+                      >
+                        Выбранный мастер
+                      </button>
+                      <button
+                        type="button"
+                        aria-pressed={appointmentScope === 'all'}
+                        onClick={() => setAppointmentScope('all')}
+                      >
+                        Все мастера
+                      </button>
+                    </div>
                   </div>
                 )}
-                <div className="admin-segmented" aria-label="Период записей">
-                  {periods.map((period) => (
-                    <button
-                      type="button"
-                      aria-pressed={appointmentPeriod === period.value}
-                      key={period.value}
-                      onClick={() => setAppointmentPeriod(period.value)}
-                    >
-                      {period.label}
-                    </button>
-                  ))}
+                <div className="admin-filter-group">
+                  <span>Период</span>
+                  <div className="admin-segmented" aria-label="Период записей">
+                    {periods.map((period) => (
+                      <button
+                        type="button"
+                        aria-pressed={appointmentPeriod === period.value}
+                        key={period.value}
+                        onClick={() => {
+                          setAppointmentDate('')
+                          setAppointmentPeriod(period.value)
+                        }}
+                      >
+                        {period.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="admin-period-date">
+                    <BookingDatePicker
+                      allowPastDates
+                      label="Дата"
+                      placeholder="Выбрать дату"
+                      value={appointmentDate}
+                      onChange={(nextDate) => {
+                        setAppointmentDate(nextDate)
+                        setAppointmentPeriod('custom')
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -1077,6 +1034,114 @@ export function AdminPage() {
                 </div>
               </>
             )}
+          </section>
+        )}
+
+        {!isCheckingSession && isAdminSession && adminView === 'barbers' && (
+          <section className="admin-manager-page">
+            <section className="admin-manager">
+              <header>
+                <div>
+                  <span className="admin-eyebrow">Мастера</span>
+                  <h2>Добавить мастера</h2>
+                </div>
+              </header>
+              <div className="admin-manager-form">
+                <label>
+                  Имя
+                  <input
+                    type="text"
+                    value={newBarberName}
+                    onChange={(event) => setNewBarberName(event.target.value)}
+                  />
+                </label>
+                <label>
+                  Специализация
+                  <input
+                    type="text"
+                    value={newBarberRole}
+                    onChange={(event) => setNewBarberRole(event.target.value)}
+                  />
+                </label>
+                <label>
+                  Опыт
+                  <input
+                    type="text"
+                    placeholder="Например: 7 лет опыта"
+                    value={newBarberExperience}
+                    onChange={(event) => setNewBarberExperience(event.target.value)}
+                  />
+                </label>
+                <label>
+                  Пароль
+                  <input
+                    type="text"
+                    value={newBarberPassword}
+                    onChange={(event) => setNewBarberPassword(event.target.value)}
+                  />
+                </label>
+                <label className="admin-manager-form-wide">
+                  Описание
+                  <textarea
+                    rows={3}
+                    value={newBarberDescription}
+                    onChange={(event) => setNewBarberDescription(event.target.value)}
+                  />
+                </label>
+                <label className="admin-photo-upload">
+                  Фото
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => handleBarberPhotoChange(event.target.files?.[0])}
+                  />
+                  <span>{newBarberPhotoUrl ? 'Заменить фото' : 'Добавить фото'}</span>
+                </label>
+                {newBarberPhotoUrl && (
+                  <img
+                    className="admin-manager-photo-preview"
+                    src={newBarberPhotoUrl}
+                    alt=""
+                    aria-hidden="true"
+                  />
+                )}
+                <button
+                  type="button"
+                  disabled={isLoading || !newBarberName.trim()}
+                  onClick={() => void handleCreateBarber()}
+                >
+                  Добавить мастера
+                </button>
+              </div>
+            </section>
+
+            <section className="admin-manager">
+              <header>
+                <div>
+                  <span className="admin-eyebrow">Команда</span>
+                  <h2>Активные мастера</h2>
+                </div>
+              </header>
+              <nav className="admin-barbers" aria-label="Мастера">
+                {barbers.map((barber) => (
+                  <button
+                    type="button"
+                    aria-pressed={barber.id === selectedBarberId}
+                    key={barber.id}
+                    onClick={() => {
+                      setAppointmentScope('selected')
+                      setSelectedBarberId(barber.id)
+                      setAdminView('schedule')
+                      setSelectedTab('upcoming')
+                    }}
+                  >
+                    <span>{barber.name}</span>
+                    {barber.role && <small>{barber.role}</small>}
+                    {barber.password && <small>Пароль: {barber.password}</small>}
+                  </button>
+                ))}
+              </nav>
+            </section>
           </section>
         )}
 

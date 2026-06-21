@@ -1,6 +1,7 @@
 import { useId, useMemo, useState } from 'react'
 
 type BookingDatePickerProps = {
+  allowPastDates?: boolean
   disabled?: boolean
   label: string
   placeholder: string
@@ -57,6 +58,7 @@ const formatDisplayDate = (value: string) => {
 }
 
 export function BookingDatePicker({
+  allowPastDates = false,
   disabled = false,
   label,
   placeholder,
@@ -142,7 +144,7 @@ export function BookingDatePicker({
             <span className="booking-calendar-grid">
               {dates.map((date) => {
                 const dateValue = getDateValue(date)
-                const isPastDate = date < today
+                const isPastDate = !allowPastDates && date < today
                 const isOutsideMonth = date.getMonth() !== visibleMonth.getMonth()
 
                 return (
