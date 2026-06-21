@@ -25,6 +25,7 @@ model Barber {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   appointments Appointment[]
+  timeOffs     BarberTimeOff[]
 }
 
 model Service {
@@ -56,4 +57,17 @@ model Appointment {
 
   @@index([barberId, startsAt])
   @@index([status])
+}
+
+model BarberTimeOff {
+  id        String   @id @default(cuid())
+  reason    String
+  startsAt  DateTime
+  endsAt    DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  barberId  String
+  barber    Barber   @relation(fields: [barberId], references: [id], onDelete: Cascade)
+
+  @@index([barberId, startsAt])
 }

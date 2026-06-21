@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { getAvailability } from '../api/availability'
+import { getAvailability, getAvailabilityMonth } from '../api/availability'
 import { createAppointment } from '../api/appointments'
 import { getBookingOptions } from '../api/bookingOptions'
 import { BookingDatePicker } from '../components/BookingDatePicker'
@@ -101,6 +101,8 @@ export function BookingPage() {
   const [availableTimeOptions, setAvailableTimeOptions] = useState<BookingSelectOption[] | null>(
     null,
   )
+  const [calendarMonth, setCalendarMonth] = useState<{ month: number; year: number } | null>(null)
+  const [unavailableDates, setUnavailableDates] = useState<string[]>([])
   const isLoadingAvailability = Boolean(service && barber && date && availableTimeOptions === null)
   const timeOptions = service && barber && date
     ? availableTimeOptions ?? []
@@ -208,6 +210,44 @@ export function BookingPage() {
     }
   }, [barber, date, service])
 
+  useEffect(() => {
+    if (!service || !barber || !calendarMonth) {
+      return
+    }
+
+    let isMounted = true
+
+    getAvailabilityMonth({
+      barberId: barber,
+      month: calendarMonth.month,
+      serviceId: service,
+      year: calendarMonth.year,
+    })
+      .then((nextUnavailableDates) => {
+        if (!isMounted) {
+          return
+        }
+
+        setUnavailableDates(nextUnavailableDates)
+      })
+      .catch((error: unknown) => {
+        console.warn('Failed to load month availability from API', error)
+        setUnavailableDates([])
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [barber, calendarMonth, service])
+
+  const handleCalendarMonthChange = useCallback((nextMonth: { month: number; year: number }) => {
+    setCalendarMonth((currentMonth) =>
+      currentMonth?.month === nextMonth.month && currentMonth.year === nextMonth.year
+        ? currentMonth
+        : nextMonth,
+    )
+  }, [])
+
   const handleSubmit = async () => {
     if (!canSubmit) {
       return
@@ -234,6 +274,7 @@ export function BookingPage() {
       setDate('')
       setTime('')
       setAvailableTimeOptions(null)
+      setUnavailableDates([])
     } catch (error: unknown) {
       console.warn('Failed to create appointment', error)
       setStatusMessage('Не удалось создать запись. Попробуйте выбрать другое время.')
@@ -277,6 +318,7 @@ export function BookingPage() {
             setDate('')
             setTime('')
             setAvailableTimeOptions(null)
+            setUnavailableDates([])
             setStatusMessage('')
           }}
         />
@@ -291,6 +333,7 @@ export function BookingPage() {
             setDate('')
             setTime('')
             setAvailableTimeOptions(null)
+            setUnavailableDates([])
             setStatusMessage('')
           }}
         />
@@ -304,6 +347,7 @@ export function BookingPage() {
                 ? 'Выберите дату'
                 : 'Сначала выберите мастера'
           }
+          unavailableDates={service && barber ? unavailableDates : []}
           value={date}
           onChange={(nextDate) => {
             setDate(nextDate)
@@ -311,6 +355,7 @@ export function BookingPage() {
             setAvailableTimeOptions(null)
             setStatusMessage('')
           }}
+          onVisibleMonthChange={handleCalendarMonthChange}
         />
         <BookingSelect
           disabled={!service || !barber || !date || isLoadingAvailability || timeOptions.length === 0}

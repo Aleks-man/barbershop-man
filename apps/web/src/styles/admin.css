@@ -361,16 +361,30 @@
   text-align: left;
 }
 
+.admin-barber-archive-card {
+  display: grid;
+  gap: 0.5rem;
+  min-height: 96px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel-bg);
+  backdrop-filter: var(--blur-sm);
+  color: var(--heading);
+  padding: 0.9rem;
+}
+
 .admin-barbers button[aria-pressed="true"] {
   border-color: var(--gold-line-strong);
   box-shadow: 0 0 0 3px var(--gold-muted);
 }
 
-.admin-barbers span {
+.admin-barbers span,
+.admin-barber-archive-card > span {
   font-weight: 900;
 }
 
-.admin-barbers small {
+.admin-barbers small,
+.admin-barber-archive-card > small {
   color: var(--text);
   font-size: 0.78rem;
   line-height: 1.45;
@@ -669,6 +683,133 @@
   opacity: 0.42;
 }
 
+.admin-availability-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.78rem;
+  align-items: end;
+  position: relative;
+}
+
+.admin-availability-panel {
+  position: relative;
+  z-index: 30;
+}
+
+.admin-availability-list-panel {
+  position: relative;
+  z-index: 1;
+}
+
+.admin-availability-form .booking-select-label.is-open,
+.admin-availability-form .booking-date-label:has(.booking-calendar) {
+  z-index: 100;
+}
+
+.admin-availability-form label {
+  display: grid;
+  gap: 0.48rem;
+  color: var(--heading);
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.admin-availability-form input {
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--control-bg);
+  color: var(--heading);
+  font: inherit;
+  outline: none;
+  padding: 0.65rem 0.75rem;
+}
+
+.admin-availability-form input::placeholder {
+  color: var(--soft);
+  opacity: 1;
+}
+
+.admin-availability-form input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.admin-availability-form > button {
+  min-height: 42px;
+  border: 1px solid var(--gold);
+  border-radius: var(--radius-sm);
+  background: var(--gold);
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+  padding: 0 0.8rem;
+}
+
+.admin-availability-form > button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.admin-availability-reason {
+  grid-column: span 2;
+}
+
+.admin-time-off-list {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.admin-time-off-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--control-bg);
+  padding: 0.85rem;
+}
+
+.admin-time-off-card > div {
+  display: grid;
+  gap: 0.24rem;
+  min-width: 0;
+}
+
+.admin-time-off-card strong {
+  color: var(--heading);
+  overflow-wrap: anywhere;
+}
+
+.admin-time-off-card span,
+.admin-time-off-card small {
+  color: var(--text);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.admin-time-off-card button {
+  min-height: 36px;
+  border: 1px solid var(--gold-line);
+  border-radius: var(--radius-sm);
+  background: var(--control-bg);
+  color: var(--heading);
+  cursor: pointer;
+  flex: 0 0 auto;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0 0.65rem;
+}
+
+.admin-time-off-card button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
 .admin-clients-page {
   display: grid;
   gap: 1rem;
@@ -932,6 +1073,19 @@
 
   .admin-manager-form-wide {
     grid-column: auto;
+  }
+
+  .admin-availability-form {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-availability-reason {
+    grid-column: auto;
+  }
+
+  .admin-time-off-card {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .admin-stats {

@@ -37,12 +37,27 @@ export type AdminBarber = {
   role: string | null
 }
 
+export type AdminTimeOff = {
+  id: string
+  reason: string
+  startsAt: string
+  endsAt: string
+  barber: {
+    id: string
+    name: string
+  }
+}
+
 type AppointmentsResponse = {
   appointments: AdminAppointment[]
 }
 
 type BarbersResponse = {
   barbers: AdminBarber[]
+}
+
+type TimeOffResponse = {
+  timeOffs: AdminTimeOff[]
 }
 
 export const loginAdmin = async ({
@@ -144,6 +159,25 @@ export const hideAdminBarber = async ({
   }
 }
 
+export const deleteAdminBarber = async ({
+  barberId,
+  token,
+}: {
+  barberId: string
+  token: string
+}) => {
+  const response = await fetch(`/api/admin/barbers/${barberId}/permanent`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    method: 'DELETE',
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to delete barber')
+  }
+}
+
 export const restoreAdminBarber = async ({
   barberId,
   token,
@@ -195,6 +229,74 @@ export const getAdminBarbers = async (token: string) => {
   const data = (await response.json()) as BarbersResponse
 
   return data.barbers
+}
+
+export const getAdminTimeOff = async (token: string) => {
+  const response = await fetch('/api/admin/time-off', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to load time off')
+  }
+
+  const data = (await response.json()) as TimeOffResponse
+
+  return data.timeOffs
+}
+
+export const createAdminTimeOff = async ({
+  barberId,
+  endTime,
+  endDate,
+  reason,
+  startDate,
+  startTime,
+  token,
+}: {
+  barberId: string
+  endDate: string
+  endTime: string
+  reason: string
+  startDate: string
+  startTime: string
+  token: string
+}) => {
+  const response = await fetch('/api/admin/time-off', {
+    body: JSON.stringify({ barberId, endDate, endTime, reason, startDate, startTime }),
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to create time off')
+  }
+
+  return response.json() as Promise<{ timeOff: AdminTimeOff }>
+}
+
+export const deleteAdminTimeOff = async ({
+  timeOffId,
+  token,
+}: {
+  timeOffId: string
+  token: string
+}) => {
+  const response = await fetch(`/api/admin/time-off/${timeOffId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    method: 'DELETE',
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to delete time off')
+  }
 }
 
 export const updateAdminAppointmentStatus = async ({

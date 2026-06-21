@@ -106,26 +106,46 @@ appointmentsRouter.post('/', async (request, response, next) => {
       return
     }
 
-    const overlappingAppointments = await prisma.appointment.findMany({
-      where: {
-        barberId,
-        status: {
-          in: [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED],
+    const [overlappingAppointments, overlappingTimeOffs] = await Promise.all([
+      prisma.appointment.findMany({
+        where: {
+          barberId,
+          status: {
+            in: [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED],
+          },
+          startsAt: {
+            lt: endsAt,
+          },
+          endsAt: {
+            gt: startsAt,
+          },
         },
-        startsAt: {
-          lt: endsAt,
+        select: {
+          endsAt: true,
+          startsAt: true,
         },
-        endsAt: {
-          gt: startsAt,
+      }),
+      prisma.barberTimeOff.findMany({
+        where: {
+          barberId,
+          startsAt: {
+            lt: endsAt,
+          },
+          endsAt: {
+            gt: startsAt,
+          },
         },
-      },
-      select: {
-        endsAt: true,
-        startsAt: true,
-      },
-    })
+        select: {
+          endsAt: true,
+          startsAt: true,
+        },
+      }),
+    ])
 
-    if (hasOverlap(startsAt, endsAt, overlappingAppointments)) {
+    if (
+      hasOverlap(startsAt, endsAt, overlappingAppointments) ||
+      hasOverlap(startsAt, endsAt, overlappingTimeOffs)
+    ) {
       response.status(409).json({
         error: 'Selected time is not available',
       })

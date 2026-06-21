@@ -43,6 +43,15 @@ type BarberPhotoBody = {
   dataUrl?: unknown
 }
 
+type BarberTimeOffBody = {
+  barberId?: unknown
+  endTime?: unknown
+  endDate?: unknown
+  reason?: unknown
+  startDate?: unknown
+  startTime?: unknown
+}
+
 const appointmentStatusValues = Object.values(AppointmentStatus)
 const barberPhotoUploadDir = fileURLToPath(new URL('../../uploads/barbers', import.meta.url))
 const allowedPhotoTypes = new Map([
@@ -207,29 +216,49 @@ adminRouter.patch('/appointments/:id/reschedule', requireStaff, async (request, 
       return
     }
 
-    const overlappingAppointments = await prisma.appointment.findMany({
-      where: {
-        id: {
-          not: appointmentId,
+    const [overlappingAppointments, overlappingTimeOffs] = await Promise.all([
+      prisma.appointment.findMany({
+        where: {
+          id: {
+            not: appointmentId,
+          },
+          barberId: appointment.barberId,
+          status: {
+            in: [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED],
+          },
+          startsAt: {
+            lt: endsAt,
+          },
+          endsAt: {
+            gt: startsAt,
+          },
         },
-        barberId: appointment.barberId,
-        status: {
-          in: [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED],
+        select: {
+          endsAt: true,
+          startsAt: true,
         },
-        startsAt: {
-          lt: endsAt,
+      }),
+      prisma.barberTimeOff.findMany({
+        where: {
+          barberId: appointment.barberId,
+          startsAt: {
+            lt: endsAt,
+          },
+          endsAt: {
+            gt: startsAt,
+          },
         },
-        endsAt: {
-          gt: startsAt,
+        select: {
+          endsAt: true,
+          startsAt: true,
         },
-      },
-      select: {
-        endsAt: true,
-        startsAt: true,
-      },
-    })
+      }),
+    ])
 
-    if (hasOverlap(startsAt, endsAt, overlappingAppointments)) {
+    if (
+      hasOverlap(startsAt, endsAt, overlappingAppointments) ||
+      hasOverlap(startsAt, endsAt, overlappingTimeOffs)
+    ) {
       response.status(409).json({
         error: 'Selected time is not available',
       })
@@ -407,6 +436,50 @@ adminRouter.delete('/barbers/:id', requireAdmin, async (request, response, next)
   }
 })
 
+adminRouter.delete('/barbers/:id/permanent', requireAdmin, async (request, response, next) => {
+  try {
+    const barberId = String(request.params.id ?? '')
+    const barber = await prisma.barber.findUnique({
+      where: {
+        id: barberId,
+      },
+      select: {
+        isActive: true,
+      },
+    })
+
+    if (!barber || barber.isActive) {
+      response.status(404).json({
+        error: 'Hidden barber not found',
+      })
+      return
+    }
+
+    const appointmentsCount = await prisma.appointment.count({
+      where: {
+        barberId,
+      },
+    })
+
+    if (appointmentsCount > 0) {
+      response.status(409).json({
+        error: 'Barber has appointments',
+      })
+      return
+    }
+
+    await prisma.barber.delete({
+      where: {
+        id: barberId,
+      },
+    })
+
+    response.status(204).send()
+  } catch (error) {
+    next(error)
+  }
+})
+
 adminRouter.patch('/barbers/:id/restore', requireAdmin, async (request, response, next) => {
   try {
     const barberId = String(request.params.id ?? '')
@@ -431,6 +504,201 @@ adminRouter.patch('/barbers/:id/restore', requireAdmin, async (request, response
     })
 
     response.json({ barber })
+  } catch (error) {
+    next(error)
+  }
+})
+
+adminRouter.get('/time-off', requireStaff, async (_request, response, next) => {
+  try {
+    const session = getResponseSession(response.locals)
+    const timeOffs = await prisma.barberTimeOff.findMany({
+      where:
+        session.role === 'barber'
+          ? {
+              barberId: session.barberId,
+            }
+          : undefined,
+      orderBy: {
+        startsAt: 'asc',
+      },
+      select: {
+        id: true,
+        reason: true,
+        startsAt: true,
+        endsAt: true,
+        barber: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    })
+
+    response.json({ timeOffs })
+  } catch (error) {
+    next(error)
+  }
+})
+
+adminRouter.post('/time-off', requireStaff, async (request, response, next) => {
+  try {
+    const session = getResponseSession(response.locals)
+    const body = request.body as BarberTimeOffBody
+    const barberId =
+      session.role === 'barber'
+        ? session.barberId || ''
+        : typeof body.barberId === 'string'
+          ? body.barberId.trim()
+          : ''
+    const endDate = typeof body.endDate === 'string' ? body.endDate.trim() : ''
+    const endTime = typeof body.endTime === 'string' ? body.endTime.trim() : ''
+    const reason = typeof body.reason === 'string' ? body.reason.trim() : ''
+    const startDate = typeof body.startDate === 'string' ? body.startDate.trim() : ''
+    const startTime = typeof body.startTime === 'string' ? body.startTime.trim() : ''
+    const selectedEndDate = parseDate(endDate)
+    const selectedStartDate = parseDate(startDate)
+
+    if (!barberId || !selectedStartDate || !selectedEndDate || !startTime || !endTime || !reason) {
+      response.status(400).json({
+        error: 'barberId, startDate, startTime, endDate, endTime and reason are required',
+      })
+      return
+    }
+
+    if (!canManageBarber(session, barberId)) {
+      response.status(403).json({
+        error: 'Forbidden',
+      })
+      return
+    }
+
+    const [barber, startsAt, endsAt] = await Promise.all([
+      prisma.barber.findFirst({
+        where: {
+          id: barberId,
+          isActive: true,
+        },
+      }),
+      Promise.resolve(setTime(selectedStartDate, startTime)),
+      Promise.resolve(setTime(selectedEndDate, endTime)),
+    ])
+
+    if (!barber || !startsAt || !endsAt || startsAt >= endsAt) {
+      response.status(409).json({
+        error: 'Selected period is not available',
+      })
+      return
+    }
+
+    const [overlappingAppointments, overlappingTimeOffs] = await Promise.all([
+      prisma.appointment.findMany({
+        where: {
+          barberId,
+          status: {
+            in: [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED],
+          },
+          startsAt: {
+            lt: endsAt,
+          },
+          endsAt: {
+            gt: startsAt,
+          },
+        },
+        select: {
+          endsAt: true,
+          startsAt: true,
+        },
+      }),
+      prisma.barberTimeOff.findMany({
+        where: {
+          barberId,
+          startsAt: {
+            lt: endsAt,
+          },
+          endsAt: {
+            gt: startsAt,
+          },
+        },
+        select: {
+          endsAt: true,
+          startsAt: true,
+        },
+      }),
+    ])
+
+    if (
+      hasOverlap(startsAt, endsAt, overlappingAppointments) ||
+      hasOverlap(startsAt, endsAt, overlappingTimeOffs)
+    ) {
+      response.status(409).json({
+        error: 'Selected period is not available',
+      })
+      return
+    }
+
+    const timeOff = await prisma.barberTimeOff.create({
+      data: {
+        barberId,
+        endsAt,
+        reason,
+        startsAt,
+      },
+      select: {
+        id: true,
+        reason: true,
+        startsAt: true,
+        endsAt: true,
+        barber: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    })
+
+    response.status(201).json({ timeOff })
+  } catch (error) {
+    next(error)
+  }
+})
+
+adminRouter.delete('/time-off/:id', requireStaff, async (request, response, next) => {
+  try {
+    const session = getResponseSession(response.locals)
+    const timeOffId = String(request.params.id ?? '')
+    const timeOff = await prisma.barberTimeOff.findUnique({
+      where: {
+        id: timeOffId,
+      },
+      select: {
+        barberId: true,
+      },
+    })
+
+    if (!timeOff) {
+      response.status(404).json({
+        error: 'Time off not found',
+      })
+      return
+    }
+
+    if (!canManageBarber(session, timeOff.barberId)) {
+      response.status(403).json({
+        error: 'Forbidden',
+      })
+      return
+    }
+
+    await prisma.barberTimeOff.delete({
+      where: {
+        id: timeOffId,
+      },
+    })
+
+    response.status(204).send()
   } catch (error) {
     next(error)
   }

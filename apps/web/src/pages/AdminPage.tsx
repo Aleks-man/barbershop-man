@@ -2,8 +2,12 @@ import { type CSSProperties, useEffect, useMemo, useState } from 'react'
 import { getAvailability } from '../api/availability'
 import {
   createAdminBarber,
+  createAdminTimeOff,
+  deleteAdminBarber,
+  deleteAdminTimeOff,
   getAdminAppointments,
   getAdminBarbers,
+  getAdminTimeOff,
   hideAdminBarber,
   loginAdmin,
   rescheduleAdminAppointment,
@@ -13,6 +17,7 @@ import {
   type AdminAppointment,
   type AdminBarber,
   type AdminSessionRole,
+  type AdminTimeOff,
 } from '../api/admin'
 import { BookingDatePicker } from '../components/BookingDatePicker'
 import { BookingSelect, type BookingSelectOption } from '../components/BookingSelect'
@@ -52,7 +57,7 @@ const readStoredSession = () => {
 
 type AdminTab = 'upcoming' | 'completed' | 'cancelled'
 type AppointmentPeriod = 'all' | 'today' | 'tomorrow' | 'custom'
-type AdminView = 'schedule' | 'clients' | 'barbers'
+type AdminView = 'schedule' | 'clients' | 'barbers' | 'availability'
 
 const tabs: Array<{ label: string; value: AdminTab }> = [
   { label: 'Ожидают', value: 'upcoming' },
@@ -69,8 +74,21 @@ const periods: Array<{ label: string; value: AppointmentPeriod }> = [
 const adminViews: Array<{ label: string; value: AdminView }> = [
   { label: 'Расписание', value: 'schedule' },
   { label: 'Клиенты', value: 'clients' },
+  { label: 'Доступность', value: 'availability' },
   { label: 'Мастера', value: 'barbers' },
 ]
+
+const timeOptions: BookingSelectOption[] = Array.from({ length: 25 }, (_, index) => {
+  const totalMinutes = 10 * 60 + index * 30
+  const hours = String(Math.floor(totalMinutes / 60)).padStart(2, '0')
+  const minutes = String(totalMinutes % 60).padStart(2, '0')
+  const value = `${hours}:${minutes}`
+
+  return {
+    label: value,
+    value,
+  }
+})
 
 const dateTimeFormatter = new Intl.DateTimeFormat('ru-RU', {
   day: '2-digit',
@@ -152,6 +170,7 @@ const matchesPeriod = (
 export function AdminPage() {
   const [appointments, setAppointments] = useState<AdminAppointment[]>([])
   const [barbers, setBarbers] = useState<AdminBarber[]>([])
+  const [timeOffs, setTimeOffs] = useState<AdminTimeOff[]>([])
   const [errorMessage, setErrorMessage] = useState('')
   const [session, setSession] = useState<AdminSession | null>(() => readStoredSession())
   const [isCheckingSession, setIsCheckingSession] = useState(Boolean(session))
@@ -178,6 +197,12 @@ export function AdminPage() {
   const [rescheduleDate, setRescheduleDate] = useState('')
   const [rescheduleTime, setRescheduleTime] = useState('')
   const [rescheduleTimeOptions, setRescheduleTimeOptions] = useState<BookingSelectOption[]>([])
+  const [timeOffBarberId, setTimeOffBarberId] = useState('')
+  const [timeOffEndDate, setTimeOffEndDate] = useState('')
+  const [timeOffEndTime, setTimeOffEndTime] = useState('')
+  const [timeOffReason, setTimeOffReason] = useState('')
+  const [timeOffStartDate, setTimeOffStartDate] = useState('')
+  const [timeOffStartTime, setTimeOffStartTime] = useState('')
   const [updatingAppointmentId, setUpdatingAppointmentId] = useState('')
   const token = session?.token ?? ''
   const isAdminSession = session?.role === 'admin'
@@ -255,14 +280,24 @@ export function AdminPage() {
       return
     }
 
-    Promise.all([getAdminBarbers(session.token), getAdminAppointments(session.token)])
-      .then(([nextBarbers, nextAppointments]) => {
+    Promise.all([
+      getAdminBarbers(session.token),
+      getAdminAppointments(session.token),
+      getAdminTimeOff(session.token),
+    ])
+      .then(([nextBarbers, nextAppointments, nextTimeOffs]) => {
         setBarbers(nextBarbers)
         setAppointments(nextAppointments)
+        setTimeOffs(nextTimeOffs)
         setSelectedBarberId((currentBarberId) =>
           session.role === 'barber'
             ? session.barberId || nextBarbers[0]?.id || ''
             : currentBarberId,
+        )
+        setTimeOffBarberId((currentBarberId) =>
+          session.role === 'barber'
+            ? session.barberId || nextBarbers[0]?.id || ''
+            : currentBarberId || nextBarbers.find((barber) => barber.isActive !== false)?.id || '',
         )
         setErrorMessage('')
       })
@@ -272,6 +307,7 @@ export function AdminPage() {
         setSession(null)
         setAppointments([])
         setBarbers([])
+        setTimeOffs([])
         setErrorMessage('Сессия истекла. Войдите снова.')
       })
       .finally(() => {
@@ -282,6 +318,35 @@ export function AdminPage() {
   const activeBarbers = useMemo(() => barbers.filter((barber) => barber.isActive !== false), [barbers])
   const hiddenBarbers = useMemo(() => barbers.filter((barber) => barber.isActive === false), [barbers])
   const selectedBarber = activeBarbers.find((barber) => barber.id === selectedBarberId)
+  const timeOffBarber = activeBarbers.find((barber) => barber.id === timeOffBarberId)
+  const visibleAdminViews = useMemo(
+    () => adminViews.filter((view) => isAdminSession || view.value !== 'barbers'),
+    [isAdminSession],
+  )
+  const activeBarberOptions = useMemo(
+    () =>
+      activeBarbers.map((barber) => ({
+        label: barber.name,
+        value: barber.id,
+      })),
+    [activeBarbers],
+  )
+  const filteredTimeOffs = useMemo(
+    () =>
+      timeOffs.filter((timeOff) =>
+        isAdminSession ? !timeOffBarberId || timeOff.barber.id === timeOffBarberId : true,
+      ),
+    [isAdminSession, timeOffBarberId, timeOffs],
+  )
+  const timeOffStartsAt =
+    timeOffStartDate && timeOffStartTime
+      ? new Date(`${timeOffStartDate}T${timeOffStartTime}:00`)
+      : null
+  const timeOffEndsAt =
+    timeOffEndDate && timeOffEndTime ? new Date(`${timeOffEndDate}T${timeOffEndTime}:00`) : null
+  const isTimeOffRangeValid =
+    Boolean(timeOffStartsAt && timeOffEndsAt) &&
+    Number(timeOffStartsAt) < Number(timeOffEndsAt)
   const canViewAllBarbers = isAdminSession && !selectedBarberId
   const scopedAppointments = useMemo(
     () =>
@@ -429,11 +494,18 @@ export function AdminPage() {
     setSession(null)
     setAppointments([])
     setBarbers([])
+    setTimeOffs([])
     setAdminView('schedule')
     setAppointmentDate('')
     setAppointmentPeriod('all')
     setClientSearch('')
     setSelectedBarberId('')
+    setTimeOffBarberId('')
+    setTimeOffEndDate('')
+    setTimeOffEndTime('')
+    setTimeOffReason('')
+    setTimeOffStartDate('')
+    setTimeOffStartTime('')
   }
 
   const handleCreateBarber = async () => {
@@ -498,6 +570,15 @@ export function AdminPage() {
       return
     }
 
+    const barber = barbers.find((currentBarber) => currentBarber.id === barberId)
+    const shouldHide = window.confirm(
+      `Скрыть мастера ${barber?.name ?? ''}? Он пропадет с сайта, но останется в архиве.`,
+    )
+
+    if (!shouldHide) {
+      return
+    }
+
     setIsLoading(true)
     setErrorMessage('')
 
@@ -542,6 +623,105 @@ export function AdminPage() {
       )
     } catch {
       setErrorMessage('Не удалось восстановить мастера.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleDeleteBarber = async (barberId: string) => {
+    if (!isAdminSession) {
+      return
+    }
+
+    const barber = barbers.find((currentBarber) => currentBarber.id === barberId)
+    const shouldDelete = window.confirm(
+      `Удалить мастера ${barber?.name ?? ''} из базы навсегда? Это действие нельзя отменить.`,
+    )
+
+    if (!shouldDelete) {
+      return
+    }
+
+    setIsLoading(true)
+    setErrorMessage('')
+
+    try {
+      await deleteAdminBarber({
+        barberId,
+        token,
+      })
+
+      setBarbers((currentBarbers) =>
+        currentBarbers.filter((currentBarber) => currentBarber.id !== barberId),
+      )
+      setTimeOffs((currentTimeOffs) =>
+        currentTimeOffs.filter((timeOff) => timeOff.barber.id !== barberId),
+      )
+    } catch {
+      setErrorMessage('Не удалось удалить мастера. Удаление доступно только если у него нет записей.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleCreateTimeOff = async () => {
+    if (!timeOffBarberId || !isTimeOffRangeValid || !timeOffReason.trim()) {
+      return
+    }
+
+    setIsLoading(true)
+    setErrorMessage('')
+
+    try {
+      const response = await createAdminTimeOff({
+        barberId: timeOffBarberId,
+        endDate: timeOffEndDate,
+        endTime: timeOffEndTime,
+        reason: timeOffReason,
+        startDate: timeOffStartDate,
+        startTime: timeOffStartTime,
+        token,
+      })
+
+      setTimeOffs((currentTimeOffs) =>
+        [...currentTimeOffs, response.timeOff].sort(
+          (firstTimeOff, secondTimeOff) =>
+            new Date(firstTimeOff.startsAt).getTime() - new Date(secondTimeOff.startsAt).getTime(),
+        ),
+      )
+      setTimeOffEndDate('')
+      setTimeOffEndTime('')
+      setTimeOffReason('')
+      setTimeOffStartDate('')
+      setTimeOffStartTime('')
+    } catch {
+      setErrorMessage('Не удалось закрыть период. Проверьте время и активные записи мастера.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleDeleteTimeOff = async (timeOffId: string) => {
+    const shouldDelete = window.confirm('Отменить этот закрытый период? После этого время снова станет доступно для записи.')
+
+    if (!shouldDelete) {
+      return
+    }
+
+    setIsLoading(true)
+    setErrorMessage('')
+
+    try {
+      await deleteAdminTimeOff({
+        timeOffId,
+        token,
+      })
+
+      setTimeOffs((currentTimeOffs) =>
+        currentTimeOffs.filter((timeOff) => timeOff.id !== timeOffId),
+      )
+    } catch {
+      setErrorMessage('Не удалось отменить закрытый период.')
     } finally {
       setIsLoading(false)
     }
@@ -774,7 +954,7 @@ export function AdminPage() {
         </header>
 
         <nav className="admin-view-tabs" aria-label="Разделы админки">
-          {adminViews.map((view) => (
+          {visibleAdminViews.map((view) => (
             <button
               type="button"
               aria-pressed={adminView === view.value}
@@ -966,6 +1146,138 @@ export function AdminPage() {
 
             </section>
           </>
+        )}
+
+        {!isCheckingSession && activeBarbers.length > 0 && adminView === 'availability' && (
+          <section className="admin-manager-page">
+            <section className="admin-manager admin-availability-panel">
+              <header>
+                <div>
+                  <span className="admin-eyebrow">График</span>
+                  <h2>График доступности</h2>
+                </div>
+              </header>
+              <div className="admin-availability-form">
+                {isAdminSession ? (
+                  <BookingSelect
+                    label="Мастер"
+                    name="timeOffBarber"
+                    options={activeBarberOptions}
+                    placeholder="Выберите мастера"
+                    value={timeOffBarberId}
+                    onChange={(nextBarberId) => {
+                      setTimeOffBarberId(nextBarberId)
+                      setErrorMessage('')
+                    }}
+                  />
+                ) : (
+                  <label>
+                    Мастер
+                    <input type="text" value={timeOffBarber?.name ?? session.name ?? ''} readOnly />
+                  </label>
+                )}
+                <BookingDatePicker
+                  label="Дата начала"
+                  placeholder="Выберите дату"
+                  value={timeOffStartDate}
+                  onChange={(nextDate) => {
+                    setTimeOffStartDate(nextDate)
+                    setTimeOffEndDate((currentDate) => currentDate || nextDate)
+                    setErrorMessage('')
+                  }}
+                />
+                <BookingSelect
+                  label="Время начала"
+                  name="timeOffStart"
+                  options={timeOptions}
+                  placeholder="Начало"
+                  value={timeOffStartTime}
+                  onChange={(nextTime) => {
+                    setTimeOffStartTime(nextTime)
+                    setErrorMessage('')
+                  }}
+                />
+                <BookingDatePicker
+                  label="Дата конца"
+                  placeholder="Выберите дату"
+                  value={timeOffEndDate}
+                  onChange={(nextDate) => {
+                    setTimeOffEndDate(nextDate)
+                    setErrorMessage('')
+                  }}
+                />
+                <BookingSelect
+                  label="Время конца"
+                  name="timeOffEnd"
+                  options={timeOptions}
+                  placeholder="Конец"
+                  value={timeOffEndTime}
+                  onChange={(nextTime) => {
+                    setTimeOffEndTime(nextTime)
+                    setErrorMessage('')
+                  }}
+                />
+                <label className="admin-availability-reason">
+                  Причина
+                  <input
+                    type="text"
+                    placeholder="Например: отпуск"
+                    value={timeOffReason}
+                    onChange={(event) => {
+                      setTimeOffReason(event.target.value)
+                      setErrorMessage('')
+                    }}
+                  />
+                </label>
+                <button
+                  type="button"
+                  disabled={
+                    isLoading ||
+                    !timeOffBarberId ||
+                    !isTimeOffRangeValid ||
+                    !timeOffReason.trim()
+                  }
+                  onClick={() => void handleCreateTimeOff()}
+                >
+                  Закрыть период
+                </button>
+              </div>
+            </section>
+
+            <section className="admin-manager admin-availability-list-panel">
+              <header>
+                <div>
+                  <span className="admin-eyebrow">Закрытые периоды</span>
+                  <h2>{timeOffBarber?.name ?? 'Все мастера'}</h2>
+                </div>
+              </header>
+              {filteredTimeOffs.length === 0 ? (
+                <p className="admin-muted">Закрытых периодов пока нет.</p>
+              ) : (
+                <div className="admin-time-off-list">
+                  {filteredTimeOffs.map((timeOff) => (
+                    <article className="admin-time-off-card" key={timeOff.id}>
+                      <div>
+                        <strong>{timeOff.reason}</strong>
+                        <span>
+                          {dateTimeFormatter.format(new Date(timeOff.startsAt))} -{' '}
+                          {dateTimeFormatter.format(new Date(timeOff.endsAt))}
+                        </span>
+                        {isAdminSession && <small>{timeOff.barber.name}</small>}
+                      </div>
+                      <button
+                        type="button"
+                        disabled={isLoading}
+                        onClick={() => void handleDeleteTimeOff(timeOff.id)}
+                      >
+                        Отменить
+                      </button>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+          </section>
         )}
 
         {!isCheckingSession && adminView === 'clients' && (
@@ -1167,16 +1479,26 @@ export function AdminPage() {
               ) : (
                 <nav className="admin-barbers" aria-label="Скрытые мастера">
                   {hiddenBarbers.map((barber) => (
-                    <button
-                      type="button"
-                      aria-pressed="false"
-                      key={barber.id}
-                      onClick={() => void handleRestoreBarber(barber.id)}
-                    >
+                    <article className="admin-barber-archive-card" key={barber.id}>
                       <span>{barber.name}</span>
                       {barber.role && <small>{barber.role}</small>}
-                      <small>Нажмите, чтобы восстановить</small>
-                    </button>
+                      <div className="admin-actions">
+                        <button
+                          type="button"
+                          disabled={isLoading}
+                          onClick={() => void handleRestoreBarber(barber.id)}
+                        >
+                          Восстановить
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isLoading}
+                          onClick={() => void handleDeleteBarber(barber.id)}
+                        >
+                          Удалить
+                        </button>
+                      </div>
+                    </article>
                   ))}
                 </nav>
               )}

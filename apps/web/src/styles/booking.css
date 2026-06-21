@@ -308,6 +308,18 @@
   color: rgba(245, 239, 227, 0.38);
 }
 
+.booking-calendar-day[data-unavailable="true"] {
+  position: relative;
+  color: rgba(245, 239, 227, 0.45);
+  cursor: not-allowed;
+}
+
+.booking-calendar-day[data-unavailable="true"]:hover,
+.booking-calendar-day[data-unavailable="true"]:focus-visible {
+  border-color: rgba(201, 65, 65, 0.42);
+  background: rgba(201, 65, 65, 0.1);
+}
+
 .booking-calendar-day:disabled {
   cursor: not-allowed;
   opacity: 0.28;

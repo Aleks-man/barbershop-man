@@ -1,12 +1,14 @@
-import { useId, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 
 type BookingDatePickerProps = {
   allowPastDates?: boolean
   disabled?: boolean
   label: string
   placeholder: string
+  unavailableDates?: string[]
   value: string
   onChange: (value: string) => void
+  onVisibleMonthChange?: (month: { month: number; year: number }) => void
 }
 
 const dayFormatter = new Intl.DateTimeFormat('ru-RU', {
@@ -62,8 +64,10 @@ export function BookingDatePicker({
   disabled = false,
   label,
   placeholder,
+  unavailableDates = [],
   value,
   onChange,
+  onVisibleMonthChange,
 }: BookingDatePickerProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [visibleMonth, setVisibleMonth] = useState(() => getStartOfDay(new Date()))
@@ -71,6 +75,14 @@ export function BookingDatePicker({
   const today = useMemo(() => getStartOfDay(new Date()), [])
   const dates = getMonthGrid(visibleMonth)
   const selectedText = formatDisplayDate(value)
+  const unavailableDateSet = useMemo(() => new Set(unavailableDates), [unavailableDates])
+
+  useEffect(() => {
+    onVisibleMonthChange?.({
+      month: visibleMonth.getMonth() + 1,
+      year: visibleMonth.getFullYear(),
+    })
+  }, [onVisibleMonthChange, visibleMonth])
 
   const closeCalendar = () => {
     if (disabled) {
@@ -145,6 +157,7 @@ export function BookingDatePicker({
               {dates.map((date) => {
                 const dateValue = getDateValue(date)
                 const isPastDate = !allowPastDates && date < today
+                const isUnavailableDate = unavailableDateSet.has(dateValue)
                 const isOutsideMonth = date.getMonth() !== visibleMonth.getMonth()
 
                 return (
@@ -152,10 +165,16 @@ export function BookingDatePicker({
                     type="button"
                     className="booking-calendar-day"
                     disabled={isPastDate}
+                    aria-disabled={isUnavailableDate}
                     aria-pressed={dateValue === value}
                     data-outside-month={isOutsideMonth}
+                    data-unavailable={isUnavailableDate}
                     key={dateValue}
                     onClick={() => {
+                      if (isUnavailableDate) {
+                        return
+                      }
+
                       onChange(dateValue)
                       closeCalendar()
                     }}
