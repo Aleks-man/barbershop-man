@@ -62,8 +62,8 @@
 .admin-login select {
   min-height: 50px;
   border: 1px solid var(--line);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-sm);
+  background: var(--control-bg);
   color: var(--heading);
   font: inherit;
   outline: none;
@@ -71,14 +71,14 @@
 }
 
 .admin-login select option {
-  background: #15130d;
+  background: var(--ink);
   color: var(--heading);
 }
 
 .admin-login input:focus,
 .admin-login select:focus {
   border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(190, 146, 77, 0.16);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .admin-login-submit,
@@ -88,10 +88,10 @@
   justify-content: center;
   min-height: 48px;
   border: 1px solid var(--gold);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--gold);
-  box-shadow: 0 18px 42px rgba(190, 146, 77, 0.22);
-  color: #15130d;
+  box-shadow: var(--shadow-gold);
+  color: var(--ink);
   cursor: pointer;
   font: inherit;
   font-weight: 800;
@@ -110,8 +110,8 @@
   justify-content: center;
   min-height: 48px;
   border-color: var(--line);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-sm);
+  background: var(--control-bg);
   color: var(--gold);
   cursor: pointer;
   font: inherit;
@@ -122,8 +122,8 @@
 .admin-login-roles button[aria-selected="true"] {
   border-color: var(--gold);
   background: var(--gold);
-  box-shadow: 0 18px 42px rgba(190, 146, 77, 0.22);
-  color: #15130d;
+  box-shadow: var(--shadow-gold);
+  color: var(--ink);
 }
 
 .admin-login-note {
@@ -146,7 +146,7 @@
 }
 
 .admin-alert {
-  color: #f3b6a8;
+  color: var(--danger);
 }
 
 .admin-shell {
@@ -179,8 +179,8 @@
 .admin-view-tabs button {
   min-height: 42px;
   border: 1px solid var(--line);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-sm);
+  background: var(--control-bg);
   color: var(--heading);
   cursor: pointer;
   font: inherit;
@@ -190,13 +190,13 @@
 
 .admin-view-tabs button:hover,
 .admin-view-tabs button[aria-pressed="true"] {
-  border-color: rgba(190, 146, 77, 0.72);
-  background: rgba(190, 146, 77, 0.14);
+  border-color: var(--gold-line-strong);
+  background: var(--gold-soft);
 }
 
 .admin-view-tabs button:focus-visible {
   border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(190, 146, 77, 0.16);
+  box-shadow: 0 0 0 3px var(--focus-ring);
   outline: none;
 }
 
@@ -204,9 +204,9 @@
   display: grid;
   gap: 0.95rem;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: rgba(24, 27, 23, 0.3);
-  backdrop-filter: blur(4px);
+  border-radius: var(--radius-md);
+  background: var(--panel-bg);
+  backdrop-filter: var(--blur-sm);
   padding: 1.05rem;
 }
 
@@ -243,8 +243,8 @@
 .admin-manager-form textarea {
   min-height: 42px;
   border: 1px solid var(--line);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-sm);
+  background: var(--control-bg);
   color: var(--heading);
   font: inherit;
   outline: none;
@@ -259,7 +259,7 @@
 .admin-manager-form input:focus,
 .admin-manager-form textarea:focus {
   border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(190, 146, 77, 0.16);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .admin-manager-form-wide {
@@ -282,9 +282,9 @@
   justify-content: center;
   gap: 0.5rem;
   min-height: 42px;
-  border: 1px solid rgba(190, 146, 77, 0.36);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--gold-line);
+  border-radius: var(--radius-sm);
+  background: var(--control-bg);
   color: var(--heading);
   cursor: pointer;
   font-weight: 900;
@@ -304,14 +304,14 @@
 
 .admin-photo-upload:focus-within span {
   border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(190, 146, 77, 0.16);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .admin-manager-photo-preview {
   width: 82px;
   aspect-ratio: 1;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   object-fit: cover;
 }
 
@@ -319,9 +319,9 @@
 .admin-danger-button {
   min-height: 42px;
   border: 1px solid var(--gold);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--gold);
-  color: #15130d;
+  color: var(--ink);
   cursor: pointer;
   font: inherit;
   font-weight: 900;
@@ -335,9 +335,9 @@
 }
 
 .admin-danger-button {
-  border-color: rgba(243, 182, 168, 0.38);
-  background: rgba(243, 182, 168, 0.1);
-  color: #f3b6a8;
+  border-color: var(--danger-line);
+  background: var(--danger-muted);
+  color: var(--danger);
 }
 
 .admin-barbers {
@@ -351,9 +351,9 @@
   gap: 0.38rem;
   min-height: 72px;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: rgba(24, 27, 23, 0.3);
-  backdrop-filter: blur(4px);
+  border-radius: var(--radius-md);
+  background: var(--panel-bg);
+  backdrop-filter: var(--blur-sm);
   color: var(--heading);
   cursor: pointer;
   font: inherit;
@@ -362,8 +362,8 @@
 }
 
 .admin-barbers button[aria-pressed="true"] {
-  border-color: rgba(190, 146, 77, 0.72);
-  box-shadow: 0 0 0 3px rgba(190, 146, 77, 0.12);
+  border-color: var(--gold-line-strong);
+  box-shadow: 0 0 0 3px var(--gold-muted);
 }
 
 .admin-barbers span {
@@ -439,14 +439,14 @@
 
 .admin-period-date .booking-date-trigger {
   min-height: 38px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--control-bg);
 }
 
 .admin-segmented button {
   min-height: 38px;
   border: 1px solid var(--line);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-sm);
+  background: var(--control-bg);
   color: var(--heading);
   cursor: pointer;
   font: inherit;
@@ -457,13 +457,13 @@
 
 .admin-segmented button:hover,
 .admin-segmented button[aria-pressed="true"] {
-  border-color: rgba(190, 146, 77, 0.72);
-  background: rgba(190, 146, 77, 0.14);
+  border-color: var(--gold-line-strong);
+  background: var(--gold-soft);
 }
 
 .admin-segmented button:focus-visible {
   border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(190, 146, 77, 0.16);
+  box-shadow: 0 0 0 3px var(--focus-ring);
   outline: none;
 }
 
@@ -477,9 +477,9 @@
   display: grid;
   gap: 0.35rem;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: rgba(24, 27, 23, 0.3);
-  backdrop-filter: blur(4px);
+  border-radius: var(--radius-md);
+  background: var(--panel-bg);
+  backdrop-filter: var(--blur-sm);
   cursor: pointer;
   font: inherit;
   padding: 0.9rem;
@@ -493,17 +493,17 @@
 
 .admin-stats button:hover,
 .admin-stats button[aria-selected="true"] {
-  border-color: rgba(190, 146, 77, 0.72);
-  background: rgba(190, 146, 77, 0.14);
+  border-color: var(--gold-line-strong);
+  background: var(--gold-soft);
 }
 
 .admin-stats button[aria-selected="true"] {
-  box-shadow: 0 0 0 3px rgba(190, 146, 77, 0.12);
+  box-shadow: 0 0 0 3px var(--gold-muted);
 }
 
 .admin-stats button:focus-visible {
   border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(190, 146, 77, 0.18);
+  box-shadow: 0 0 0 3px var(--focus-ring-strong);
   outline: none;
 }
 
@@ -525,9 +525,9 @@
 .admin-table-wrap {
   overflow-x: auto;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: rgba(24, 27, 23, 0.3);
-  backdrop-filter: blur(4px);
+  border-radius: var(--radius-md);
+  background: var(--panel-bg);
+  backdrop-filter: var(--blur-sm);
 }
 
 .admin-table {
@@ -565,8 +565,8 @@
   display: inline-flex;
   align-items: center;
   min-height: 26px;
-  border: 1px solid rgba(245, 239, 227, 0.12);
-  border-radius: 999px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
   font-size: 0.76rem;
   font-weight: 900;
   padding: 0.24rem 0.52rem;
@@ -574,21 +574,21 @@
 }
 
 .admin-status--upcoming {
-  border-color: rgba(190, 146, 77, 0.34);
-  background: rgba(190, 146, 77, 0.12);
+  border-color: var(--gold-line);
+  background: var(--gold-muted);
   color: #d9b56f;
 }
 
 .admin-status--completed {
-  border-color: rgba(113, 158, 118, 0.34);
-  background: rgba(113, 158, 118, 0.12);
-  color: #9ec79f;
+  border-color: var(--success-line);
+  background: var(--success-muted);
+  color: var(--success);
 }
 
 .admin-status--cancelled {
-  border-color: rgba(207, 116, 102, 0.34);
-  background: rgba(207, 116, 102, 0.12);
-  color: #d79a8f;
+  border-color: var(--cancelled-line);
+  background: var(--cancelled-muted);
+  color: var(--cancelled);
 }
 
 .admin-appointment-list {
@@ -599,9 +599,9 @@
   display: grid;
   gap: 0.95rem;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: rgba(24, 27, 23, 0.3);
-  backdrop-filter: blur(4px);
+  border-radius: var(--radius-md);
+  background: var(--panel-bg);
+  backdrop-filter: var(--blur-sm);
   padding: 1rem;
 }
 
@@ -653,9 +653,9 @@
 
 .admin-actions button {
   min-height: 34px;
-  border: 1px solid rgba(190, 146, 77, 0.28);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--gold-line);
+  border-radius: var(--radius-sm);
+  background: var(--control-bg);
   color: var(--heading);
   cursor: pointer;
   font: inherit;
@@ -673,9 +673,9 @@
   display: grid;
   gap: 1rem;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: rgba(24, 27, 23, 0.3);
-  backdrop-filter: blur(4px);
+  border-radius: var(--radius-md);
+  background: var(--panel-bg);
+  backdrop-filter: var(--blur-sm);
   padding: 1rem;
 }
 
@@ -713,8 +713,8 @@
 .admin-client-search input {
   min-height: 46px;
   border: 1px solid var(--line);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-sm);
+  background: var(--control-bg);
   color: var(--heading);
   font: inherit;
   outline: none;
@@ -728,7 +728,7 @@
 
 .admin-client-search input:focus {
   border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(190, 146, 77, 0.16);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .admin-clients-table {
@@ -751,9 +751,9 @@
   display: grid;
   gap: 0.8rem;
   min-width: 0;
-  border: 1px solid rgba(245, 239, 227, 0.1);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--control-bg);
   padding: 0.8rem;
 }
 
@@ -820,10 +820,10 @@
   gap: 1rem;
   width: min(440px, 100%);
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: rgba(24, 27, 23, 0.42);
-  backdrop-filter: blur(6px);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.44);
+  border-radius: var(--radius-md);
+  background: var(--panel-bg-strong);
+  backdrop-filter: var(--blur-md);
+  box-shadow: var(--shadow-modal);
   padding: 1rem;
 }
 
@@ -846,9 +846,9 @@
 .admin-modal header button {
   min-height: 42px;
   border: 1px solid var(--gold);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--gold);
-  color: #15130d;
+  color: var(--ink);
   cursor: pointer;
   font: inherit;
   font-weight: 900;
@@ -856,8 +856,8 @@
 }
 
 .admin-modal header button {
-  border-color: rgba(190, 146, 77, 0.28);
-  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--gold-line);
+  background: var(--control-bg);
   color: var(--heading);
 }
 

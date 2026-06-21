@@ -41,7 +41,7 @@
   min-height: 178px;
   padding: 1.1rem;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--surface);
   color: inherit;
   cursor: pointer;
@@ -51,7 +51,7 @@
 
 .service-row:focus-visible {
   border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(190, 146, 77, 0.18);
+  box-shadow: 0 0 0 3px var(--focus-ring-strong);
   outline: none;
 }
 
