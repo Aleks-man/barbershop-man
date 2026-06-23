@@ -1,5 +1,5 @@
-import { type CSSProperties, useEffect, useMemo, useState } from 'react'
-import { getAvailability } from '../api/availability'
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
+import { getAvailability } from "../api/availability";
 import {
   createAdminBarber,
   createAdminTimeOff,
@@ -18,266 +18,253 @@ import {
   type AdminBarber,
   type AdminSessionRole,
   type AdminTimeOff,
-} from '../api/admin'
-import { BookingDatePicker } from '../components/BookingDatePicker'
-import { BookingSelect, type BookingSelectOption } from '../components/BookingSelect'
-import adminBg from '../assets/admin-bg.webp'
+} from "../api/admin";
+import { BookingDatePicker } from "../components/BookingDatePicker";
+import {
+  BookingSelect,
+  type BookingSelectOption,
+} from "../components/BookingSelect";
+import { useCurrentTime } from "../hooks/useCurrentTime";
+import {
+  createTimeOptions,
+  formatAdminDateTime,
+  formatAdminHeaderDateTime,
+  matchesDatePeriod,
+  type DatePeriod,
+} from "../utils/dateTime";
+import adminBg from "../assets/admin-bg.webp";
 
-const tokenStorageKey = 'barbershop-admin-token'
-const sessionStorageKey = 'barbershop-admin-session'
-const defaultBarberPassword = '111111'
+const tokenStorageKey = "barbershop-admin-token";
+const sessionStorageKey = "barbershop-admin-session";
+const defaultBarberPassword = "111111";
 
 const adminPageStyle = {
-  '--admin-bg': `url(${adminBg})`,
-} as CSSProperties
+  "--admin-bg": `url(${adminBg})`,
+} as CSSProperties;
 
 type AdminSession = {
-  barberId?: string
-  name?: string
-  role: AdminSessionRole
-  token: string
-}
+  barberId?: string;
+  name?: string;
+  role: AdminSessionRole;
+  token: string;
+};
 
 const readStoredSession = () => {
-  const storedSession = sessionStorage.getItem(sessionStorageKey)
+  const storedSession = sessionStorage.getItem(sessionStorageKey);
 
   if (!storedSession) {
-    const legacyToken = sessionStorage.getItem(tokenStorageKey)
+    const legacyToken = sessionStorage.getItem(tokenStorageKey);
 
-    return legacyToken ? { role: 'admin' as const, token: legacyToken } : null
+    return legacyToken ? { role: "admin" as const, token: legacyToken } : null;
   }
 
   try {
-    return JSON.parse(storedSession) as AdminSession
+    return JSON.parse(storedSession) as AdminSession;
   } catch {
-    sessionStorage.removeItem(sessionStorageKey)
-    return null
+    sessionStorage.removeItem(sessionStorageKey);
+    return null;
   }
-}
+};
 
-type AdminTab = 'upcoming' | 'completed' | 'cancelled'
-type AppointmentPeriod = 'all' | 'today' | 'tomorrow' | 'custom'
-type AdminView = 'schedule' | 'clients' | 'barbers' | 'availability'
+type AdminTab = "upcoming" | "completed" | "cancelled";
+type AppointmentPeriod = DatePeriod;
+type AdminView = "schedule" | "clients" | "barbers" | "availability";
 
 const tabs: Array<{ label: string; value: AdminTab }> = [
-  { label: 'Ожидают', value: 'upcoming' },
-  { label: 'Выполнено', value: 'completed' },
-  { label: 'Отменены', value: 'cancelled' },
-]
+  { label: "Ожидают", value: "upcoming" },
+  { label: "Выполнено", value: "completed" },
+  { label: "Отменены", value: "cancelled" },
+];
 
 const periods: Array<{ label: string; value: AppointmentPeriod }> = [
-  { label: 'Все', value: 'all' },
-  { label: 'Сегодня', value: 'today' },
-  { label: 'Завтра', value: 'tomorrow' },
-]
+  { label: "Все", value: "all" },
+  { label: "Сегодня", value: "today" },
+  { label: "Завтра", value: "tomorrow" },
+];
 
 const adminViews: Array<{ label: string; value: AdminView }> = [
-  { label: 'Расписание', value: 'schedule' },
-  { label: 'Клиенты', value: 'clients' },
-  { label: 'Доступность', value: 'availability' },
-  { label: 'Мастера', value: 'barbers' },
-]
+  { label: "Расписание", value: "schedule" },
+  { label: "Клиенты", value: "clients" },
+  { label: "Доступность", value: "availability" },
+  { label: "Мастера", value: "barbers" },
+];
 
-const timeOptions: BookingSelectOption[] = Array.from({ length: 25 }, (_, index) => {
-  const totalMinutes = 10 * 60 + index * 30
-  const hours = String(Math.floor(totalMinutes / 60)).padStart(2, '0')
-  const minutes = String(totalMinutes % 60).padStart(2, '0')
-  const value = `${hours}:${minutes}`
-
-  return {
-    label: value,
-    value,
-  }
-})
-
-const dateTimeFormatter = new Intl.DateTimeFormat('ru-RU', {
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  month: '2-digit',
-  year: 'numeric',
-})
+const timeOptions: BookingSelectOption[] = createTimeOptions({
+  endHour: 22,
+  startHour: 10,
+});
 
 const getAppointmentTab = (appointment: AdminAppointment): AdminTab => {
-  if (appointment.status === 'CANCELLED') {
-    return 'cancelled'
+  if (appointment.status === "CANCELLED") {
+    return "cancelled";
   }
 
-  return new Date(appointment.endsAt) < new Date() ? 'completed' : 'upcoming'
-}
+  return new Date(appointment.endsAt) < new Date() ? "completed" : "upcoming";
+};
 
 const statusLabels: Record<string, string> = {
-  CANCELLED: 'Отменена',
-  COMPLETED: 'Ожидает',
-  CONFIRMED: 'Активна',
-  PENDING: 'Ожидает',
-}
+  CANCELLED: "Отменена",
+  COMPLETED: "Ожидает",
+  CONFIRMED: "Активна",
+  PENDING: "Ожидает",
+};
 
 const getStatusLabel = (appointment: AdminAppointment) =>
-  getAppointmentTab(appointment) === 'completed'
-    ? 'Выполнена'
-    : statusLabels[appointment.status] ?? appointment.status
+  getAppointmentTab(appointment) === "completed"
+    ? "Выполнена"
+    : (statusLabels[appointment.status] ?? appointment.status);
 
 const getStatusTone = (appointment: AdminAppointment) => {
-  const tab = getAppointmentTab(appointment)
+  const tab = getAppointmentTab(appointment);
 
-  if (tab === 'completed') {
-    return 'completed'
+  if (tab === "completed") {
+    return "completed";
   }
 
-  if (tab === 'cancelled') {
-    return 'cancelled'
+  if (tab === "cancelled") {
+    return "cancelled";
   }
 
-  return 'upcoming'
-}
-
-const getDayStart = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate())
-
-const addDays = (date: Date, days: number) => {
-  const nextDate = new Date(date)
-  nextDate.setDate(nextDate.getDate() + days)
-
-  return nextDate
-}
-
-const isSameDay = (date: Date, targetDate: Date) =>
-  date.getFullYear() === targetDate.getFullYear() &&
-  date.getMonth() === targetDate.getMonth() &&
-  date.getDate() === targetDate.getDate()
+  return "upcoming";
+};
 
 const matchesPeriod = (
   appointment: AdminAppointment,
   period: AppointmentPeriod,
   customDate: string,
-) => {
-  if (period === 'all') {
-    return true
-  }
-
-  const appointmentDate = new Date(appointment.startsAt)
-  const today = getDayStart(new Date())
-  const targetDate =
-    period === 'custom' && customDate
-      ? getDayStart(new Date(`${customDate}T00:00:00`))
-      : period === 'today'
-        ? today
-        : addDays(today, 1)
-
-  return isSameDay(appointmentDate, targetDate)
-}
+) => matchesDatePeriod(appointment.startsAt, period, customDate);
 
 export function AdminPage() {
-  const [appointments, setAppointments] = useState<AdminAppointment[]>([])
-  const [barbers, setBarbers] = useState<AdminBarber[]>([])
-  const [timeOffs, setTimeOffs] = useState<AdminTimeOff[]>([])
-  const [errorMessage, setErrorMessage] = useState('')
-  const [session, setSession] = useState<AdminSession | null>(() => readStoredSession())
-  const [isCheckingSession, setIsCheckingSession] = useState(Boolean(session))
-  const [isLoading, setIsLoading] = useState(false)
-  const [isLoadingLoginBarbers, setIsLoadingLoginBarbers] = useState(false)
-  const [loginBarbersMessage, setLoginBarbersMessage] = useState('')
-  const [loginBarbers, setLoginBarbers] = useState<AdminBarber[]>([])
-  const [loginBarberId, setLoginBarberId] = useState('')
-  const [loginRole, setLoginRole] = useState<AdminSessionRole>('admin')
-  const [newBarberDescription, setNewBarberDescription] = useState('')
-  const [newBarberExperience, setNewBarberExperience] = useState('')
-  const [newBarberName, setNewBarberName] = useState('')
-  const [newBarberPassword, setNewBarberPassword] = useState(defaultBarberPassword)
-  const [newBarberPhotoUrl, setNewBarberPhotoUrl] = useState('')
-  const [newBarberRole, setNewBarberRole] = useState('')
-  const [password, setPassword] = useState('')
-  const [adminView, setAdminView] = useState<AdminView>('schedule')
-  const [appointmentDate, setAppointmentDate] = useState('')
-  const [appointmentPeriod, setAppointmentPeriod] = useState<AppointmentPeriod>('all')
-  const [clientSearch, setClientSearch] = useState('')
-  const [selectedBarberId, setSelectedBarberId] = useState('')
-  const [selectedTab, setSelectedTab] = useState<AdminTab>('upcoming')
-  const [rescheduleAppointmentId, setRescheduleAppointmentId] = useState('')
-  const [rescheduleDate, setRescheduleDate] = useState('')
-  const [rescheduleTime, setRescheduleTime] = useState('')
-  const [rescheduleTimeOptions, setRescheduleTimeOptions] = useState<BookingSelectOption[]>([])
-  const [timeOffBarberId, setTimeOffBarberId] = useState('')
-  const [timeOffEndDate, setTimeOffEndDate] = useState('')
-  const [timeOffEndTime, setTimeOffEndTime] = useState('')
-  const [timeOffReason, setTimeOffReason] = useState('')
-  const [timeOffStartDate, setTimeOffStartDate] = useState('')
-  const [timeOffStartTime, setTimeOffStartTime] = useState('')
-  const [updatingAppointmentId, setUpdatingAppointmentId] = useState('')
-  const token = session?.token ?? ''
-  const isAdminSession = session?.role === 'admin'
+  const currentTime = useCurrentTime();
+  const [appointments, setAppointments] = useState<AdminAppointment[]>([]);
+  const [barbers, setBarbers] = useState<AdminBarber[]>([]);
+  const [timeOffs, setTimeOffs] = useState<AdminTimeOff[]>([]);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [session, setSession] = useState<AdminSession | null>(() =>
+    readStoredSession(),
+  );
+  const [isCheckingSession, setIsCheckingSession] = useState(Boolean(session));
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingLoginBarbers, setIsLoadingLoginBarbers] = useState(false);
+  const [loginBarbersMessage, setLoginBarbersMessage] = useState("");
+  const [loginBarbers, setLoginBarbers] = useState<AdminBarber[]>([]);
+  const [loginBarberId, setLoginBarberId] = useState("");
+  const [loginRole, setLoginRole] = useState<AdminSessionRole>("admin");
+  const [newBarberDescription, setNewBarberDescription] = useState("");
+  const [newBarberExperience, setNewBarberExperience] = useState("");
+  const [newBarberName, setNewBarberName] = useState("");
+  const [newBarberPassword, setNewBarberPassword] = useState(
+    defaultBarberPassword,
+  );
+  const [newBarberPhotoUrl, setNewBarberPhotoUrl] = useState("");
+  const [newBarberRole, setNewBarberRole] = useState("");
+  const [password, setPassword] = useState("");
+  const [adminView, setAdminView] = useState<AdminView>("schedule");
+  const [appointmentDate, setAppointmentDate] = useState("");
+  const [appointmentPeriod, setAppointmentPeriod] =
+    useState<AppointmentPeriod>("all");
+  const [clientSearch, setClientSearch] = useState("");
+  const [selectedBarberId, setSelectedBarberId] = useState("");
+  const [selectedTab, setSelectedTab] = useState<AdminTab>("upcoming");
+  const [rescheduleAppointmentId, setRescheduleAppointmentId] = useState("");
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleTime, setRescheduleTime] = useState("");
+  const [rescheduleTimeOptions, setRescheduleTimeOptions] = useState<
+    BookingSelectOption[]
+  >([]);
+  const [timeOffBarberId, setTimeOffBarberId] = useState("");
+  const [timeOffEndDate, setTimeOffEndDate] = useState("");
+  const [timeOffEndTime, setTimeOffEndTime] = useState("");
+  const [timeOffReason, setTimeOffReason] = useState("");
+  const [timeOffStartDate, setTimeOffStartDate] = useState("");
+  const [timeOffStartTime, setTimeOffStartTime] = useState("");
+  const [updatingAppointmentId, setUpdatingAppointmentId] = useState("");
+  const token = session?.token ?? "";
+  const isAdminSession = session?.role === "admin";
 
   const rescheduleAppointment = appointments.find(
     (appointment) => appointment.id === rescheduleAppointmentId,
-  )
+  );
 
   const loadLoginBarbers = () => {
-    setIsLoadingLoginBarbers(true)
-    setLoginBarbersMessage('')
+    setIsLoadingLoginBarbers(true);
+    setLoginBarbersMessage("");
 
-    fetch('/api/barbers')
+    fetch("/api/barbers")
       .then((response) => {
         if (!response.ok) {
-          throw new Error('Failed to load barbers')
+          throw new Error("Failed to load barbers");
         }
 
-        return response.json() as Promise<{ barbers: AdminBarber[] }>
+        return response.json() as Promise<{ barbers: AdminBarber[] }>;
       })
       .then((data) => {
-        setLoginBarbers(data.barbers)
-        setLoginBarberId((currentBarberId) => currentBarberId || data.barbers[0]?.id || '')
-        setLoginBarbersMessage(data.barbers.length === 0 ? 'В базе пока нет активных мастеров.' : '')
+        setLoginBarbers(data.barbers);
+        setLoginBarberId(
+          (currentBarberId) => currentBarberId || data.barbers[0]?.id || "",
+        );
+        setLoginBarbersMessage(
+          data.barbers.length === 0 ? "В базе пока нет активных мастеров." : "",
+        );
       })
       .catch(() => {
-        setLoginBarbers([])
-        setLoginBarberId('')
-        setLoginBarbersMessage('Не удалось загрузить мастеров из базы. Проверьте, что backend запущен.')
+        setLoginBarbers([]);
+        setLoginBarberId("");
+        setLoginBarbersMessage(
+          "Не удалось загрузить мастеров из базы. Проверьте, что backend запущен.",
+        );
       })
       .finally(() => {
-        setIsLoadingLoginBarbers(false)
-      })
-  }
+        setIsLoadingLoginBarbers(false);
+      });
+  };
 
   useEffect(() => {
     if (session) {
-      return
+      return;
     }
 
-    let isMounted = true
+    let isMounted = true;
 
-    fetch('/api/barbers')
+    fetch("/api/barbers")
       .then((response) => {
         if (!response.ok) {
-          throw new Error('Failed to load barbers')
+          throw new Error("Failed to load barbers");
         }
 
-        return response.json() as Promise<{ barbers: AdminBarber[] }>
+        return response.json() as Promise<{ barbers: AdminBarber[] }>;
       })
       .then((data) => {
         if (!isMounted) {
-          return
+          return;
         }
 
-        setLoginBarbers(data.barbers)
-        setLoginBarberId((currentBarberId) => currentBarberId || data.barbers[0]?.id || '')
-        setLoginBarbersMessage(data.barbers.length === 0 ? 'В базе пока нет активных мастеров.' : '')
+        setLoginBarbers(data.barbers);
+        setLoginBarberId(
+          (currentBarberId) => currentBarberId || data.barbers[0]?.id || "",
+        );
+        setLoginBarbersMessage(
+          data.barbers.length === 0 ? "В базе пока нет активных мастеров." : "",
+        );
       })
       .catch(() => {
         if (isMounted) {
-          setLoginBarbers([])
-          setLoginBarberId('')
-          setLoginBarbersMessage('Не удалось загрузить мастеров из базы. Проверьте, что backend запущен.')
+          setLoginBarbers([]);
+          setLoginBarberId("");
+          setLoginBarbersMessage(
+            "Не удалось загрузить мастеров из базы. Проверьте, что backend запущен.",
+          );
         }
-      })
+      });
 
     return () => {
-      isMounted = false
-    }
-  }, [session])
+      isMounted = false;
+    };
+  }, [session]);
 
   useEffect(() => {
     if (!session) {
-      return
+      return;
     }
 
     Promise.all([
@@ -286,43 +273,56 @@ export function AdminPage() {
       getAdminTimeOff(session.token),
     ])
       .then(([nextBarbers, nextAppointments, nextTimeOffs]) => {
-        setBarbers(nextBarbers)
-        setAppointments(nextAppointments)
-        setTimeOffs(nextTimeOffs)
+        setBarbers(nextBarbers);
+        setAppointments(nextAppointments);
+        setTimeOffs(nextTimeOffs);
         setSelectedBarberId((currentBarberId) =>
-          session.role === 'barber'
-            ? session.barberId || nextBarbers[0]?.id || ''
+          session.role === "barber"
+            ? session.barberId || nextBarbers[0]?.id || ""
             : currentBarberId,
-        )
+        );
         setTimeOffBarberId((currentBarberId) =>
-          session.role === 'barber'
-            ? session.barberId || nextBarbers[0]?.id || ''
-            : currentBarberId || nextBarbers.find((barber) => barber.isActive !== false)?.id || '',
-        )
-        setErrorMessage('')
+          session.role === "barber"
+            ? session.barberId || nextBarbers[0]?.id || ""
+            : currentBarberId ||
+              nextBarbers.find((barber) => barber.isActive !== false)?.id ||
+              "",
+        );
+        setErrorMessage("");
       })
       .catch(() => {
-        sessionStorage.removeItem(tokenStorageKey)
-        sessionStorage.removeItem(sessionStorageKey)
-        setSession(null)
-        setAppointments([])
-        setBarbers([])
-        setTimeOffs([])
-        setErrorMessage('Сессия истекла. Войдите снова.')
+        sessionStorage.removeItem(tokenStorageKey);
+        sessionStorage.removeItem(sessionStorageKey);
+        setSession(null);
+        setAppointments([]);
+        setBarbers([]);
+        setTimeOffs([]);
+        setErrorMessage("Сессия истекла. Войдите снова.");
       })
       .finally(() => {
-        setIsCheckingSession(false)
-      })
-  }, [session])
+        setIsCheckingSession(false);
+      });
+  }, [session]);
 
-  const activeBarbers = useMemo(() => barbers.filter((barber) => barber.isActive !== false), [barbers])
-  const hiddenBarbers = useMemo(() => barbers.filter((barber) => barber.isActive === false), [barbers])
-  const selectedBarber = activeBarbers.find((barber) => barber.id === selectedBarberId)
-  const timeOffBarber = activeBarbers.find((barber) => barber.id === timeOffBarberId)
+  const activeBarbers = useMemo(
+    () => barbers.filter((barber) => barber.isActive !== false),
+    [barbers],
+  );
+  const hiddenBarbers = useMemo(
+    () => barbers.filter((barber) => barber.isActive === false),
+    [barbers],
+  );
+  const selectedBarber = activeBarbers.find(
+    (barber) => barber.id === selectedBarberId,
+  );
+  const timeOffBarber = activeBarbers.find(
+    (barber) => barber.id === timeOffBarberId,
+  );
   const visibleAdminViews = useMemo(
-    () => adminViews.filter((view) => isAdminSession || view.value !== 'barbers'),
+    () =>
+      adminViews.filter((view) => isAdminSession || view.value !== "barbers"),
     [isAdminSession],
-  )
+  );
   const activeBarberOptions = useMemo(
     () =>
       activeBarbers.map((barber) => ({
@@ -330,50 +330,59 @@ export function AdminPage() {
         value: barber.id,
       })),
     [activeBarbers],
-  )
+  );
   const filteredTimeOffs = useMemo(
     () =>
       timeOffs.filter((timeOff) =>
-        isAdminSession ? !timeOffBarberId || timeOff.barber.id === timeOffBarberId : true,
+        isAdminSession
+          ? !timeOffBarberId || timeOff.barber.id === timeOffBarberId
+          : true,
       ),
     [isAdminSession, timeOffBarberId, timeOffs],
-  )
+  );
   const timeOffStartsAt =
     timeOffStartDate && timeOffStartTime
       ? new Date(`${timeOffStartDate}T${timeOffStartTime}:00`)
-      : null
+      : null;
   const timeOffEndsAt =
-    timeOffEndDate && timeOffEndTime ? new Date(`${timeOffEndDate}T${timeOffEndTime}:00`) : null
+    timeOffEndDate && timeOffEndTime
+      ? new Date(`${timeOffEndDate}T${timeOffEndTime}:00`)
+      : null;
   const isTimeOffRangeValid =
     Boolean(timeOffStartsAt && timeOffEndsAt) &&
-    Number(timeOffStartsAt) < Number(timeOffEndsAt)
-  const canViewAllBarbers = isAdminSession && !selectedBarberId
+    Number(timeOffStartsAt) < Number(timeOffEndsAt);
+  const canViewAllBarbers = isAdminSession && !selectedBarberId;
   const scopedAppointments = useMemo(
     () =>
       canViewAllBarbers
         ? appointments
-        : appointments.filter((appointment) => appointment.barber.id === selectedBarberId),
+        : appointments.filter(
+            (appointment) => appointment.barber.id === selectedBarberId,
+          ),
     [appointments, canViewAllBarbers, selectedBarberId],
-  )
+  );
   const periodAppointments = useMemo(
     () =>
       scopedAppointments.filter((appointment) =>
         matchesPeriod(appointment, appointmentPeriod, appointmentDate),
       ),
     [appointmentDate, appointmentPeriod, scopedAppointments],
-  )
+  );
   const filteredAppointments = useMemo(
     () =>
-      periodAppointments.filter((appointment) => getAppointmentTab(appointment) === selectedTab),
+      periodAppointments.filter(
+        (appointment) => getAppointmentTab(appointment) === selectedTab,
+      ),
     [periodAppointments, selectedTab],
-  )
+  );
   const tabCounts = useMemo(
     () =>
       tabs.reduce<Record<AdminTab, number>>(
         (counts, tab) => ({
           ...counts,
-          [tab.value]: periodAppointments.filter((appointment) => getAppointmentTab(appointment) === tab.value)
-            .length,
+          [tab.value]: periodAppointments.filter(
+            (appointment) => getAppointmentTab(appointment) === tab.value,
+          ).length,
         }),
         {
           cancelled: 0,
@@ -382,23 +391,31 @@ export function AdminPage() {
         },
       ),
     [periodAppointments],
-  )
+  );
   const clientSourceAppointments = useMemo(
     () =>
       isAdminSession
         ? appointments
-        : appointments.filter((appointment) => appointment.barber.id === selectedBarberId),
+        : appointments.filter(
+            (appointment) => appointment.barber.id === selectedBarberId,
+          ),
     [appointments, isAdminSession, selectedBarberId],
-  )
+  );
   const clients = useMemo(() => {
     const clientsByPhone = new Map<
       string,
-      { barberNames: Set<string>; lastVisit: string; name: string; phone: string; visits: number }
-    >()
+      {
+        barberNames: Set<string>;
+        lastVisit: string;
+        name: string;
+        phone: string;
+        visits: number;
+      }
+    >();
 
     clientSourceAppointments.forEach((appointment) => {
-      const existingClient = clientsByPhone.get(appointment.customerPhone)
-      const nextVisitTime = new Date(appointment.startsAt).getTime()
+      const existingClient = clientsByPhone.get(appointment.customerPhone);
+      const nextVisitTime = new Date(appointment.startsAt).getTime();
 
       if (!existingClient) {
         clientsByPhone.set(appointment.customerPhone, {
@@ -407,12 +424,15 @@ export function AdminPage() {
           name: appointment.customerName,
           phone: appointment.customerPhone,
           visits: 1,
-        })
-        return
+        });
+        return;
       }
 
       clientsByPhone.set(appointment.customerPhone, {
-        barberNames: new Set([...existingClient.barberNames, appointment.barber.name]),
+        barberNames: new Set([
+          ...existingClient.barberNames,
+          appointment.barber.name,
+        ]),
         lastVisit:
           nextVisitTime > new Date(existingClient.lastVisit).getTime()
             ? appointment.startsAt
@@ -420,32 +440,33 @@ export function AdminPage() {
         name: existingClient.name || appointment.customerName,
         phone: appointment.customerPhone,
         visits: existingClient.visits + 1,
-      })
-    })
+      });
+    });
 
-    return Array.from(clientsByPhone.values()).sort((firstClient, secondClient) =>
-      firstClient.name.localeCompare(secondClient.name, 'ru'),
-    )
-  }, [clientSourceAppointments])
+    return Array.from(clientsByPhone.values()).sort(
+      (firstClient, secondClient) =>
+        firstClient.name.localeCompare(secondClient.name, "ru"),
+    );
+  }, [clientSourceAppointments]);
   const filteredClients = useMemo(() => {
-    const searchValue = clientSearch.trim().toLowerCase()
+    const searchValue = clientSearch.trim().toLowerCase();
 
     if (!searchValue) {
-      return clients
+      return clients;
     }
 
-    const searchDigits = searchValue.replace(/\D/g, '')
+    const searchDigits = searchValue.replace(/\D/g, "");
 
     return clients.filter((client) => {
-      const clientDigits = client.phone.replace(/\D/g, '')
+      const clientDigits = client.phone.replace(/\D/g, "");
 
       return (
         client.name.toLowerCase().includes(searchValue) ||
         client.phone.toLowerCase().includes(searchValue) ||
         (Boolean(searchDigits) && clientDigits.includes(searchDigits))
-      )
-    })
-  }, [clientSearch, clients])
+      );
+    });
+  }, [clientSearch, clients]);
   const loginBarberOptions = useMemo(
     () =>
       loginBarbers.map((barber) => ({
@@ -453,77 +474,76 @@ export function AdminPage() {
         value: barber.id,
       })),
     [loginBarbers],
-  )
+  );
 
   const handleLogin = async () => {
-    if (!password.trim() || (loginRole === 'barber' && !loginBarberId)) {
-      return
+    if (!password.trim() || (loginRole === "barber" && !loginBarberId)) {
+      return;
     }
 
-    setIsLoading(true)
-    setErrorMessage('')
+    setIsLoading(true);
+    setErrorMessage("");
 
     try {
       const response = await loginAdmin({
-        barberId: loginRole === 'barber' ? loginBarberId : undefined,
+        barberId: loginRole === "barber" ? loginBarberId : undefined,
         password,
         role: loginRole,
-      })
+      });
       const nextSession: AdminSession = {
         barberId: response.barberId,
         name: response.name,
         role: response.role,
         token: response.token,
-      }
+      };
 
-      sessionStorage.removeItem(tokenStorageKey)
-      sessionStorage.setItem(sessionStorageKey, JSON.stringify(nextSession))
-      setSession(nextSession)
-      setIsCheckingSession(true)
-      setPassword('')
+      sessionStorage.removeItem(tokenStorageKey);
+      sessionStorage.setItem(sessionStorageKey, JSON.stringify(nextSession));
+      setSession(nextSession);
+      setIsCheckingSession(true);
+      setPassword("");
     } catch {
-      setErrorMessage('Неверный пароль.')
+      setErrorMessage("Неверный пароль.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleLogout = () => {
-    sessionStorage.removeItem(tokenStorageKey)
-    sessionStorage.removeItem(sessionStorageKey)
-    setSession(null)
-    setAppointments([])
-    setBarbers([])
-    setTimeOffs([])
-    setAdminView('schedule')
-    setAppointmentDate('')
-    setAppointmentPeriod('all')
-    setClientSearch('')
-    setSelectedBarberId('')
-    setTimeOffBarberId('')
-    setTimeOffEndDate('')
-    setTimeOffEndTime('')
-    setTimeOffReason('')
-    setTimeOffStartDate('')
-    setTimeOffStartTime('')
-  }
+    sessionStorage.removeItem(tokenStorageKey);
+    sessionStorage.removeItem(sessionStorageKey);
+    setSession(null);
+    setAppointments([]);
+    setBarbers([]);
+    setTimeOffs([]);
+    setAdminView("schedule");
+    setAppointmentDate("");
+    setAppointmentPeriod("all");
+    setClientSearch("");
+    setSelectedBarberId("");
+    setTimeOffBarberId("");
+    setTimeOffEndDate("");
+    setTimeOffEndTime("");
+    setTimeOffReason("");
+    setTimeOffStartDate("");
+    setTimeOffStartTime("");
+  };
 
   const handleCreateBarber = async () => {
     if (!isAdminSession || !newBarberName.trim()) {
-      return
+      return;
     }
 
-    setIsLoading(true)
-    setErrorMessage('')
+    setIsLoading(true);
+    setErrorMessage("");
 
     try {
-      const uploadedPhoto =
-        newBarberPhotoUrl.startsWith('data:image/')
-          ? await uploadAdminBarberPhoto({
-              dataUrl: newBarberPhotoUrl,
-              token,
-            })
-          : null
+      const uploadedPhoto = newBarberPhotoUrl.startsWith("data:image/")
+        ? await uploadAdminBarberPhoto({
+            dataUrl: newBarberPhotoUrl,
+            token,
+          })
+        : null;
       const response = await createAdminBarber({
         description: newBarberDescription,
         experience: newBarberExperience,
@@ -532,145 +552,157 @@ export function AdminPage() {
         photoUrl: uploadedPhoto?.photoUrl ?? newBarberPhotoUrl,
         role: newBarberRole,
         token,
-      })
+      });
 
-      setBarbers((currentBarbers) => [...currentBarbers, response.barber])
-      setSelectedBarberId((currentBarberId) => currentBarberId || response.barber.id)
-      setNewBarberDescription('')
-      setNewBarberExperience('')
-      setNewBarberName('')
-      setNewBarberPassword(defaultBarberPassword)
-      setNewBarberPhotoUrl('')
-      setNewBarberRole('')
+      setBarbers((currentBarbers) => [...currentBarbers, response.barber]);
+      setSelectedBarberId(
+        (currentBarberId) => currentBarberId || response.barber.id,
+      );
+      setNewBarberDescription("");
+      setNewBarberExperience("");
+      setNewBarberName("");
+      setNewBarberPassword(defaultBarberPassword);
+      setNewBarberPhotoUrl("");
+      setNewBarberRole("");
     } catch {
-      setErrorMessage('Не удалось добавить мастера.')
+      setErrorMessage("Не удалось добавить мастера.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleBarberPhotoChange = (file: File | undefined) => {
     if (!file) {
-      setNewBarberPhotoUrl('')
-      return
+      setNewBarberPhotoUrl("");
+      return;
     }
 
-    const reader = new FileReader()
+    const reader = new FileReader();
 
-    reader.addEventListener('load', () => {
-      if (typeof reader.result === 'string') {
-        setNewBarberPhotoUrl(reader.result)
+    reader.addEventListener("load", () => {
+      if (typeof reader.result === "string") {
+        setNewBarberPhotoUrl(reader.result);
       }
-    })
-    reader.readAsDataURL(file)
-  }
+    });
+    reader.readAsDataURL(file);
+  };
 
   const handleHideBarber = async (barberId: string) => {
     if (!isAdminSession) {
-      return
+      return;
     }
 
-    const barber = barbers.find((currentBarber) => currentBarber.id === barberId)
+    const barber = barbers.find(
+      (currentBarber) => currentBarber.id === barberId,
+    );
     const shouldHide = window.confirm(
-      `Скрыть мастера ${barber?.name ?? ''}? Он пропадет с сайта, но останется в архиве.`,
-    )
+      `Скрыть мастера ${barber?.name ?? ""}? Он пропадет с сайта, но останется в архиве.`,
+    );
 
     if (!shouldHide) {
-      return
+      return;
     }
 
-    setIsLoading(true)
-    setErrorMessage('')
+    setIsLoading(true);
+    setErrorMessage("");
 
     try {
       await hideAdminBarber({
         barberId,
         token,
-      })
+      });
 
       setBarbers((currentBarbers) => {
         if (selectedBarberId === barberId) {
-          setSelectedBarberId('')
+          setSelectedBarberId("");
         }
 
         return currentBarbers.map((barber) =>
           barber.id === barberId ? { ...barber, isActive: false } : barber,
-        )
-      })
+        );
+      });
     } catch {
-      setErrorMessage('Не удалось скрыть мастера. Проверьте, что у него нет будущих записей.')
+      setErrorMessage(
+        "Не удалось скрыть мастера. Проверьте, что у него нет будущих записей.",
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleRestoreBarber = async (barberId: string) => {
     if (!isAdminSession) {
-      return
+      return;
     }
 
-    setIsLoading(true)
-    setErrorMessage('')
+    setIsLoading(true);
+    setErrorMessage("");
 
     try {
       const response = await restoreAdminBarber({
         barberId,
         token,
-      })
+      });
 
       setBarbers((currentBarbers) =>
-        currentBarbers.map((barber) => (barber.id === barberId ? response.barber : barber)),
-      )
+        currentBarbers.map((barber) =>
+          barber.id === barberId ? response.barber : barber,
+        ),
+      );
     } catch {
-      setErrorMessage('Не удалось восстановить мастера.')
+      setErrorMessage("Не удалось восстановить мастера.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleDeleteBarber = async (barberId: string) => {
     if (!isAdminSession) {
-      return
+      return;
     }
 
-    const barber = barbers.find((currentBarber) => currentBarber.id === barberId)
+    const barber = barbers.find(
+      (currentBarber) => currentBarber.id === barberId,
+    );
     const shouldDelete = window.confirm(
-      `Удалить мастера ${barber?.name ?? ''} из базы навсегда? Это действие нельзя отменить.`,
-    )
+      `Удалить мастера ${barber?.name ?? ""} из базы навсегда? Это действие нельзя отменить.`,
+    );
 
     if (!shouldDelete) {
-      return
+      return;
     }
 
-    setIsLoading(true)
-    setErrorMessage('')
+    setIsLoading(true);
+    setErrorMessage("");
 
     try {
       await deleteAdminBarber({
         barberId,
         token,
-      })
+      });
 
       setBarbers((currentBarbers) =>
         currentBarbers.filter((currentBarber) => currentBarber.id !== barberId),
-      )
+      );
       setTimeOffs((currentTimeOffs) =>
         currentTimeOffs.filter((timeOff) => timeOff.barber.id !== barberId),
-      )
+      );
     } catch {
-      setErrorMessage('Не удалось удалить мастера. Удаление доступно только если у него нет записей.')
+      setErrorMessage(
+        "Не удалось удалить мастера. Удаление доступно только если у него нет записей.",
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleCreateTimeOff = async () => {
     if (!timeOffBarberId || !isTimeOffRangeValid || !timeOffReason.trim()) {
-      return
+      return;
     }
 
-    setIsLoading(true)
-    setErrorMessage('')
+    setIsLoading(true);
+    setErrorMessage("");
 
     try {
       const response = await createAdminTimeOff({
@@ -681,83 +713,88 @@ export function AdminPage() {
         startDate: timeOffStartDate,
         startTime: timeOffStartTime,
         token,
-      })
+      });
 
       setTimeOffs((currentTimeOffs) =>
         [...currentTimeOffs, response.timeOff].sort(
           (firstTimeOff, secondTimeOff) =>
-            new Date(firstTimeOff.startsAt).getTime() - new Date(secondTimeOff.startsAt).getTime(),
+            new Date(firstTimeOff.startsAt).getTime() -
+            new Date(secondTimeOff.startsAt).getTime(),
         ),
-      )
-      setTimeOffEndDate('')
-      setTimeOffEndTime('')
-      setTimeOffReason('')
-      setTimeOffStartDate('')
-      setTimeOffStartTime('')
+      );
+      setTimeOffEndDate("");
+      setTimeOffEndTime("");
+      setTimeOffReason("");
+      setTimeOffStartDate("");
+      setTimeOffStartTime("");
     } catch {
-      setErrorMessage('Не удалось закрыть период. Проверьте время и активные записи мастера.')
+      setErrorMessage(
+        "Не удалось закрыть период. Проверьте время и активные записи мастера.",
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleDeleteTimeOff = async (timeOffId: string) => {
-    const shouldDelete = window.confirm('Отменить этот закрытый период? После этого время снова станет доступно для записи.')
+    const shouldDelete = window.confirm(
+      "Отменить этот закрытый период? После этого время снова станет доступно для записи.",
+    );
 
     if (!shouldDelete) {
-      return
+      return;
     }
 
-    setIsLoading(true)
-    setErrorMessage('')
+    setIsLoading(true);
+    setErrorMessage("");
 
     try {
       await deleteAdminTimeOff({
         timeOffId,
         token,
-      })
+      });
 
       setTimeOffs((currentTimeOffs) =>
         currentTimeOffs.filter((timeOff) => timeOff.id !== timeOffId),
-      )
+      );
     } catch {
-      setErrorMessage('Не удалось отменить закрытый период.')
+      setErrorMessage("Не удалось отменить закрытый период.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleCancelAppointment = async (appointmentId: string) => {
-    setUpdatingAppointmentId(appointmentId)
-    setErrorMessage('')
+    setUpdatingAppointmentId(appointmentId);
+    setErrorMessage("");
 
     try {
       await updateAdminAppointmentStatus({
         appointmentId,
-        status: 'CANCELLED',
+        status: "CANCELLED",
         token,
-      })
+      });
 
       setAppointments((currentAppointments) =>
         currentAppointments.map((appointment) =>
           appointment.id === appointmentId
-            ? { ...appointment, status: 'CANCELLED' }
+            ? { ...appointment, status: "CANCELLED" }
             : appointment,
         ),
-      )
+      );
     } catch {
-      setErrorMessage('Не удалось отменить запись.')
+      setErrorMessage("Не удалось отменить запись.");
     } finally {
-      setUpdatingAppointmentId('')
+      setUpdatingAppointmentId("");
     }
-  }
+  };
 
   useEffect(() => {
     if (!rescheduleAppointment || !rescheduleDate) {
-      return
+      return;
     }
 
-    let isMounted = true
+    let isMounted = true;
 
     getAvailability({
       barberId: rescheduleAppointment.barber.id,
@@ -766,42 +803,42 @@ export function AdminPage() {
     })
       .then((slots) => {
         if (!isMounted) {
-          return
+          return;
         }
 
-        setRescheduleTimeOptions(slots)
+        setRescheduleTimeOptions(slots);
       })
       .catch(() => {
-        setRescheduleTimeOptions([])
-      })
+        setRescheduleTimeOptions([]);
+      });
 
     return () => {
-      isMounted = false
-    }
-  }, [rescheduleAppointment, rescheduleDate])
+      isMounted = false;
+    };
+  }, [rescheduleAppointment, rescheduleDate]);
 
   const openRescheduleForm = (appointment: AdminAppointment) => {
-    setRescheduleAppointmentId(appointment.id)
-    setRescheduleDate('')
-    setRescheduleTime('')
-    setRescheduleTimeOptions([])
-    setErrorMessage('')
-  }
+    setRescheduleAppointmentId(appointment.id);
+    setRescheduleDate("");
+    setRescheduleTime("");
+    setRescheduleTimeOptions([]);
+    setErrorMessage("");
+  };
 
   const closeRescheduleForm = () => {
-    setRescheduleAppointmentId('')
-    setRescheduleDate('')
-    setRescheduleTime('')
-    setRescheduleTimeOptions([])
-  }
+    setRescheduleAppointmentId("");
+    setRescheduleDate("");
+    setRescheduleTime("");
+    setRescheduleTimeOptions([]);
+  };
 
   const handleRescheduleAppointment = async () => {
     if (!rescheduleAppointment || !rescheduleDate || !rescheduleTime) {
-      return
+      return;
     }
 
-    setUpdatingAppointmentId(rescheduleAppointment.id)
-    setErrorMessage('')
+    setUpdatingAppointmentId(rescheduleAppointment.id);
+    setErrorMessage("");
 
     try {
       const response = await rescheduleAdminAppointment({
@@ -809,7 +846,7 @@ export function AdminPage() {
         date: rescheduleDate,
         time: rescheduleTime,
         token,
-      })
+      });
 
       setAppointments((currentAppointments) =>
         currentAppointments.map((appointment) =>
@@ -821,18 +858,18 @@ export function AdminPage() {
               }
             : appointment,
         ),
-      )
-      closeRescheduleForm()
+      );
+      closeRescheduleForm();
     } catch {
-      setErrorMessage('Не удалось перенести запись. Выберите другое время.')
+      setErrorMessage("Не удалось перенести запись. Выберите другое время.");
     } finally {
-      setUpdatingAppointmentId('')
+      setUpdatingAppointmentId("");
     }
-  }
+  };
 
   const renderAppointmentActions = (appointment: AdminAppointment) => {
-    if (selectedTab !== 'upcoming') {
-      return null
+    if (selectedTab !== "upcoming") {
+      return null;
     }
 
     return (
@@ -852,8 +889,8 @@ export function AdminPage() {
           Отменить
         </button>
       </div>
-    )
-  }
+    );
+  };
 
   if (!session) {
     return (
@@ -864,36 +901,40 @@ export function AdminPage() {
         <form
           className="admin-login"
           onSubmit={(event) => {
-            event.preventDefault()
-            void handleLogin()
+            event.preventDefault();
+            void handleLogin();
           }}
         >
           <span className="admin-eyebrow">Gentleman's Room</span>
           <h1>Вход в админку</h1>
-          <div className="admin-login-roles" role="tablist" aria-label="Роль входа">
+          <div
+            className="admin-login-roles"
+            role="tablist"
+            aria-label="Роль входа"
+          >
             <button
               type="button"
-              aria-selected={loginRole === 'admin'}
+              aria-selected={loginRole === "admin"}
               onClick={() => {
-                setLoginRole('admin')
-                setErrorMessage('')
+                setLoginRole("admin");
+                setErrorMessage("");
               }}
             >
               Админ
             </button>
             <button
               type="button"
-              aria-selected={loginRole === 'barber'}
+              aria-selected={loginRole === "barber"}
               onClick={() => {
-                setLoginRole('barber')
-                setErrorMessage('')
-                loadLoginBarbers()
+                setLoginRole("barber");
+                setErrorMessage("");
+                loadLoginBarbers();
               }}
             >
               Мастер
             </button>
           </div>
-          {loginRole === 'barber' && (
+          {loginRole === "barber" && (
             <>
               <BookingSelect
                 disabled={isLoadingLoginBarbers}
@@ -901,15 +942,19 @@ export function AdminPage() {
                 name="loginBarber"
                 options={loginBarberOptions}
                 placeholder={
-                  isLoadingLoginBarbers ? 'Загружаем мастеров' : 'Выберите мастера'
+                  isLoadingLoginBarbers
+                    ? "Загружаем мастеров"
+                    : "Выберите мастера"
                 }
                 value={loginBarberId}
                 onChange={(nextBarberId) => {
-                  setLoginBarberId(nextBarberId)
-                  setErrorMessage('')
+                  setLoginBarberId(nextBarberId);
+                  setErrorMessage("");
                 }}
               />
-              {loginBarbersMessage && <p className="admin-login-note">{loginBarbersMessage}</p>}
+              {loginBarbersMessage && (
+                <p className="admin-login-note">{loginBarbersMessage}</p>
+              )}
             </>
           )}
           <label>
@@ -918,15 +963,19 @@ export function AdminPage() {
               type="password"
               value={password}
               onChange={(event) => {
-                setPassword(event.target.value)
-                setErrorMessage('')
+                setPassword(event.target.value);
+                setErrorMessage("");
               }}
             />
           </label>
           <button
             type="button"
             className="admin-login-submit"
-            disabled={isLoading || !password.trim() || (loginRole === 'barber' && !loginBarberId)}
+            disabled={
+              isLoading ||
+              !password.trim() ||
+              (loginRole === "barber" && !loginBarberId)
+            }
             onClick={handleLogin}
           >
             Войти
@@ -934,7 +983,7 @@ export function AdminPage() {
           {errorMessage && <p role="status">{errorMessage}</p>}
         </form>
       </main>
-    )
+    );
   }
 
   return (
@@ -945,8 +994,13 @@ export function AdminPage() {
       <section className="admin-shell">
         <header className="admin-header">
           <div>
-            <span className="admin-eyebrow">{isAdminSession ? 'Админка' : 'Кабинет мастера'}</span>
-            <h1>{isAdminSession ? 'Расписание мастеров' : 'Мои записи'}</h1>
+            <span className="admin-eyebrow">
+              {isAdminSession ? "Кабинет админа" : "Кабинет мастера"}
+            </span>
+            <span className="admin-eyebrow">
+              {formatAdminHeaderDateTime(currentTime)}
+            </span>
+            <h1>{isAdminSession ? "Расписание мастеров" : "Мои записи"}</h1>
           </div>
           <button type="button" onClick={handleLogout}>
             Выйти
@@ -966,332 +1020,369 @@ export function AdminPage() {
           ))}
         </nav>
 
-        {isCheckingSession && <p className="admin-muted">Загружаем расписание...</p>}
+        {isCheckingSession && (
+          <p className="admin-muted">Загружаем расписание...</p>
+        )}
         {errorMessage && <p className="admin-alert">{errorMessage}</p>}
 
-        {!isCheckingSession && activeBarbers.length > 0 && adminView === 'schedule' && (
-          <>
-            {isAdminSession && (
-              <nav className="admin-barbers" aria-label="Мастера">
-                <button
-                  type="button"
-                  aria-pressed={!selectedBarberId}
-                  onClick={() => {
-                    setSelectedBarberId('')
-                    setSelectedTab('upcoming')
-                  }}
-                >
-                  <span>Все мастера</span>
-                  <small>Общее расписание</small>
-                </button>
-                {activeBarbers.map((barber) => (
+        {!isCheckingSession &&
+          activeBarbers.length > 0 &&
+          adminView === "schedule" && (
+            <>
+              {isAdminSession && (
+                <nav className="admin-barbers" aria-label="Мастера">
                   <button
                     type="button"
-                    aria-pressed={barber.id === selectedBarberId}
-                    key={barber.id}
+                    aria-pressed={!selectedBarberId}
                     onClick={() => {
-                      setSelectedBarberId(barber.id)
-                      setSelectedTab('upcoming')
+                      setSelectedBarberId("");
+                      setSelectedTab("upcoming");
                     }}
                   >
-                    <span>{barber.name}</span>
-                    {barber.role && <small>{barber.role}</small>}
+                    <span>Все мастера</span>
+                    <small>Общее расписание</small>
                   </button>
-                ))}
-              </nav>
-            )}
-
-            <section className="admin-schedule">
-              <header className="admin-schedule-header">
-                <div>
-                  <span className="admin-eyebrow">{canViewAllBarbers ? 'Обзор' : 'Мастер'}</span>
-                  <h2>{canViewAllBarbers ? 'Все мастера' : selectedBarber?.name}</h2>
-                </div>
-                {isAdminSession && selectedBarber && !canViewAllBarbers && (
-                  <button
-                    type="button"
-                    className="admin-danger-button"
-                    disabled={isLoading}
-                    onClick={() => void handleHideBarber(selectedBarber.id)}
-                  >
-                    Скрыть мастера
-                  </button>
-                )}
-              </header>
-
-              <div className="admin-schedule-tools">
-                <div className="admin-filter-group">
-                  <span>Период</span>
-                  <div className="admin-segmented" aria-label="Период записей">
-                    {periods.map((period) => (
-                      <button
-                        type="button"
-                        aria-pressed={appointmentPeriod === period.value}
-                        key={period.value}
-                        onClick={() => {
-                          setAppointmentDate('')
-                          setAppointmentPeriod(period.value)
-                        }}
-                      >
-                        {period.label}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="admin-period-date">
-                    <BookingDatePicker
-                      allowPastDates
-                      label="Дата"
-                      placeholder="Выбрать дату"
-                      value={appointmentDate}
-                      onChange={(nextDate) => {
-                        setAppointmentDate(nextDate)
-                        setAppointmentPeriod('custom')
+                  {activeBarbers.map((barber) => (
+                    <button
+                      type="button"
+                      aria-pressed={barber.id === selectedBarberId}
+                      key={barber.id}
+                      onClick={() => {
+                        setSelectedBarberId(barber.id);
+                        setSelectedTab("upcoming");
                       }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="admin-stats" role="tablist" aria-label="Статус записей">
-                {tabs.map((tab) => (
-                  <button
-                    type="button"
-                    aria-selected={selectedTab === tab.value}
-                    key={tab.value}
-                    role="tab"
-                    onClick={() => setSelectedTab(tab.value)}
-                  >
-                    <span>{tab.label}</span>
-                    <strong>{tabCounts[tab.value]}</strong>
-                  </button>
-                ))}
-              </div>
-
-              {filteredAppointments.length === 0 && (
-                <p className="admin-muted">Записей в этой вкладке пока нет.</p>
+                    >
+                      <span>{barber.name}</span>
+                      {barber.role && <small>{barber.role}</small>}
+                    </button>
+                  ))}
+                </nav>
               )}
 
-              {filteredAppointments.length > 0 && (
-                <>
-                  <div className="admin-table-wrap">
-                    <table className="admin-table">
-                      <thead>
-                        <tr>
-                          <th>Время</th>
-                          {canViewAllBarbers && <th>Мастер</th>}
-                          <th>Клиент</th>
-                          <th>Телефон</th>
-                          <th>Услуга</th>
-                          <th>Статус</th>
-                          <th>Действия</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredAppointments.map((appointment) => (
-                          <tr key={appointment.id}>
-                            <td>{dateTimeFormatter.format(new Date(appointment.startsAt))}</td>
-                            {canViewAllBarbers && <td>{appointment.barber.name}</td>}
-                            <td>{appointment.customerName}</td>
-                            <td>{appointment.customerPhone}</td>
-                            <td>{appointment.service.title}</td>
-                            <td>
-                              <span className={`admin-status admin-status--${getStatusTone(appointment)}`}>
-                                {getStatusLabel(appointment)}
-                              </span>
-                            </td>
-                            <td>{renderAppointmentActions(appointment)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+              <section className="admin-schedule">
+                <header className="admin-schedule-header">
+                  <div>
+                    <span className="admin-eyebrow">
+                      {canViewAllBarbers ? "Обзор" : "Мастер"}
+                    </span>
+                    <h2>
+                      {canViewAllBarbers ? "Все мастера" : selectedBarber?.name}
+                    </h2>
                   </div>
+                  {isAdminSession && selectedBarber && !canViewAllBarbers && (
+                    <button
+                      type="button"
+                      className="admin-danger-button"
+                      disabled={isLoading}
+                      onClick={() => void handleHideBarber(selectedBarber.id)}
+                    >
+                      Скрыть мастера
+                    </button>
+                  )}
+                </header>
 
-                  <div className="admin-appointment-list">
-                    {filteredAppointments.map((appointment) => (
-                      <article className="admin-appointment-card" key={appointment.id}>
-                        <header>
-                          <strong>
-                            {dateTimeFormatter.format(new Date(appointment.startsAt))}
-                          </strong>
-                          <span className={`admin-status admin-status--${getStatusTone(appointment)}`}>
-                            {getStatusLabel(appointment)}
-                          </span>
-                        </header>
-                        <dl>
-                          {canViewAllBarbers && (
+                <div className="admin-schedule-tools">
+                  <div className="admin-filter-group">
+                    <span>Период</span>
+                    <div
+                      className="admin-segmented"
+                      aria-label="Период записей"
+                    >
+                      {periods.map((period) => (
+                        <button
+                          type="button"
+                          aria-pressed={appointmentPeriod === period.value}
+                          key={period.value}
+                          onClick={() => {
+                            setAppointmentDate("");
+                            setAppointmentPeriod(period.value);
+                          }}
+                        >
+                          {period.label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="admin-period-date">
+                      <BookingDatePicker
+                        allowPastDates
+                        label="Дата"
+                        placeholder="Выбрать дату"
+                        value={appointmentDate}
+                        onChange={(nextDate) => {
+                          setAppointmentDate(nextDate);
+                          setAppointmentPeriod("custom");
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  className="admin-stats"
+                  role="tablist"
+                  aria-label="Статус записей"
+                >
+                  {tabs.map((tab) => (
+                    <button
+                      type="button"
+                      aria-selected={selectedTab === tab.value}
+                      key={tab.value}
+                      role="tab"
+                      onClick={() => setSelectedTab(tab.value)}
+                    >
+                      <span>{tab.label}</span>
+                      <strong>{tabCounts[tab.value]}</strong>
+                    </button>
+                  ))}
+                </div>
+
+                {filteredAppointments.length === 0 && (
+                  <p className="admin-muted">
+                    Записей в этой вкладке пока нет.
+                  </p>
+                )}
+
+                {filteredAppointments.length > 0 && (
+                  <>
+                    <div className="admin-table-wrap">
+                      <table className="admin-table">
+                        <thead>
+                          <tr>
+                            <th>Время</th>
+                            {canViewAllBarbers && <th>Мастер</th>}
+                            <th>Клиент</th>
+                            <th>Телефон</th>
+                            <th>Услуга</th>
+                            <th>Статус</th>
+                            <th>Действия</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredAppointments.map((appointment) => (
+                            <tr key={appointment.id}>
+                              <td>
+                                {formatAdminDateTime(appointment.startsAt)}
+                              </td>
+                              {canViewAllBarbers && (
+                                <td>{appointment.barber.name}</td>
+                              )}
+                              <td>{appointment.customerName}</td>
+                              <td>{appointment.customerPhone}</td>
+                              <td>{appointment.service.title}</td>
+                              <td>
+                                <span
+                                  className={`admin-status admin-status--${getStatusTone(appointment)}`}
+                                >
+                                  {getStatusLabel(appointment)}
+                                </span>
+                              </td>
+                              <td>{renderAppointmentActions(appointment)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="admin-appointment-list">
+                      {filteredAppointments.map((appointment) => (
+                        <article
+                          className="admin-appointment-card"
+                          key={appointment.id}
+                        >
+                          <header>
+                            <strong>
+                              {formatAdminDateTime(appointment.startsAt)}
+                            </strong>
+                            <span
+                              className={`admin-status admin-status--${getStatusTone(appointment)}`}
+                            >
+                              {getStatusLabel(appointment)}
+                            </span>
+                          </header>
+                          <dl>
+                            {canViewAllBarbers && (
+                              <div>
+                                <dt>Мастер</dt>
+                                <dd>{appointment.barber.name}</dd>
+                              </div>
+                            )}
                             <div>
-                              <dt>Мастер</dt>
-                              <dd>{appointment.barber.name}</dd>
+                              <dt>Клиент</dt>
+                              <dd>{appointment.customerName}</dd>
                             </div>
+                            <div>
+                              <dt>Телефон</dt>
+                              <dd>{appointment.customerPhone}</dd>
+                            </div>
+                            <div>
+                              <dt>Услуга</dt>
+                              <dd>{appointment.service.title}</dd>
+                            </div>
+                          </dl>
+                          {renderAppointmentActions(appointment)}
+                        </article>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </section>
+            </>
+          )}
+
+        {!isCheckingSession &&
+          activeBarbers.length > 0 &&
+          adminView === "availability" && (
+            <section className="admin-manager-page">
+              <section className="admin-manager admin-availability-panel">
+                <header>
+                  <div>
+                    <span className="admin-eyebrow">График</span>
+                    <h2>График доступности</h2>
+                  </div>
+                </header>
+                <div className="admin-availability-form">
+                  {isAdminSession ? (
+                    <BookingSelect
+                      label="Мастер"
+                      name="timeOffBarber"
+                      options={activeBarberOptions}
+                      placeholder="Выберите мастера"
+                      value={timeOffBarberId}
+                      onChange={(nextBarberId) => {
+                        setTimeOffBarberId(nextBarberId);
+                        setErrorMessage("");
+                      }}
+                    />
+                  ) : (
+                    <label>
+                      Мастер
+                      <input
+                        type="text"
+                        value={timeOffBarber?.name ?? session.name ?? ""}
+                        readOnly
+                      />
+                    </label>
+                  )}
+                  <fieldset className="admin-availability-period">
+                    <legend>Начало периода</legend>
+                    <BookingDatePicker
+                      label="Дата"
+                      placeholder="Выберите дату"
+                      value={timeOffStartDate}
+                      onChange={(nextDate) => {
+                        setTimeOffStartDate(nextDate);
+                        setTimeOffEndDate(
+                          (currentDate) => currentDate || nextDate,
+                        );
+                        setErrorMessage("");
+                      }}
+                    />
+                    <BookingSelect
+                      label="Время"
+                      name="timeOffStart"
+                      options={timeOptions}
+                      placeholder="Начало"
+                      value={timeOffStartTime}
+                      onChange={(nextTime) => {
+                        setTimeOffStartTime(nextTime);
+                        setErrorMessage("");
+                      }}
+                    />
+                  </fieldset>
+                  <fieldset className="admin-availability-period">
+                    <legend>Конец периода</legend>
+                    <BookingDatePicker
+                      label="Дата"
+                      placeholder="Выберите дату"
+                      value={timeOffEndDate}
+                      onChange={(nextDate) => {
+                        setTimeOffEndDate(nextDate);
+                        setErrorMessage("");
+                      }}
+                    />
+                    <BookingSelect
+                      label="Время"
+                      name="timeOffEnd"
+                      options={timeOptions}
+                      placeholder="Конец"
+                      value={timeOffEndTime}
+                      onChange={(nextTime) => {
+                        setTimeOffEndTime(nextTime);
+                        setErrorMessage("");
+                      }}
+                    />
+                  </fieldset>
+                  <label className="admin-availability-reason">
+                    Причина
+                    <input
+                      type="text"
+                      placeholder="Например: отпуск"
+                      value={timeOffReason}
+                      onChange={(event) => {
+                        setTimeOffReason(event.target.value);
+                        setErrorMessage("");
+                      }}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    disabled={
+                      isLoading ||
+                      !timeOffBarberId ||
+                      !isTimeOffRangeValid ||
+                      !timeOffReason.trim()
+                    }
+                    onClick={() => void handleCreateTimeOff()}
+                  >
+                    Закрыть период
+                  </button>
+                </div>
+              </section>
+
+              <section className="admin-manager admin-availability-list-panel">
+                <header>
+                  <div>
+                    <span className="admin-eyebrow">Закрытые периоды</span>
+                    <h2>{timeOffBarber?.name ?? "Все мастера"}</h2>
+                  </div>
+                </header>
+                {filteredTimeOffs.length === 0 ? (
+                  <p className="admin-muted">Закрытых периодов пока нет.</p>
+                ) : (
+                  <div className="admin-time-off-list">
+                    {filteredTimeOffs.map((timeOff) => (
+                      <article className="admin-time-off-card" key={timeOff.id}>
+                        <div>
+                          <strong>{timeOff.reason}</strong>
+                          <span>
+                            {formatAdminDateTime(timeOff.startsAt)} -{" "}
+                            {formatAdminDateTime(timeOff.endsAt)}
+                          </span>
+                          {isAdminSession && (
+                            <small>{timeOff.barber.name}</small>
                           )}
-                          <div>
-                            <dt>Клиент</dt>
-                            <dd>{appointment.customerName}</dd>
-                          </div>
-                          <div>
-                            <dt>Телефон</dt>
-                            <dd>{appointment.customerPhone}</dd>
-                          </div>
-                          <div>
-                            <dt>Услуга</dt>
-                            <dd>{appointment.service.title}</dd>
-                          </div>
-                        </dl>
-                        {renderAppointmentActions(appointment)}
+                        </div>
+                        <button
+                          type="button"
+                          disabled={isLoading}
+                          onClick={() => void handleDeleteTimeOff(timeOff.id)}
+                        >
+                          Отменить
+                        </button>
                       </article>
                     ))}
                   </div>
-                </>
-              )}
-
-            </section>
-          </>
-        )}
-
-        {!isCheckingSession && activeBarbers.length > 0 && adminView === 'availability' && (
-          <section className="admin-manager-page">
-            <section className="admin-manager admin-availability-panel">
-              <header>
-                <div>
-                  <span className="admin-eyebrow">График</span>
-                  <h2>График доступности</h2>
-                </div>
-              </header>
-              <div className="admin-availability-form">
-                {isAdminSession ? (
-                  <BookingSelect
-                    label="Мастер"
-                    name="timeOffBarber"
-                    options={activeBarberOptions}
-                    placeholder="Выберите мастера"
-                    value={timeOffBarberId}
-                    onChange={(nextBarberId) => {
-                      setTimeOffBarberId(nextBarberId)
-                      setErrorMessage('')
-                    }}
-                  />
-                ) : (
-                  <label>
-                    Мастер
-                    <input type="text" value={timeOffBarber?.name ?? session.name ?? ''} readOnly />
-                  </label>
                 )}
-                <fieldset className="admin-availability-period">
-                  <legend>Начало периода</legend>
-                  <BookingDatePicker
-                    label="Дата"
-                    placeholder="Выберите дату"
-                    value={timeOffStartDate}
-                    onChange={(nextDate) => {
-                      setTimeOffStartDate(nextDate)
-                      setTimeOffEndDate((currentDate) => currentDate || nextDate)
-                      setErrorMessage('')
-                    }}
-                  />
-                  <BookingSelect
-                    label="Время"
-                    name="timeOffStart"
-                    options={timeOptions}
-                    placeholder="Начало"
-                    value={timeOffStartTime}
-                    onChange={(nextTime) => {
-                      setTimeOffStartTime(nextTime)
-                      setErrorMessage('')
-                    }}
-                  />
-                </fieldset>
-                <fieldset className="admin-availability-period">
-                  <legend>Конец периода</legend>
-                  <BookingDatePicker
-                    label="Дата"
-                    placeholder="Выберите дату"
-                    value={timeOffEndDate}
-                    onChange={(nextDate) => {
-                      setTimeOffEndDate(nextDate)
-                      setErrorMessage('')
-                    }}
-                  />
-                  <BookingSelect
-                    label="Время"
-                    name="timeOffEnd"
-                    options={timeOptions}
-                    placeholder="Конец"
-                    value={timeOffEndTime}
-                    onChange={(nextTime) => {
-                      setTimeOffEndTime(nextTime)
-                      setErrorMessage('')
-                    }}
-                  />
-                </fieldset>
-                <label className="admin-availability-reason">
-                  Причина
-                  <input
-                    type="text"
-                    placeholder="Например: отпуск"
-                    value={timeOffReason}
-                    onChange={(event) => {
-                      setTimeOffReason(event.target.value)
-                      setErrorMessage('')
-                    }}
-                  />
-                </label>
-                <button
-                  type="button"
-                  disabled={
-                    isLoading ||
-                    !timeOffBarberId ||
-                    !isTimeOffRangeValid ||
-                    !timeOffReason.trim()
-                  }
-                  onClick={() => void handleCreateTimeOff()}
-                >
-                  Закрыть период
-                </button>
-              </div>
+              </section>
             </section>
+          )}
 
-            <section className="admin-manager admin-availability-list-panel">
-              <header>
-                <div>
-                  <span className="admin-eyebrow">Закрытые периоды</span>
-                  <h2>{timeOffBarber?.name ?? 'Все мастера'}</h2>
-                </div>
-              </header>
-              {filteredTimeOffs.length === 0 ? (
-                <p className="admin-muted">Закрытых периодов пока нет.</p>
-              ) : (
-                <div className="admin-time-off-list">
-                  {filteredTimeOffs.map((timeOff) => (
-                    <article className="admin-time-off-card" key={timeOff.id}>
-                      <div>
-                        <strong>{timeOff.reason}</strong>
-                        <span>
-                          {dateTimeFormatter.format(new Date(timeOff.startsAt))} -{' '}
-                          {dateTimeFormatter.format(new Date(timeOff.endsAt))}
-                        </span>
-                        {isAdminSession && <small>{timeOff.barber.name}</small>}
-                      </div>
-                      <button
-                        type="button"
-                        disabled={isLoading}
-                        onClick={() => void handleDeleteTimeOff(timeOff.id)}
-                      >
-                        Отменить
-                      </button>
-                    </article>
-                  ))}
-                </div>
-              )}
-            </section>
-          </section>
-        )}
-
-        {!isCheckingSession && adminView === 'clients' && (
+        {!isCheckingSession && adminView === "clients" && (
           <section className="admin-clients-page">
             <header className="admin-section-header">
               <div>
                 <span className="admin-eyebrow">Клиенты</span>
-                <h2>{isAdminSession ? 'Список клиентов' : 'Мои клиенты'}</h2>
+                <h2>{isAdminSession ? "Список клиентов" : "Мои клиенты"}</h2>
               </div>
               <strong>{filteredClients.length}</strong>
             </header>
@@ -1329,8 +1420,12 @@ export function AdminPage() {
                             <a href={`tel:${client.phone}`}>{client.phone}</a>
                           </td>
                           <td>{client.visits}</td>
-                          <td>{dateTimeFormatter.format(new Date(client.lastVisit))}</td>
-                          {isAdminSession && <td>{Array.from(client.barberNames).join(', ')}</td>}
+                          <td>
+                            {formatAdminDateTime(client.lastVisit)}
+                          </td>
+                          {isAdminSession && (
+                            <td>{Array.from(client.barberNames).join(", ")}</td>
+                          )}
                         </tr>
                       ))}
                     </tbody>
@@ -1351,12 +1446,14 @@ export function AdminPage() {
                         </div>
                         <div>
                           <dt>Последний визит</dt>
-                          <dd>{dateTimeFormatter.format(new Date(client.lastVisit))}</dd>
+                          <dd>
+                            {formatAdminDateTime(client.lastVisit)}
+                          </dd>
                         </div>
                         {isAdminSession && (
                           <div>
                             <dt>Мастера</dt>
-                            <dd>{Array.from(client.barberNames).join(', ')}</dd>
+                            <dd>{Array.from(client.barberNames).join(", ")}</dd>
                           </div>
                         )}
                       </dl>
@@ -1368,7 +1465,7 @@ export function AdminPage() {
           </section>
         )}
 
-        {!isCheckingSession && isAdminSession && adminView === 'barbers' && (
+        {!isCheckingSession && isAdminSession && adminView === "barbers" && (
           <section className="admin-manager-page">
             <section className="admin-manager">
               <header>
@@ -1400,7 +1497,9 @@ export function AdminPage() {
                     type="text"
                     placeholder="Например: 7 лет опыта"
                     value={newBarberExperience}
-                    onChange={(event) => setNewBarberExperience(event.target.value)}
+                    onChange={(event) =>
+                      setNewBarberExperience(event.target.value)
+                    }
                   />
                 </label>
                 <label>
@@ -1408,7 +1507,9 @@ export function AdminPage() {
                   <input
                     type="text"
                     value={newBarberPassword}
-                    onChange={(event) => setNewBarberPassword(event.target.value)}
+                    onChange={(event) =>
+                      setNewBarberPassword(event.target.value)
+                    }
                   />
                 </label>
                 <label className="admin-manager-form-wide">
@@ -1416,7 +1517,9 @@ export function AdminPage() {
                   <textarea
                     rows={3}
                     value={newBarberDescription}
-                    onChange={(event) => setNewBarberDescription(event.target.value)}
+                    onChange={(event) =>
+                      setNewBarberDescription(event.target.value)
+                    }
                   />
                 </label>
                 <label className="admin-photo-upload">
@@ -1424,9 +1527,13 @@ export function AdminPage() {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(event) => handleBarberPhotoChange(event.target.files?.[0])}
+                    onChange={(event) =>
+                      handleBarberPhotoChange(event.target.files?.[0])
+                    }
                   />
-                  <span>{newBarberPhotoUrl ? 'Заменить фото' : 'Добавить фото'}</span>
+                  <span>
+                    {newBarberPhotoUrl ? "Заменить фото" : "Добавить фото"}
+                  </span>
                 </label>
                 {newBarberPhotoUrl && (
                   <img
@@ -1460,14 +1567,16 @@ export function AdminPage() {
                     aria-pressed={barber.id === selectedBarberId}
                     key={barber.id}
                     onClick={() => {
-                      setSelectedBarberId(barber.id)
-                      setAdminView('schedule')
-                      setSelectedTab('upcoming')
+                      setSelectedBarberId(barber.id);
+                      setAdminView("schedule");
+                      setSelectedTab("upcoming");
                     }}
                   >
                     <span>{barber.name}</span>
                     {barber.role && <small>{barber.role}</small>}
-                    {barber.password && <small>Пароль: {barber.password}</small>}
+                    {barber.password && (
+                      <small>Пароль: {barber.password}</small>
+                    )}
                   </button>
                 ))}
               </nav>
@@ -1485,7 +1594,10 @@ export function AdminPage() {
               ) : (
                 <nav className="admin-barbers" aria-label="Скрытые мастера">
                   {hiddenBarbers.map((barber) => (
-                    <article className="admin-barber-archive-card" key={barber.id}>
+                    <article
+                      className="admin-barber-archive-card"
+                      key={barber.id}
+                    >
                       <span>{barber.name}</span>
                       {barber.role && <small>{barber.role}</small>}
                       <div className="admin-actions">
@@ -1512,9 +1624,11 @@ export function AdminPage() {
           </section>
         )}
 
-        {!isCheckingSession && activeBarbers.length === 0 && adminView !== 'barbers' && (
-          <p className="admin-muted">Мастера пока не добавлены.</p>
-        )}
+        {!isCheckingSession &&
+          activeBarbers.length === 0 &&
+          adminView !== "barbers" && (
+            <p className="admin-muted">Мастера пока не добавлены.</p>
+          )}
       </section>
       {rescheduleAppointment && (
         <div className="admin-modal-backdrop">
@@ -1533,9 +1647,9 @@ export function AdminPage() {
               placeholder="Выберите дату"
               value={rescheduleDate}
               onChange={(nextDate) => {
-                setRescheduleDate(nextDate)
-                setRescheduleTime('')
-                setRescheduleTimeOptions([])
+                setRescheduleDate(nextDate);
+                setRescheduleTime("");
+                setRescheduleTimeOptions([]);
               }}
             />
             <BookingSelect
@@ -1543,7 +1657,9 @@ export function AdminPage() {
               label="Новое время"
               name="rescheduleTime"
               options={rescheduleTimeOptions}
-              placeholder={rescheduleDate ? 'Выберите время' : 'Сначала выберите дату'}
+              placeholder={
+                rescheduleDate ? "Выберите время" : "Сначала выберите дату"
+              }
               value={rescheduleTime}
               onChange={setRescheduleTime}
             />
@@ -1562,5 +1678,5 @@ export function AdminPage() {
         </div>
       )}
     </main>
-  )
+  );
 }

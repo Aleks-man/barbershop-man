@@ -532,7 +532,7 @@
 .admin-stats strong {
   color: var(--heading);
   font-family: var(--display);
-  font-size: 2rem;
+  font-size: 1.5rem;
   line-height: 1;
 }
 
