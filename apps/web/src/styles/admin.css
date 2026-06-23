@@ -149,6 +149,20 @@
   color: var(--danger);
 }
 
+.admin-phone-link {
+  color: var(--gold);
+  font-weight: 800;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+
+.admin-phone-link:hover,
+.admin-phone-link:focus-visible {
+  color: var(--heading);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
 .admin-shell {
   display: grid;
   gap: 1rem;
@@ -162,12 +176,174 @@
   padding: 1rem 0;
 }
 
-.admin-header > div,
+.admin-header > div:not(.admin-header-actions),
 .admin-manager header > div,
 .admin-schedule-header > div,
 .admin-section-header > div {
   display: grid;
   gap: 0.38rem;
+}
+
+.admin-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-role-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  border: 1px solid var(--gold-line);
+  border-radius: var(--radius-pill);
+  background: var(--gold-muted);
+  color: var(--gold);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  padding: 0 0.74rem;
+  text-transform: uppercase;
+}
+
+.admin-header-actions {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.admin-notifications {
+  position: relative;
+}
+
+.admin-header .admin-notification-button {
+  position: relative;
+  width: 48px;
+  min-height: 48px;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  color: var(--heading);
+  padding: 0;
+}
+
+.admin-notification-button span {
+  width: 1.08rem;
+  height: 1.08rem;
+  background: var(--gold);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 22a2.6 2.6 0 0 0 2.45-1.73h-4.9A2.6 2.6 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5-6.7V3a2 2 0 1 0-4 0v1.3A7 7 0 0 0 5 11v5l-1.3 1.3A1 1 0 0 0 4.4 19h15.2a1 1 0 0 0 .7-1.7L19 16Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 22a2.6 2.6 0 0 0 2.45-1.73h-4.9A2.6 2.6 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5-6.7V3a2 2 0 1 0-4 0v1.3A7 7 0 0 0 5 11v5l-1.3 1.3A1 1 0 0 0 4.4 19h15.2a1 1 0 0 0 .7-1.7L19 16Z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.admin-notification-button strong {
+  position: absolute;
+  top: -0.3rem;
+  right: -0.3rem;
+  display: grid;
+  min-width: 1.34rem;
+  min-height: 1.34rem;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.36);
+  border-radius: var(--radius-pill);
+  background: #c94141;
+  color: #fff;
+  font-size: 0.72rem;
+  line-height: 1;
+  padding: 0 0.28rem;
+}
+
+.admin-notification-panel {
+  position: absolute;
+  top: calc(100% + 0.55rem);
+  left: 0;
+  z-index: 120;
+  display: grid;
+  gap: 0.75rem;
+  width: min(360px, calc(100vw - 2rem));
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(18, 20, 18, 0.98);
+  box-shadow: var(--shadow-modal);
+  padding: 0.9rem;
+}
+
+.admin-notification-panel header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.admin-notification-panel header span {
+  color: var(--heading);
+  font-weight: 900;
+}
+
+.admin-notification-panel header small,
+.admin-notification-panel p {
+  margin: 0;
+  color: var(--soft);
+}
+
+.admin-notification-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.admin-header .admin-notification-tabs button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--control-bg);
+  box-shadow: none;
+  color: var(--heading);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 900;
+  padding: 0 0.55rem;
+}
+
+.admin-header .admin-notification-tabs button[aria-pressed="true"] {
+  border-color: var(--gold-line-strong);
+  background: var(--gold-soft);
+}
+
+.admin-notification-list {
+  display: grid;
+  gap: 0.55rem;
+  max-height: min(360px, 62svh);
+  overflow-y: auto;
+}
+
+.admin-notification-list article {
+  display: grid;
+  gap: 0.22rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.065);
+  padding: 0.72rem;
+}
+
+.admin-notification-list article > div {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.admin-notification-list strong {
+  color: var(--heading);
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.admin-notification-list span,
+.admin-notification-list small {
+  color: var(--text);
+  font-size: 0.8rem;
+  line-height: 1.4;
 }
 
 .admin-view-tabs {
@@ -898,12 +1074,6 @@
   min-width: 760px;
 }
 
-.admin-clients-table a {
-  color: var(--gold);
-  font-weight: 800;
-  text-decoration: none;
-}
-
 .admin-client-list {
   display: none;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
@@ -1062,6 +1232,22 @@
   .admin-header {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .admin-header-meta {
+    position: relative;
+    flex-wrap: wrap;
+  }
+
+  .admin-notification-panel {
+    left: -4.5rem;
+    width: min(300px, calc(100vw - 2rem));
+    max-width: calc(100vw - 2rem);
+    transform: none;
+  }
+
+  .admin-notification-list {
+    max-height: min(320px, 58svh);
   }
 
   .admin-schedule-header {

@@ -1,6 +1,7 @@
 import { AppointmentStatus } from '@prisma/client'
 import { Router } from 'express'
 import { addMinutes, businessHoursByDay, hasOverlap, parseDate, setTime } from '../bookingTime.js'
+import { notifyAppointmentCreated } from '../adminEvents.js'
 import { prisma } from '../prisma.js'
 
 type AppointmentRequestBody = {
@@ -162,12 +163,102 @@ appointmentsRouter.post('/', async (request, response, next) => {
         startsAt,
       },
       select: {
+        barber: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        customerName: true,
+        customerPhone: true,
+        endsAt: true,
         id: true,
+        service: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
         status: true,
         startsAt: true,
-        endsAt: true,
       },
     })
+
+    const notifications = await prisma.$transaction([
+      prisma.adminNotification.create({
+        data: {
+          appointmentId: appointment.id,
+          recipientRole: 'admin',
+        },
+        select: {
+          id: true,
+          createdAt: true,
+          readAt: true,
+          recipientRole: true,
+          barberId: true,
+          appointment: {
+            select: {
+              id: true,
+              customerName: true,
+              customerPhone: true,
+              startsAt: true,
+              endsAt: true,
+              status: true,
+              barber: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+              service: {
+                select: {
+                  id: true,
+                  title: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+      prisma.adminNotification.create({
+        data: {
+          appointmentId: appointment.id,
+          barberId: appointment.barber.id,
+          recipientRole: 'barber',
+        },
+        select: {
+          id: true,
+          createdAt: true,
+          readAt: true,
+          recipientRole: true,
+          barberId: true,
+          appointment: {
+            select: {
+              id: true,
+              customerName: true,
+              customerPhone: true,
+              startsAt: true,
+              endsAt: true,
+              status: true,
+              barber: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+              service: {
+                select: {
+                  id: true,
+                  title: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+    ])
+
+    notifyAppointmentCreated({ notifications })
 
     response.status(201).json({ appointment })
   } catch (error) {

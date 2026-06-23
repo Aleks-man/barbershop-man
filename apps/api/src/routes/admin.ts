@@ -8,9 +8,11 @@ import {
   createAdminToken,
   createBarberToken,
   getResponseSession,
+  getStaffSession,
   requireAdmin,
   requireStaff,
 } from '../adminAuth.js'
+import { addAdminEventClient } from '../adminEvents.js'
 import { addMinutes, businessHoursByDay, hasOverlap, parseDate, setTime } from '../bookingTime.js'
 import { config } from '../config.js'
 import { prisma } from '../prisma.js'
@@ -61,6 +63,20 @@ const allowedPhotoTypes = new Map([
 ])
 
 export const adminRouter = Router()
+
+adminRouter.get('/events', (request, response) => {
+  const token = String(request.query.token ?? '')
+  const session = getStaffSession(token)
+
+  if (!session) {
+    response.status(401).json({
+      error: 'Unauthorized',
+    })
+    return
+  }
+
+  addAdminEventClient(response, session)
+})
 
 adminRouter.post('/login', async (request, response, next) => {
   try {
@@ -150,6 +166,88 @@ adminRouter.get('/appointments', requireStaff, async (_request, response, next) 
     })
 
     response.json({ appointments })
+  } catch (error) {
+    next(error)
+  }
+})
+
+adminRouter.get('/notifications', requireStaff, async (request, response, next) => {
+  try {
+    const session = getResponseSession(response.locals)
+    const scope = request.query.scope === 'all' ? 'all' : 'unread'
+    const notifications = await prisma.adminNotification.findMany({
+      where:
+        session.role === 'admin'
+          ? {
+              recipientRole: 'admin',
+              readAt: scope === 'unread' ? null : undefined,
+            }
+          : {
+              barberId: session.barberId,
+              recipientRole: 'barber',
+              readAt: scope === 'unread' ? null : undefined,
+            },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: scope === 'all' ? 100 : undefined,
+      select: {
+        id: true,
+        createdAt: true,
+        readAt: true,
+        appointment: {
+          select: {
+            id: true,
+            customerName: true,
+            customerPhone: true,
+            startsAt: true,
+            endsAt: true,
+            status: true,
+            barber: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            service: {
+              select: {
+                id: true,
+                title: true,
+              },
+            },
+          },
+        },
+      },
+    })
+
+    response.json({ notifications })
+  } catch (error) {
+    next(error)
+  }
+})
+
+adminRouter.patch('/notifications/read', requireStaff, async (_request, response, next) => {
+  try {
+    const session = getResponseSession(response.locals)
+
+    await prisma.adminNotification.updateMany({
+      where:
+        session.role === 'admin'
+          ? {
+              recipientRole: 'admin',
+              readAt: null,
+            }
+          : {
+              barberId: session.barberId,
+              recipientRole: 'barber',
+              readAt: null,
+            },
+      data: {
+        readAt: new Date(),
+      },
+    })
+
+    response.status(204).send()
   } catch (error) {
     next(error)
   }

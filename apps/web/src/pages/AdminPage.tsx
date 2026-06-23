@@ -1,4 +1,11 @@
-import { type CSSProperties, useEffect, useMemo, useState } from "react";
+import {
+  type CSSProperties,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { getAvailability } from "../api/availability";
 import {
   createAdminBarber,
@@ -7,15 +14,18 @@ import {
   deleteAdminTimeOff,
   getAdminAppointments,
   getAdminBarbers,
+  getAdminNotifications,
   getAdminTimeOff,
   hideAdminBarber,
   loginAdmin,
+  markAdminNotificationsRead,
   rescheduleAdminAppointment,
   restoreAdminBarber,
   uploadAdminBarberPhoto,
   updateAdminAppointmentStatus,
   type AdminAppointment,
   type AdminBarber,
+  type AdminNotification,
   type AdminSessionRole,
   type AdminTimeOff,
 } from "../api/admin";
@@ -69,6 +79,7 @@ const readStoredSession = () => {
 type AdminTab = "upcoming" | "completed" | "cancelled";
 type AppointmentPeriod = DatePeriod;
 type AdminView = "schedule" | "clients" | "barbers" | "availability";
+type NotificationMode = "all" | "unread";
 
 const tabs: Array<{ label: string; value: AdminTab }> = [
   { label: "Ожидают", value: "upcoming" },
@@ -134,11 +145,21 @@ const matchesPeriod = (
   customDate: string,
 ) => matchesDatePeriod(appointment.startsAt, period, customDate);
 
+const getPhoneHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, "")}`;
+
 export function AdminPage() {
   const currentTime = useCurrentTime();
+  const notificationsRef = useRef<HTMLDivElement | null>(null);
+  const isNotificationsOpenRef = useRef(false);
   const [appointments, setAppointments] = useState<AdminAppointment[]>([]);
   const [barbers, setBarbers] = useState<AdminBarber[]>([]);
   const [timeOffs, setTimeOffs] = useState<AdminTimeOff[]>([]);
+  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
+  const [notificationMode, setNotificationMode] =
+    useState<NotificationMode>("unread");
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
   const [session, setSession] = useState<AdminSession | null>(() =>
     readStoredSession(),
@@ -181,6 +202,74 @@ export function AdminPage() {
   const [updatingAppointmentId, setUpdatingAppointmentId] = useState("");
   const token = session?.token ?? "";
   const isAdminSession = session?.role === "admin";
+
+  const closeNotifications = useCallback(() => {
+    setIsNotificationsOpen(false);
+    setUnreadNotifications(0);
+    setNotificationMode("unread");
+  }, []);
+
+  const loadNotifications = useCallback(
+    async (mode: NotificationMode) => {
+      if (!token) {
+        return [];
+      }
+
+      setIsLoadingNotifications(true);
+
+      try {
+        const nextNotifications = await getAdminNotifications(token, mode);
+
+        setNotifications(nextNotifications);
+
+        if (mode === "unread") {
+          setUnreadNotifications(nextNotifications.length);
+        }
+
+        return nextNotifications;
+      } catch (error: unknown) {
+        console.warn("Failed to load notifications", error);
+        return [];
+      } finally {
+        setIsLoadingNotifications(false);
+      }
+    },
+    [token],
+  );
+
+  const openNotifications = async () => {
+    setIsNotificationsOpen(true);
+    setNotificationMode("unread");
+    setUnreadNotifications(0);
+    const unreadNotificationsList = await loadNotifications("unread");
+
+    if (!token || unreadNotificationsList.length === 0) {
+      return;
+    }
+
+    void markAdminNotificationsRead(token).catch((error: unknown) => {
+      console.warn("Failed to mark notifications read", error);
+    });
+  };
+
+  const toggleNotifications = () => {
+    if (isNotificationsOpen) {
+      closeNotifications();
+      return;
+    }
+
+    void openNotifications();
+  };
+
+  const showAllNotifications = () => {
+    setNotificationMode("all");
+    void loadNotifications("all");
+  };
+
+  const showUnreadNotifications = () => {
+    setNotificationMode("unread");
+    void loadNotifications("unread");
+  };
 
   const rescheduleAppointment = appointments.find(
     (appointment) => appointment.id === rescheduleAppointmentId,
@@ -271,11 +360,14 @@ export function AdminPage() {
       getAdminBarbers(session.token),
       getAdminAppointments(session.token),
       getAdminTimeOff(session.token),
+      getAdminNotifications(session.token),
     ])
-      .then(([nextBarbers, nextAppointments, nextTimeOffs]) => {
+      .then(([nextBarbers, nextAppointments, nextTimeOffs, nextNotifications]) => {
         setBarbers(nextBarbers);
         setAppointments(nextAppointments);
         setTimeOffs(nextTimeOffs);
+        setNotifications(nextNotifications);
+        setUnreadNotifications(nextNotifications.length);
         setSelectedBarberId((currentBarberId) =>
           session.role === "barber"
             ? session.barberId || nextBarbers[0]?.id || ""
@@ -302,6 +394,91 @@ export function AdminPage() {
       .finally(() => {
         setIsCheckingSession(false);
       });
+  }, [session]);
+
+  useEffect(() => {
+    isNotificationsOpenRef.current = isNotificationsOpen;
+  }, [closeNotifications, isNotificationsOpen]);
+
+  useEffect(() => {
+    if (!isNotificationsOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (
+        notificationsRef.current &&
+        !notificationsRef.current.contains(event.target as Node)
+      ) {
+        closeNotifications();
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeNotifications();
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [closeNotifications, isNotificationsOpen]);
+
+  useEffect(() => {
+    if (!session) {
+      return;
+    }
+
+    const events = new EventSource(
+      `/api/admin/events?token=${encodeURIComponent(session.token)}`,
+    );
+
+    events.addEventListener("appointment-created", (event) => {
+      const data = JSON.parse(event.data) as { notification: AdminNotification };
+      const notification = data.notification;
+      const appointment = notification.appointment;
+
+      setAppointments((currentAppointments) => {
+        if (
+          currentAppointments.some(
+            (currentAppointment) => currentAppointment.id === appointment.id,
+          )
+        ) {
+          return currentAppointments;
+        }
+
+        return [...currentAppointments, appointment].sort(
+          (firstAppointment, secondAppointment) =>
+            new Date(firstAppointment.startsAt).getTime() -
+            new Date(secondAppointment.startsAt).getTime(),
+        );
+      });
+      setNotifications((currentNotifications) =>
+        currentNotifications.some(
+          (currentNotification) => currentNotification.id === notification.id,
+        )
+          ? currentNotifications
+          : [notification, ...currentNotifications],
+      );
+      setUnreadNotifications((currentCount) =>
+        isNotificationsOpenRef.current ? currentCount : currentCount + 1,
+      );
+
+      if (isNotificationsOpenRef.current) {
+        void markAdminNotificationsRead(session.token).catch((error: unknown) => {
+          console.warn("Failed to mark notifications read", error);
+        });
+      }
+    });
+
+    return () => {
+      events.close();
+    };
   }, [session]);
 
   const activeBarbers = useMemo(
@@ -516,6 +693,9 @@ export function AdminPage() {
     setAppointments([]);
     setBarbers([]);
     setTimeOffs([]);
+    setNotifications([]);
+    setIsNotificationsOpen(false);
+    setUnreadNotifications(0);
     setAdminView("schedule");
     setAppointmentDate("");
     setAppointmentPeriod("all");
@@ -994,17 +1174,123 @@ export function AdminPage() {
       <section className="admin-shell">
         <header className="admin-header">
           <div>
-            <span className="admin-eyebrow">
-              {isAdminSession ? "Кабинет админа" : "Кабинет мастера"}
-            </span>
+            <div className="admin-header-meta">
+              <span className="admin-role-badge">
+                {isAdminSession ? "Админ" : "Мастер"}
+              </span>
+              <div className="admin-notifications" ref={notificationsRef}>
+                <button
+                  type="button"
+                  className="admin-notification-button"
+                  aria-expanded={isNotificationsOpen}
+                  aria-label="Уведомления"
+                  onClick={toggleNotifications}
+                >
+                  <span aria-hidden="true" />
+                  {unreadNotifications > 0 && (
+                    <strong>
+                      {unreadNotifications > 9 ? "9+" : unreadNotifications}
+                    </strong>
+                  )}
+                </button>
+                {isNotificationsOpen && (
+                  <section className="admin-notification-panel">
+                    <header>
+                      <span>Уведомления</span>
+                      <small>{notifications.length}</small>
+                    </header>
+                    <div className="admin-notification-tabs">
+                      <button
+                        type="button"
+                        aria-pressed={notificationMode === "unread"}
+                        onClick={showUnreadNotifications}
+                      >
+                        Новые
+                      </button>
+                      <button
+                        type="button"
+                        aria-pressed={notificationMode === "all"}
+                        onClick={showAllNotifications}
+                      >
+                        Все уведомления
+                      </button>
+                    </div>
+                    {notifications.length === 0 ? (
+                      <p>
+                        {isLoadingNotifications
+                          ? "Загружаем уведомления..."
+                          : notificationMode === "all"
+                            ? "История уведомлений пока пуста."
+                            : "Новых уведомлений пока нет."}
+                      </p>
+                    ) : (
+                      <div className="admin-notification-list">
+                        {notifications.map((notification) => (
+                          <article key={notification.id}>
+                            <div>
+                              <strong>
+                                {notification.appointment.service.title}
+                              </strong>
+                              <span
+                                className={`admin-status admin-status--${
+                                  notification.readAt ? "completed" : "upcoming"
+                                }`}
+                              >
+                                {notification.readAt ? "Прочитано" : "Новое"}
+                              </span>
+                            </div>
+                            <span>
+                              Запись:{" "}
+                              {formatAdminDateTime(
+                                notification.appointment.startsAt,
+                              )}
+                            </span>
+                            <span>
+                              Мастер: {notification.appointment.barber.name}
+                            </span>
+                            <small>
+                              Клиент записался:{" "}
+                              {formatAdminDateTime(notification.createdAt)}
+                            </small>
+                            <small>
+                              Клиент: {notification.appointment.customerName}
+                            </small>
+                            <small>
+                              Телефон:{" "}
+                              <a
+                                className="admin-phone-link"
+                                href={getPhoneHref(
+                                  notification.appointment.customerPhone,
+                                )}
+                              >
+                                {notification.appointment.customerPhone}
+                              </a>
+                            </small>
+                          </article>
+                        ))}
+                      </div>
+                    )}
+                  </section>
+                )}
+              </div>
+            </div>
             <span className="admin-eyebrow">
               {formatAdminHeaderDateTime(currentTime)}
             </span>
             <h1>{isAdminSession ? "Расписание мастеров" : "Мои записи"}</h1>
           </div>
-          <button type="button" onClick={handleLogout}>
-            Выйти
-          </button>
+          <div className="admin-header-actions">
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm("Выйти из админки?")) {
+                  handleLogout();
+                }
+              }}
+            >
+              Выйти
+            </button>
+          </div>
         </header>
 
         <nav className="admin-view-tabs" aria-label="Разделы админки">
@@ -1167,7 +1453,14 @@ export function AdminPage() {
                                 <td>{appointment.barber.name}</td>
                               )}
                               <td>{appointment.customerName}</td>
-                              <td>{appointment.customerPhone}</td>
+                              <td>
+                                <a
+                                  className="admin-phone-link"
+                                  href={getPhoneHref(appointment.customerPhone)}
+                                >
+                                  {appointment.customerPhone}
+                                </a>
+                              </td>
                               <td>{appointment.service.title}</td>
                               <td>
                                 <span
@@ -1212,7 +1505,14 @@ export function AdminPage() {
                             </div>
                             <div>
                               <dt>Телефон</dt>
-                              <dd>{appointment.customerPhone}</dd>
+                              <dd>
+                                <a
+                                  className="admin-phone-link"
+                                  href={getPhoneHref(appointment.customerPhone)}
+                                >
+                                  {appointment.customerPhone}
+                                </a>
+                              </dd>
                             </div>
                             <div>
                               <dt>Услуга</dt>
@@ -1417,7 +1717,12 @@ export function AdminPage() {
                         <tr key={client.phone}>
                           <td>{client.name}</td>
                           <td>
-                            <a href={`tel:${client.phone}`}>{client.phone}</a>
+                            <a
+                              className="admin-phone-link"
+                              href={getPhoneHref(client.phone)}
+                            >
+                              {client.phone}
+                            </a>
                           </td>
                           <td>{client.visits}</td>
                           <td>
@@ -1437,7 +1742,12 @@ export function AdminPage() {
                     <article className="admin-client-card" key={client.phone}>
                       <div>
                         <strong>{client.name}</strong>
-                        <a href={`tel:${client.phone}`}>{client.phone}</a>
+                        <a
+                          className="admin-phone-link"
+                          href={getPhoneHref(client.phone)}
+                        >
+                          {client.phone}
+                        </a>
                       </div>
                       <dl>
                         <div>

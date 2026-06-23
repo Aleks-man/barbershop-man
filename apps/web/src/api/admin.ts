@@ -48,6 +48,13 @@ export type AdminTimeOff = {
   }
 }
 
+export type AdminNotification = {
+  id: string
+  createdAt: string
+  readAt: string | null
+  appointment: AdminAppointment
+}
+
 type AppointmentsResponse = {
   appointments: AdminAppointment[]
 }
@@ -58,6 +65,10 @@ type BarbersResponse = {
 
 type TimeOffResponse = {
   timeOffs: AdminTimeOff[]
+}
+
+type NotificationsResponse = {
+  notifications: AdminNotification[]
 }
 
 export const loginAdmin = async ({
@@ -245,6 +256,41 @@ export const getAdminTimeOff = async (token: string) => {
   const data = (await response.json()) as TimeOffResponse
 
   return data.timeOffs
+}
+
+export const getAdminNotifications = async (
+  token: string,
+  scope: 'all' | 'unread' = 'unread',
+) => {
+  const searchParams = new URLSearchParams({
+    scope,
+  })
+  const response = await fetch(`/api/admin/notifications?${searchParams.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to load notifications')
+  }
+
+  const data = (await response.json()) as NotificationsResponse
+
+  return data.notifications
+}
+
+export const markAdminNotificationsRead = async (token: string) => {
+  const response = await fetch('/api/admin/notifications/read', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    method: 'PATCH',
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to mark notifications read')
+  }
 }
 
 export const createAdminTimeOff = async ({

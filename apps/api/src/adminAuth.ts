@@ -32,7 +32,7 @@ export const createBarberToken = (barberId: string) =>
     role: 'barber',
   })
 
-const getStaffSession = (token: string): StaffSession | null => {
+export const getStaffSession = (token: string): StaffSession | null => {
   const [encodedPayload, signature] = token.split('.')
 
   if (!encodedPayload || !signature || sign(encodedPayload) !== signature) {
