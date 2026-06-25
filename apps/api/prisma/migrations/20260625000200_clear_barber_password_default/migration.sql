@@ -1,0 +1,1 @@
+ALTER TABLE "Barber" ALTER COLUMN "password" SET DEFAULT '';

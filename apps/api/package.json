@@ -10,6 +10,7 @@
     "prisma:migrate": "prisma migrate dev --schema prisma/schema.prisma",
     "prisma:seed": "tsx prisma/seed.ts",
     "prisma:seed:appointments": "tsx prisma/seed-appointments.ts",
+    "prisma:hash-passwords": "tsx prisma/hash-legacy-barber-passwords.ts",
     "prisma:studio": "prisma studio --schema prisma/schema.prisma",
     "start": "node dist/server.js"
   },

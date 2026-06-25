@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { createAdminToken, createBarberToken } from '../adminAuth.js'
 import { config } from '../config.js'
+import { hashPassword, verifyPasswordHash } from '../passwordHash.js'
 import { prisma } from '../prisma.js'
 
 type LoginBody = {
@@ -42,14 +43,38 @@ adminAuthRouter.post('/login', async (request, response, next) => {
         id: true,
         name: true,
         password: true,
+        passwordHash: true,
       },
     })
 
-    if (!barber || barber.password !== password) {
+    if (!barber) {
       response.status(401).json({
         error: 'Invalid password',
       })
       return
+    }
+
+    const isValidPassword = barber.passwordHash
+      ? await verifyPasswordHash(password, barber.passwordHash)
+      : barber.password === password
+
+    if (!isValidPassword) {
+      response.status(401).json({
+        error: 'Invalid password',
+      })
+      return
+    }
+
+    if (!barber.passwordHash) {
+      await prisma.barber.update({
+        where: {
+          id: barber.id,
+        },
+        data: {
+          password: '',
+          passwordHash: await hashPassword(password),
+        },
+      })
     }
 
     response.json({

@@ -1,5 +1,6 @@
 import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '@prisma/client'
+import { hashPassword } from '../src/passwordHash.js'
 
 const connectionString =
   process.env.DATABASE_URL ??
@@ -106,7 +107,15 @@ async function main() {
   await prisma.barber.deleteMany()
   await prisma.service.deleteMany()
 
-  await prisma.barber.createMany({ data: barbers })
+  const defaultPasswordHash = await hashPassword('111111')
+
+  await prisma.barber.createMany({
+    data: barbers.map((barber) => ({
+      ...barber,
+      password: '',
+      passwordHash: defaultPasswordHash,
+    })),
+  })
   await prisma.service.createMany({ data: services })
 }
 

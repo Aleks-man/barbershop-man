@@ -15,6 +15,7 @@ import {
   adminTimeOffSelect,
 } from '../adminSelects.js'
 import { addMinutes, businessHoursByDay, hasOverlap, parseDate, setTime } from '../bookingTime.js'
+import { hashPassword } from '../passwordHash.js'
 import { prisma } from '../prisma.js'
 import { adminAuthRouter } from './adminAuthRoutes.js'
 import { adminEventsRouter } from './adminEvents.js'
@@ -232,10 +233,7 @@ adminRouter.get('/barbers', requireStaff, async (_request, response, next) => {
       orderBy: {
         name: 'asc',
       },
-      select: {
-        ...adminBarberSelect,
-        password: session.role === 'admin',
-      },
+      select: adminBarberSelect,
     })
 
     response.json({ barbers })
@@ -251,6 +249,7 @@ adminRouter.post('/barbers', requireAdmin, async (request, response, next) => {
     const experience = typeof body.experience === 'string' ? body.experience.trim() : ''
     const name = typeof body.name === 'string' ? body.name.trim() : ''
     const password = typeof body.password === 'string' ? body.password.trim() : ''
+    const passwordHash = await hashPassword(password || '111111')
     const photoUrl = typeof body.photoUrl === 'string' ? body.photoUrl.trim() : ''
     const role = typeof body.role === 'string' ? body.role.trim() : ''
 
@@ -266,7 +265,8 @@ adminRouter.post('/barbers', requireAdmin, async (request, response, next) => {
         description: description || null,
         experience: experience || null,
         name,
-        password: password || '111111',
+        password: '',
+        passwordHash,
         photoUrl: photoUrl || null,
         role: role || null,
       },

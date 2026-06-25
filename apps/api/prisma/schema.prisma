@@ -16,7 +16,8 @@ enum AppointmentStatus {
 model Barber {
   id           String        @id @default(cuid())
   name         String
-  password     String        @default("111111")
+  password     String        @default("")
+  passwordHash String?
   role         String?
   description  String?
   experience   String?

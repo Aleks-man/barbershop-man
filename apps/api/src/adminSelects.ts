@@ -51,7 +51,6 @@ export const adminBarberSelect = {
   id: true,
   isActive: true,
   name: true,
-  password: true,
   photoUrl: true,
   role: true,
 } satisfies Prisma.BarberSelect

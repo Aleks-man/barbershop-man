@@ -32,7 +32,6 @@ export type AdminBarber = {
   id: string
   isActive?: boolean
   name: string
-  password?: string
   photoUrl?: string | null
   role: string | null
 }

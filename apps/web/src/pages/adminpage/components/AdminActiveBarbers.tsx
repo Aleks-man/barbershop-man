@@ -29,7 +29,6 @@ export function AdminActiveBarbers({
           >
             <span>{barber.name}</span>
             {barber.role && <small>{barber.role}</small>}
-            {barber.password && <small>Пароль: {barber.password}</small>}
           </button>
         ))}
       </nav>

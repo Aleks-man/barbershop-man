@@ -21,6 +21,7 @@
     "optimize:images": "npm run optimize:images --workspace @barbershop/web",
     "prisma:generate": "npm run prisma:generate --workspace @barbershop/api",
     "prisma:migrate": "npm run prisma:migrate --workspace @barbershop/api",
+    "prisma:hash-passwords": "npm run prisma:hash-passwords --workspace @barbershop/api",
     "prisma:seed": "npm run prisma:seed --workspace @barbershop/api",
     "prisma:seed:appointments": "npm run prisma:seed:appointments --workspace @barbershop/api",
     "prisma:studio": "npm run prisma:studio --workspace @barbershop/api",
