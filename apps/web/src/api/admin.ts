@@ -135,14 +135,16 @@ export const createAdminBarber = async ({
 }
 
 export const changeAdminPassword = async ({
+  currentPassword,
   password,
   token,
 }: {
+  currentPassword?: string
   password: string
   token: string
 }) => {
   const response = await fetch('/api/admin/password', {
-    body: JSON.stringify({ password }),
+    body: JSON.stringify({ currentPassword, password }),
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',

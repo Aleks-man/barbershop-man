@@ -16,6 +16,7 @@ type AdminHeaderProps = {
   notificationsRef: RefObject<HTMLDivElement | null>
   unreadNotifications: number
   onLogout: () => void
+  onPasswordChangeClick: () => void
   onShowAllNotifications: () => void
   onShowUnreadNotifications: () => void
   onToggleNotifications: () => void
@@ -30,6 +31,7 @@ export function AdminHeader({
   notifications,
   notificationsRef,
   onLogout,
+  onPasswordChangeClick,
   onShowAllNotifications,
   onShowUnreadNotifications,
   onToggleNotifications,
@@ -61,6 +63,9 @@ export function AdminHeader({
         <h1>{isAdminSession ? 'Расписание мастеров' : 'Мои записи'}</h1>
       </div>
       <div className="admin-header-actions">
+        <button type="button" onClick={onPasswordChangeClick}>
+          Сменить пароль
+        </button>
         <button type="button" onClick={onLogout}>
           Выйти
         </button>

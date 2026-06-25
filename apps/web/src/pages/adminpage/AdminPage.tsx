@@ -33,6 +33,7 @@ import { AdminHeader } from "./components/AdminHeader";
 import { AdminClientsView } from "./components/AdminClientsView";
 import { AdminLoginView } from "./components/AdminLoginView";
 import { AdminPasswordChangeView } from "./components/AdminPasswordChangeView";
+import { AdminPasswordSettingsModal } from "./components/AdminPasswordSettingsModal";
 import { AdminRescheduleModal } from "./components/AdminRescheduleModal";
 import { AdminScheduleView } from "./components/AdminScheduleView";
 import { useCurrentTime } from "../../hooks/useCurrentTime";
@@ -85,6 +86,11 @@ export function AdminPage() {
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [repeatedPassword, setRepeatedPassword] = useState("");
+  const [accountCurrentPassword, setAccountCurrentPassword] = useState("");
+  const [accountNewPassword, setAccountNewPassword] = useState("");
+  const [accountPasswordError, setAccountPasswordError] = useState("");
+  const [accountRepeatedPassword, setAccountRepeatedPassword] = useState("");
+  const [isPasswordSettingsOpen, setIsPasswordSettingsOpen] = useState(false);
   const [createdBarberPassword, setCreatedBarberPassword] = useState("");
   const [createdBarberName, setCreatedBarberName] = useState("");
   const [adminView, setAdminView] = useState<AdminView>(readStoredAdminView);
@@ -300,6 +306,11 @@ export function AdminPage() {
     setTimeOffStartTime("");
     setNewPassword("");
     setRepeatedPassword("");
+    setAccountCurrentPassword("");
+    setAccountNewPassword("");
+    setAccountPasswordError("");
+    setAccountRepeatedPassword("");
+    setIsPasswordSettingsOpen(false);
     setCreatedBarberPassword("");
     setCreatedBarberName("");
   };
@@ -336,6 +347,48 @@ export function AdminPage() {
       setRepeatedPassword("");
     } catch {
       setErrorMessage("Не удалось сменить пароль.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const closePasswordSettings = () => {
+    setIsPasswordSettingsOpen(false);
+    setAccountCurrentPassword("");
+    setAccountNewPassword("");
+    setAccountPasswordError("");
+    setAccountRepeatedPassword("");
+  };
+
+  const handleChangeAccountPassword = async () => {
+    if (
+      !session ||
+      !accountCurrentPassword.trim() ||
+      !accountNewPassword.trim() ||
+      accountNewPassword !== accountRepeatedPassword
+    ) {
+      setAccountPasswordError("Пароли не совпадают.");
+      return;
+    }
+
+    if (accountNewPassword.trim().length < 6) {
+      setAccountPasswordError("Пароль должен быть не короче 6 символов.");
+      return;
+    }
+
+    setIsLoading(true);
+    setAccountPasswordError("");
+
+    try {
+      await changeAdminPassword({
+        currentPassword: accountCurrentPassword,
+        password: accountNewPassword,
+        token: session.token,
+      });
+
+      closePasswordSettings();
+    } catch {
+      setAccountPasswordError("Не удалось сменить пароль. Проверьте текущий пароль.");
     } finally {
       setIsLoading(false);
     }
@@ -772,6 +825,10 @@ export function AdminPage() {
               handleLogout();
             }
           }}
+          onPasswordChangeClick={() => {
+            setIsPasswordSettingsOpen(true);
+            setAccountPasswordError("");
+          }}
           onShowAllNotifications={showAllNotifications}
           onShowUnreadNotifications={showUnreadNotifications}
           onToggleNotifications={toggleNotifications}
@@ -925,6 +982,21 @@ export function AdminPage() {
             setRescheduleTimeOptions([]);
           }}
           onRescheduleTimeChange={setRescheduleTime}
+        />
+      )}
+      {isPasswordSettingsOpen && (
+        <AdminPasswordSettingsModal
+          currentPassword={accountCurrentPassword}
+          errorMessage={accountPasswordError}
+          isLoading={isLoading}
+          newPassword={accountNewPassword}
+          repeatedPassword={accountRepeatedPassword}
+          onClose={closePasswordSettings}
+          onCurrentPasswordChange={setAccountCurrentPassword}
+          onErrorReset={() => setAccountPasswordError("")}
+          onNewPasswordChange={setAccountNewPassword}
+          onPasswordSave={() => void handleChangeAccountPassword()}
+          onRepeatedPasswordChange={setAccountRepeatedPassword}
         />
       )}
     </main>
