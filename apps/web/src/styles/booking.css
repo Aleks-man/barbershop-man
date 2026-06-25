@@ -524,6 +524,13 @@
     overflow-wrap: anywhere;
   }
 
+  .booking-form input:not([type="hidden"]),
+  .booking-select-trigger,
+  .booking-date-trigger,
+  .booking-select-option {
+    font-size: 16px;
+  }
+
   .schedule-list div {
     min-width: 0;
   }
