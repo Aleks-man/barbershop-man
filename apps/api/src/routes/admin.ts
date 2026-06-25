@@ -16,6 +16,7 @@ import {
 } from '../adminSelects.js'
 import { addMinutes, businessHoursByDay, hasOverlap, parseDate, setTime } from '../bookingTime.js'
 import { hashPassword } from '../passwordHash.js'
+import { normalizeRussianPhone } from '../phone.js'
 import { prisma } from '../prisma.js'
 import { adminAuthRouter } from './adminAuthRoutes.js'
 import { adminEventsRouter } from './adminEvents.js'
@@ -35,6 +36,7 @@ type BarberBody = {
   experience?: unknown
   name?: unknown
   password?: unknown
+  phone?: unknown
   photoUrl?: unknown
   role?: unknown
 }
@@ -250,12 +252,21 @@ adminRouter.post('/barbers', requireAdmin, async (request, response, next) => {
     const name = typeof body.name === 'string' ? body.name.trim() : ''
     const password = typeof body.password === 'string' ? body.password.trim() : ''
     const passwordHash = await hashPassword(password || '111111')
+    const phone = typeof body.phone === 'string' ? body.phone.trim() : ''
+    const normalizedPhone = phone ? normalizeRussianPhone(phone) : ''
     const photoUrl = typeof body.photoUrl === 'string' ? body.photoUrl.trim() : ''
     const role = typeof body.role === 'string' ? body.role.trim() : ''
 
     if (!name) {
       response.status(400).json({
         error: 'Name is required',
+      })
+      return
+    }
+
+    if (phone && !normalizedPhone) {
+      response.status(400).json({
+        error: 'Invalid phone',
       })
       return
     }
@@ -267,6 +278,7 @@ adminRouter.post('/barbers', requireAdmin, async (request, response, next) => {
         name,
         password: '',
         passwordHash,
+        phone: normalizedPhone || null,
         photoUrl: photoUrl || null,
         role: role || null,
       },

@@ -1,4 +1,5 @@
 import type { AdminBarber } from '../../../api/admin'
+import { getPhoneHref } from '../helpers'
 
 type AdminActiveBarbersProps = {
   activeBarbers: AdminBarber[]
@@ -21,15 +22,21 @@ export function AdminActiveBarbers({
       </header>
       <nav className="admin-barbers" aria-label="Мастера">
         {activeBarbers.map((barber) => (
-          <button
-            type="button"
-            aria-pressed={barber.id === selectedBarberId}
-            key={barber.id}
-            onClick={() => onSelectBarberSchedule(barber.id)}
-          >
-            <span>{barber.name}</span>
-            {barber.role && <small>{barber.role}</small>}
-          </button>
+          <article className="admin-barber-card" key={barber.id}>
+            <button
+              type="button"
+              aria-pressed={barber.id === selectedBarberId}
+              onClick={() => onSelectBarberSchedule(barber.id)}
+            >
+              <span>{barber.name}</span>
+              {barber.role && <small>{barber.role}</small>}
+            </button>
+            {barber.phone && (
+              <a className="admin-phone-link" href={getPhoneHref(barber.phone)}>
+                {barber.phone}
+              </a>
+            )}
+          </article>
         ))}
       </nav>
     </section>

@@ -11,6 +11,7 @@ type AdminBarbersViewProps = {
   newBarberExperience: string
   newBarberName: string
   newBarberPassword: string
+  newBarberPhone: string
   newBarberPhotoUrl: string
   newBarberRole: string
   selectedBarberId: string
@@ -21,6 +22,7 @@ type AdminBarbersViewProps = {
   onNewBarberExperienceChange: (value: string) => void
   onNewBarberNameChange: (value: string) => void
   onNewBarberPasswordChange: (value: string) => void
+  onNewBarberPhoneChange: (value: string) => void
   onNewBarberRoleChange: (value: string) => void
   onRestoreBarber: (barberId: string) => void
   onSelectBarberSchedule: (barberId: string) => void
@@ -34,6 +36,7 @@ export function AdminBarbersView({
   newBarberExperience,
   newBarberName,
   newBarberPassword,
+  newBarberPhone,
   newBarberPhotoUrl,
   newBarberRole,
   onBarberPhotoChange,
@@ -43,6 +46,7 @@ export function AdminBarbersView({
   onNewBarberExperienceChange,
   onNewBarberNameChange,
   onNewBarberPasswordChange,
+  onNewBarberPhoneChange,
   onNewBarberRoleChange,
   onRestoreBarber,
   onSelectBarberSchedule,
@@ -56,6 +60,7 @@ export function AdminBarbersView({
         newBarberExperience={newBarberExperience}
         newBarberName={newBarberName}
         newBarberPassword={newBarberPassword}
+        newBarberPhone={newBarberPhone}
         newBarberPhotoUrl={newBarberPhotoUrl}
         newBarberRole={newBarberRole}
         onBarberPhotoChange={onBarberPhotoChange}
@@ -64,6 +69,7 @@ export function AdminBarbersView({
         onNewBarberExperienceChange={onNewBarberExperienceChange}
         onNewBarberNameChange={onNewBarberNameChange}
         onNewBarberPasswordChange={onNewBarberPasswordChange}
+        onNewBarberPhoneChange={onNewBarberPhoneChange}
         onNewBarberRoleChange={onNewBarberRoleChange}
       />
       <AdminActiveBarbers

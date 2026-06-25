@@ -32,6 +32,7 @@ export type AdminBarber = {
   id: string
   isActive?: boolean
   name: string
+  phone?: string | null
   photoUrl?: string | null
   role: string | null
 }
@@ -97,6 +98,7 @@ export const loginAdmin = async ({
 export const createAdminBarber = async ({
   name,
   password,
+  phone,
   description,
   experience,
   photoUrl,
@@ -107,12 +109,13 @@ export const createAdminBarber = async ({
   experience: string
   name: string
   password: string
+  phone: string
   photoUrl: string
   role: string
   token: string
 }) => {
   const response = await fetch('/api/admin/barbers', {
-    body: JSON.stringify({ description, experience, name, password, photoUrl, role }),
+    body: JSON.stringify({ description, experience, name, password, phone, photoUrl, role }),
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',

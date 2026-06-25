@@ -21,6 +21,7 @@ model Barber {
   role         String?
   description  String?
   experience   String?
+  phone        String?
   photoUrl     String?
   isActive     Boolean       @default(true)
   createdAt    DateTime      @default(now())

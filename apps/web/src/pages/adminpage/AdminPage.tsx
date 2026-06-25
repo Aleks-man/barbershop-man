@@ -77,6 +77,7 @@ export function AdminPage() {
   const [newBarberPassword, setNewBarberPassword] = useState(
     defaultBarberPassword,
   );
+  const [newBarberPhone, setNewBarberPhone] = useState("");
   const [newBarberPhotoUrl, setNewBarberPhotoUrl] = useState("");
   const [newBarberRole, setNewBarberRole] = useState("");
   const [password, setPassword] = useState("");
@@ -302,6 +303,7 @@ export function AdminPage() {
         experience: newBarberExperience,
         name: newBarberName,
         password: newBarberPassword || defaultBarberPassword,
+        phone: newBarberPhone,
         photoUrl: uploadedPhoto?.photoUrl ?? newBarberPhotoUrl,
         role: newBarberRole,
         token,
@@ -315,6 +317,7 @@ export function AdminPage() {
       setNewBarberExperience("");
       setNewBarberName("");
       setNewBarberPassword(defaultBarberPassword);
+      setNewBarberPhone("");
       setNewBarberPhotoUrl("");
       setNewBarberRole("");
     } catch {
@@ -795,6 +798,7 @@ export function AdminPage() {
             newBarberExperience={newBarberExperience}
             newBarberName={newBarberName}
             newBarberPassword={newBarberPassword}
+            newBarberPhone={newBarberPhone}
             newBarberPhotoUrl={newBarberPhotoUrl}
             newBarberRole={newBarberRole}
             selectedBarberId={selectedBarberId}
@@ -805,6 +809,7 @@ export function AdminPage() {
             onNewBarberExperienceChange={setNewBarberExperience}
             onNewBarberNameChange={setNewBarberName}
             onNewBarberPasswordChange={setNewBarberPassword}
+            onNewBarberPhoneChange={setNewBarberPhone}
             onNewBarberRoleChange={setNewBarberRole}
             onRestoreBarber={(barberId) => void handleRestoreBarber(barberId)}
             onSelectBarberSchedule={(barberId) => {

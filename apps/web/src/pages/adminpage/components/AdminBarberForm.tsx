@@ -1,4 +1,5 @@
 import type { ChangeEvent } from 'react'
+import { formatPhoneInput, phoneMask } from '../../../utils/phone'
 
 type AdminBarberFormProps = {
   isLoading: boolean
@@ -6,6 +7,7 @@ type AdminBarberFormProps = {
   newBarberExperience: string
   newBarberName: string
   newBarberPassword: string
+  newBarberPhone: string
   newBarberPhotoUrl: string
   newBarberRole: string
   onBarberPhotoChange: (file?: File) => void
@@ -14,6 +16,7 @@ type AdminBarberFormProps = {
   onNewBarberExperienceChange: (value: string) => void
   onNewBarberNameChange: (value: string) => void
   onNewBarberPasswordChange: (value: string) => void
+  onNewBarberPhoneChange: (value: string) => void
   onNewBarberRoleChange: (value: string) => void
 }
 
@@ -23,6 +26,7 @@ export function AdminBarberForm({
   newBarberExperience,
   newBarberName,
   newBarberPassword,
+  newBarberPhone,
   newBarberPhotoUrl,
   newBarberRole,
   onBarberPhotoChange,
@@ -31,6 +35,7 @@ export function AdminBarberForm({
   onNewBarberExperienceChange,
   onNewBarberNameChange,
   onNewBarberPasswordChange,
+  onNewBarberPhoneChange,
   onNewBarberRoleChange,
 }: AdminBarberFormProps) {
   const handlePhotoChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -79,10 +84,22 @@ export function AdminBarberForm({
             onChange={(event) => onNewBarberPasswordChange(event.target.value)}
           />
         </label>
+        <label>
+          Телефон
+          <input
+            type="tel"
+            inputMode="numeric"
+            placeholder={phoneMask}
+            value={newBarberPhone}
+            onChange={(event) =>
+              onNewBarberPhoneChange(formatPhoneInput(event.currentTarget.value))
+            }
+          />
+        </label>
         <label className="admin-manager-form-wide">
           Описание
           <textarea
-            rows={3}
+            rows={1}
             value={newBarberDescription}
             onChange={(event) =>
               onNewBarberDescriptionChange(event.target.value)

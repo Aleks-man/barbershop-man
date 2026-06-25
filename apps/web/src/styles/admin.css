@@ -428,7 +428,6 @@
 }
 
 .admin-manager-form textarea {
-  min-height: 94px;
   resize: vertical;
 }
 
@@ -522,6 +521,7 @@
   gap: 0.6rem;
 }
 
+.admin-barber-card,
 .admin-barbers button {
   display: grid;
   gap: 0.38rem;
@@ -537,6 +537,22 @@
   text-align: left;
 }
 
+.admin-barber-card {
+  padding: 0;
+}
+
+.admin-barber-card > button {
+  min-height: 0;
+  border: 0;
+  background: transparent;
+  backdrop-filter: none;
+  padding: 0.9rem 0.9rem 0.25rem;
+}
+
+.admin-barber-card > .admin-phone-link {
+  margin: 0 0.9rem 0.9rem;
+}
+
 .admin-barber-archive-card {
   display: grid;
   gap: 0.5rem;
@@ -549,6 +565,7 @@
   padding: 0.9rem;
 }
 
+.admin-barber-card:has(button[aria-pressed="true"]),
 .admin-barbers button[aria-pressed="true"] {
   border-color: var(--gold-line-strong);
   box-shadow: 0 0 0 3px var(--gold-muted);
