@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { AdminBarber } from '../../../api/admin'
+import { apiFetch } from '../../../api/client'
 
 const emptyBarbersMessage = 'В базе пока нет активных мастеров.'
 const failedBarbersMessage =
@@ -23,7 +24,7 @@ export function useLoginBarbers(isSessionActive: boolean) {
     setIsLoadingLoginBarbers(true)
     setLoginBarbersMessage('')
 
-    fetch('/api/barbers')
+    apiFetch('/api/barbers')
       .then((response) => {
         if (!response.ok) {
           throw new Error('Failed to load barbers')
@@ -51,7 +52,7 @@ export function useLoginBarbers(isSessionActive: boolean) {
 
     let isMounted = true
 
-    fetch('/api/barbers')
+    apiFetch('/api/barbers')
       .then((response) => {
         if (!response.ok) {
           throw new Error('Failed to load barbers')

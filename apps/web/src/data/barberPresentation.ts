@@ -3,6 +3,7 @@ import masterAnton from '../assets/masters/master-anton.webp'
 import masterDenis from '../assets/masters/master-denis.webp'
 import masterMax from '../assets/masters/master-max.webp'
 import type { PublicBarber } from '../api/barbers'
+import { mediaUrl } from '../api/client'
 import { barbers } from './site'
 
 const fallbackPhotoByName = new Map([
@@ -47,4 +48,4 @@ export const getBarberPhoto = ({
 }: {
   name: string
   photoUrl?: string | null
-}) => photoUrl || fallbackPhotoByName.get(name.trim().toLowerCase()) || masterAnton
+}) => mediaUrl(photoUrl) || fallbackPhotoByName.get(name.trim().toLowerCase()) || masterAnton

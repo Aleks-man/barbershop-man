@@ -5,6 +5,7 @@ import {
   type AdminAppointment,
   type AdminNotification,
 } from '../../../api/admin'
+import { apiUrl } from '../../../api/client'
 import type { NotificationMode } from '../components/AdminNotifications'
 import type { AdminSession } from '../types'
 
@@ -154,7 +155,7 @@ export function useAdminNotifications({
     }
 
     const events = new EventSource(
-      `/api/admin/events?token=${encodeURIComponent(session.token)}`,
+      apiUrl(`/api/admin/events?token=${encodeURIComponent(session.token)}`),
     )
 
     events.addEventListener('appointment-created', (event) => {

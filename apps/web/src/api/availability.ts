@@ -1,4 +1,5 @@
 import type { BookingSelectOption } from '../components/BookingSelect'
+import { apiFetch } from './client'
 
 type AvailabilityResponse = {
   slots: string[]
@@ -22,7 +23,7 @@ export const getAvailability = async ({
     date,
     serviceId,
   })
-  const response = await fetch(`/api/availability?${searchParams.toString()}`)
+  const response = await apiFetch(`/api/availability?${searchParams.toString()}`)
 
   if (!response.ok) {
     throw new Error('Failed to load availability')
@@ -53,7 +54,7 @@ export const getAvailabilityMonth = async ({
     serviceId,
     year: String(year),
   })
-  const response = await fetch(`/api/availability/month?${searchParams.toString()}`)
+  const response = await apiFetch(`/api/availability/month?${searchParams.toString()}`)
 
   if (!response.ok) {
     throw new Error('Failed to load month availability')

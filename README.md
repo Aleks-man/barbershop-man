@@ -204,3 +204,75 @@ GET http://localhost:4000/api/health
 ```
 
 Frontend в разработке проксирует API-запросы на backend, поэтому обычно достаточно открыть `http://localhost:5173`.
+
+## Деплой
+
+Рекомендуемая схема:
+
+```text
+Frontend + Admin: Vercel
+Backend API: Render
+Database: PostgreSQL
+```
+
+### Render: PostgreSQL
+
+1. Создать PostgreSQL database на Render.
+2. Скопировать `DATABASE_URL`.
+3. Использовать этот URL в backend-сервисе Render.
+
+### Render: Backend API
+
+Создать Web Service из репозитория.
+
+Основные настройки:
+
+```text
+Root Directory: .
+Runtime: Node
+Build Command: npm install && npm run prisma:deploy && npm run prisma:generate && npm run build:api
+Start Command: npm run start --workspace @barbershop/api
+```
+
+Environment variables:
+
+```env
+DATABASE_URL="postgresql://..."
+ADMIN_PASSWORD="admin123"
+ADMIN_TOKEN_SECRET="long-random-secret"
+PROTECT_DEFAULT_STAFF=true
+NODE_ENV="production"
+```
+
+После первого деплоя можно один раз заполнить базу начальными данными через Render Shell:
+
+```bash
+npm run prisma:seed
+```
+
+Проверка backend:
+
+```text
+https://your-render-api.onrender.com/api/health
+```
+
+### Vercel: Frontend + Admin
+
+Frontend уже собирается из `apps/web`.
+
+В Vercel нужно добавить environment variable:
+
+```env
+VITE_API_BASE_URL="https://your-render-api.onrender.com"
+```
+
+После изменения переменной нужно сделать redeploy frontend.
+
+Публичный сайт и админка будут доступны на Vercel:
+
+```text
+https://your-vercel-domain.vercel.app
+https://your-vercel-domain.vercel.app/admin
+```
+
+Важно: `VITE_API_BASE_URL` подставляется во frontend во время сборки. Если backend URL изменился, нужно обновить переменную на Vercel и пересобрать frontend.

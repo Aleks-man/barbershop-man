@@ -1,3 +1,5 @@
+import { apiFetch } from './client'
+
 export type PublicBarber = {
   description: string | null
   experience: string | null
@@ -12,7 +14,7 @@ type BarberResponse = {
 }
 
 export const getPublicBarbers = async () => {
-  const response = await fetch('/api/barbers')
+  const response = await apiFetch('/api/barbers')
 
   if (!response.ok) {
     throw new Error('Failed to load barbers')

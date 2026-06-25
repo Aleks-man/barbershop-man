@@ -1,4 +1,5 @@
 import type { BookingSelectOption } from '../components/BookingSelect'
+import { apiFetch } from './client'
 
 type BarberResponse = {
   barbers: Array<{
@@ -20,7 +21,7 @@ type BookingOptions = {
 }
 
 const fetchJson = async <T>(url: string): Promise<T> => {
-  const response = await fetch(url)
+  const response = await apiFetch(url)
 
   if (!response.ok) {
     throw new Error(`Failed to load ${url}`)

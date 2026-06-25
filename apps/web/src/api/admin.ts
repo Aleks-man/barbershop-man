@@ -1,3 +1,5 @@
+import { apiFetch } from './client'
+
 type LoginResponse = {
   barberId?: string
   isProtected?: boolean
@@ -88,7 +90,7 @@ export const loginAdmin = async ({
   password: string
   role: AdminSessionRole
 }) => {
-  const response = await fetch('/api/admin/login', {
+  const response = await apiFetch('/api/admin/login', {
     body: JSON.stringify({ barberId, password, role }),
     headers: {
       'Content-Type': 'application/json',
@@ -120,7 +122,7 @@ export const createAdminBarber = async ({
   role: string
   token: string
 }) => {
-  const response = await fetch('/api/admin/barbers', {
+  const response = await apiFetch('/api/admin/barbers', {
     body: JSON.stringify({ description, experience, name, phone, photoUrl, role }),
     headers: {
       Authorization: `Bearer ${token}`,
@@ -145,7 +147,7 @@ export const changeAdminPassword = async ({
   password: string
   token: string
 }) => {
-  const response = await fetch('/api/admin/password', {
+  const response = await apiFetch('/api/admin/password', {
     body: JSON.stringify({ currentPassword, password }),
     headers: {
       Authorization: `Bearer ${token}`,
@@ -166,7 +168,7 @@ export const uploadAdminBarberPhoto = async ({
   dataUrl: string
   token: string
 }) => {
-  const response = await fetch('/api/admin/barbers/photo', {
+  const response = await apiFetch('/api/admin/barbers/photo', {
     body: JSON.stringify({ dataUrl }),
     headers: {
       Authorization: `Bearer ${token}`,
@@ -189,7 +191,7 @@ export const hideAdminBarber = async ({
   barberId: string
   token: string
 }) => {
-  const response = await fetch(`/api/admin/barbers/${barberId}`, {
+  const response = await apiFetch(`/api/admin/barbers/${barberId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -208,7 +210,7 @@ export const deleteAdminBarber = async ({
   barberId: string
   token: string
 }) => {
-  const response = await fetch(`/api/admin/barbers/${barberId}/permanent`, {
+  const response = await apiFetch(`/api/admin/barbers/${barberId}/permanent`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -227,7 +229,7 @@ export const restoreAdminBarber = async ({
   barberId: string
   token: string
 }) => {
-  const response = await fetch(`/api/admin/barbers/${barberId}/restore`, {
+  const response = await apiFetch(`/api/admin/barbers/${barberId}/restore`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -242,7 +244,7 @@ export const restoreAdminBarber = async ({
 }
 
 export const getAdminAppointments = async (token: string) => {
-  const response = await fetch('/api/admin/appointments', {
+  const response = await apiFetch('/api/admin/appointments', {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -258,7 +260,7 @@ export const getAdminAppointments = async (token: string) => {
 }
 
 export const getAdminBarbers = async (token: string) => {
-  const response = await fetch('/api/admin/barbers', {
+  const response = await apiFetch('/api/admin/barbers', {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -274,7 +276,7 @@ export const getAdminBarbers = async (token: string) => {
 }
 
 export const getAdminTimeOff = async (token: string) => {
-  const response = await fetch('/api/admin/time-off', {
+  const response = await apiFetch('/api/admin/time-off', {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -296,7 +298,7 @@ export const getAdminNotifications = async (
   const searchParams = new URLSearchParams({
     scope,
   })
-  const response = await fetch(`/api/admin/notifications?${searchParams.toString()}`, {
+  const response = await apiFetch(`/api/admin/notifications?${searchParams.toString()}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -312,7 +314,7 @@ export const getAdminNotifications = async (
 }
 
 export const markAdminNotificationsRead = async (token: string) => {
-  const response = await fetch('/api/admin/notifications/read', {
+  const response = await apiFetch('/api/admin/notifications/read', {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -341,7 +343,7 @@ export const createAdminTimeOff = async ({
   startTime: string
   token: string
 }) => {
-  const response = await fetch('/api/admin/time-off', {
+  const response = await apiFetch('/api/admin/time-off', {
     body: JSON.stringify({ barberId, endDate, endTime, reason, startDate, startTime }),
     headers: {
       Authorization: `Bearer ${token}`,
@@ -364,7 +366,7 @@ export const deleteAdminTimeOff = async ({
   timeOffId: string
   token: string
 }) => {
-  const response = await fetch(`/api/admin/time-off/${timeOffId}`, {
+  const response = await apiFetch(`/api/admin/time-off/${timeOffId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -385,7 +387,7 @@ export const updateAdminAppointmentStatus = async ({
   status: AdminAppointmentStatus
   token: string
 }) => {
-  const response = await fetch(`/api/admin/appointments/${appointmentId}/status`, {
+  const response = await apiFetch(`/api/admin/appointments/${appointmentId}/status`, {
     body: JSON.stringify({ status }),
     headers: {
       Authorization: `Bearer ${token}`,
@@ -410,7 +412,7 @@ export const rescheduleAdminAppointment = async ({
   time: string
   token: string
 }) => {
-  const response = await fetch(`/api/admin/appointments/${appointmentId}/reschedule`, {
+  const response = await apiFetch(`/api/admin/appointments/${appointmentId}/reschedule`, {
     body: JSON.stringify({ date, time }),
     headers: {
       Authorization: `Bearer ${token}`,

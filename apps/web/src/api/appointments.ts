@@ -1,3 +1,5 @@
+import { apiFetch } from './client'
+
 type CreateAppointmentInput = {
   barberId: string
   customerName: string
@@ -8,7 +10,7 @@ type CreateAppointmentInput = {
 }
 
 export const createAppointment = async (input: CreateAppointmentInput) => {
-  const response = await fetch('/api/appointments', {
+  const response = await apiFetch('/api/appointments', {
     body: JSON.stringify(input),
     headers: {
       'Content-Type': 'application/json',

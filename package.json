@@ -20,6 +20,7 @@
     "lint": "eslint .",
     "optimize:images": "npm run optimize:images --workspace @barbershop/web",
     "prisma:generate": "npm run prisma:generate --workspace @barbershop/api",
+    "prisma:deploy": "npm run prisma:deploy --workspace @barbershop/api",
     "prisma:migrate": "npm run prisma:migrate --workspace @barbershop/api",
     "prisma:hash-passwords": "npm run prisma:hash-passwords --workspace @barbershop/api",
     "prisma:seed": "npm run prisma:seed --workspace @barbershop/api",
