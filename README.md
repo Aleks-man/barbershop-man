@@ -230,7 +230,7 @@ Database: PostgreSQL
 ```text
 Root Directory: .
 Runtime: Node
-Build Command: npm install && npm run prisma:deploy && npm run prisma:generate && npm run build:api
+Build Command: npm install --include=dev && npm run prisma:deploy && npm run prisma:generate && npm run build:api
 Start Command: npm run start --workspace @barbershop/api
 ```
 
