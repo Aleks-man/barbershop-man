@@ -74,6 +74,7 @@
 
 .master-card h2 {
   margin: 0;
+    margin-top: 0.5rem;
   color: var(--heading);
   font-family: var(--display);
   font-size: 2.3rem;
@@ -91,7 +92,7 @@
   display: inline-flex;
   align-self: end;
   justify-self: start;
-  margin-top: auto;
+  margin-top: 1rem;
   color: var(--heading);
 }
 
