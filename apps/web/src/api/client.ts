@@ -10,7 +10,7 @@ export const mediaUrl = (path?: string | null) => {
     return ''
   }
 
-  if (/^https?:\/\//i.test(path) || path.startsWith('data:')) {
+  if (/^https?:\/\//i.test(path) || path.startsWith('data:') || !path.startsWith('/uploads/')) {
     return path
   }
 
