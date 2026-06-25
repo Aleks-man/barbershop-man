@@ -15,6 +15,7 @@ import {
   adminTimeOffSelect,
 } from '../adminSelects.js'
 import { addMinutes, businessHoursByDay, hasOverlap, parseDate, setTime } from '../bookingTime.js'
+import { config } from '../config.js'
 import { generateTemporaryPassword, hashPassword } from '../passwordHash.js'
 import { normalizeRussianPhone } from '../phone.js'
 import { prisma } from '../prisma.js'
@@ -331,6 +332,29 @@ adminRouter.post('/barbers/photo', requireAdmin, async (request, response, next)
 adminRouter.delete('/barbers/:id', requireAdmin, async (request, response, next) => {
   try {
     const barberId = String(request.params.id ?? '')
+    const barber = await prisma.barber.findUnique({
+      where: {
+        id: barberId,
+      },
+      select: {
+        isProtected: true,
+      },
+    })
+
+    if (!barber) {
+      response.status(404).json({
+        error: 'Barber not found',
+      })
+      return
+    }
+
+    if (config.protectDefaultStaff && barber.isProtected) {
+      response.status(409).json({
+        error: 'Protected barber cannot be hidden',
+      })
+      return
+    }
+
     const activeAppointments = await prisma.appointment.count({
       where: {
         barberId,
@@ -374,12 +398,20 @@ adminRouter.delete('/barbers/:id/permanent', requireAdmin, async (request, respo
       },
       select: {
         isActive: true,
+        isProtected: true,
       },
     })
 
     if (!barber || barber.isActive) {
       response.status(404).json({
         error: 'Hidden barber not found',
+      })
+      return
+    }
+
+    if (config.protectDefaultStaff && barber.isProtected) {
+      response.status(409).json({
+        error: 'Protected barber cannot be deleted',
       })
       return
     }

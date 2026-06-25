@@ -50,6 +50,7 @@ export const adminBarberSelect = {
   experience: true,
   id: true,
   isActive: true,
+  isProtected: true,
   name: true,
   phone: true,
   photoUrl: true,

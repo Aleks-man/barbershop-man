@@ -116,6 +116,7 @@ async function main() {
   await prisma.barber.createMany({
     data: barbers.map((barber) => ({
       ...barber,
+      isProtected: true,
       password: '',
       passwordHash: defaultPasswordHash,
     })),

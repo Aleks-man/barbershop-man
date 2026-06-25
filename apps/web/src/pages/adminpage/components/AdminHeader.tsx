@@ -11,6 +11,7 @@ type AdminHeaderProps = {
   isAdminSession: boolean
   isLoadingNotifications: boolean
   isNotificationsOpen: boolean
+  isPasswordChangeDisabled: boolean
   notificationMode: NotificationMode
   notifications: AdminNotification[]
   notificationsRef: RefObject<HTMLDivElement | null>
@@ -27,6 +28,7 @@ export function AdminHeader({
   isAdminSession,
   isLoadingNotifications,
   isNotificationsOpen,
+  isPasswordChangeDisabled,
   notificationMode,
   notifications,
   notificationsRef,
@@ -63,7 +65,16 @@ export function AdminHeader({
         <h1>{isAdminSession ? 'Расписание мастеров' : 'Мои записи'}</h1>
       </div>
       <div className="admin-header-actions">
-        <button type="button" onClick={onPasswordChangeClick}>
+        <button
+          type="button"
+          disabled={isPasswordChangeDisabled}
+          title={
+            isPasswordChangeDisabled
+              ? 'Пароль защищенного тестового аккаунта нельзя менять'
+              : undefined
+          }
+          onClick={onPasswordChangeClick}
+        >
           Сменить пароль
         </button>
         <button type="button" onClick={onLogout}>

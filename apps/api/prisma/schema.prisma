@@ -25,6 +25,7 @@ model Barber {
   phone        String?
   photoUrl     String?
   isActive     Boolean       @default(true)
+  isProtected  Boolean       @default(false)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   appointments Appointment[]
@@ -36,6 +37,7 @@ model StaffCredential {
   id           String   @id @default(cuid())
   role         String   @unique
   passwordHash String
+  isProtected  Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }

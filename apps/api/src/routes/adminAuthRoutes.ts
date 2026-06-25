@@ -44,6 +44,7 @@ const verifyAdminPassword = async (password: string) => {
 
   await prisma.staffCredential.create({
     data: {
+      isProtected: config.protectDefaultStaff,
       passwordHash: await hashPassword(password),
       role: adminCredentialRole,
     },
@@ -58,6 +59,7 @@ const updateAdminPassword = async (password: string) => {
       role: adminCredentialRole,
     },
     create: {
+      isProtected: config.protectDefaultStaff,
       passwordHash: await hashPassword(password),
       role: adminCredentialRole,
     },
@@ -83,6 +85,7 @@ adminAuthRouter.post('/login', async (request, response, next) => {
       }
 
       response.json({
+        isProtected: config.protectDefaultStaff && Boolean((await getAdminCredential())?.isProtected),
         role: 'admin',
         token: createAdminToken(),
       })
@@ -100,6 +103,7 @@ adminAuthRouter.post('/login', async (request, response, next) => {
         name: true,
         password: true,
         passwordHash: true,
+        isProtected: true,
       },
     })
 
@@ -135,6 +139,7 @@ adminAuthRouter.post('/login', async (request, response, next) => {
 
     response.json({
       barberId: barber.id,
+      isProtected: config.protectDefaultStaff && barber.isProtected,
       mustChangePassword: barber.mustChangePassword,
       name: barber.name,
       role: 'barber',
@@ -161,6 +166,15 @@ adminAuthRouter.patch('/password', requireStaff, async (request, response, next)
     }
 
     if (session.role === 'admin') {
+      const credential = await getAdminCredential()
+
+      if (config.protectDefaultStaff && (!credential || credential.isProtected)) {
+        response.status(409).json({
+          error: 'Protected admin password cannot be changed',
+        })
+        return
+      }
+
       if (!currentPassword || !(await verifyAdminPassword(currentPassword))) {
         response.status(401).json({
           error: 'Invalid current password',
@@ -185,6 +199,7 @@ adminAuthRouter.patch('/password', requireStaff, async (request, response, next)
         id: session.barberId,
       },
       select: {
+        isProtected: true,
         mustChangePassword: true,
         passwordHash: true,
       },
@@ -193,6 +208,13 @@ adminAuthRouter.patch('/password', requireStaff, async (request, response, next)
     if (!barber) {
       response.status(404).json({
         error: 'Barber not found',
+      })
+      return
+    }
+
+    if (config.protectDefaultStaff && barber.isProtected) {
+      response.status(409).json({
+        error: 'Protected barber password cannot be changed',
       })
       return
     }

@@ -267,6 +267,7 @@ export function AdminPage() {
       });
       const nextSession: AdminSession = {
         barberId: response.barberId,
+        isProtected: response.isProtected,
         mustChangePassword: response.mustChangePassword,
         name: response.name,
         role: response.role,
@@ -829,6 +830,7 @@ export function AdminPage() {
             setIsPasswordSettingsOpen(true);
             setAccountPasswordError("");
           }}
+          isPasswordChangeDisabled={Boolean(session.isProtected)}
           onShowAllNotifications={showAllNotifications}
           onShowUnreadNotifications={showUnreadNotifications}
           onToggleNotifications={toggleNotifications}

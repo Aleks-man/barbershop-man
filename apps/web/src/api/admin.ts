@@ -1,5 +1,6 @@
 type LoginResponse = {
   barberId?: string
+  isProtected?: boolean
   mustChangePassword?: boolean
   name?: string
   role: AdminSessionRole
@@ -32,6 +33,7 @@ export type AdminBarber = {
   experience?: string | null
   id: string
   isActive?: boolean
+  isProtected?: boolean
   name: string
   phone?: string | null
   photoUrl?: string | null
