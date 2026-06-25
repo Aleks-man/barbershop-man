@@ -18,6 +18,7 @@ model Barber {
   name         String
   password     String        @default("")
   passwordHash String?
+  mustChangePassword Boolean @default(false)
   role         String?
   description  String?
   experience   String?

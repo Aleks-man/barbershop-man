@@ -15,7 +15,7 @@ import {
   adminTimeOffSelect,
 } from '../adminSelects.js'
 import { addMinutes, businessHoursByDay, hasOverlap, parseDate, setTime } from '../bookingTime.js'
-import { hashPassword } from '../passwordHash.js'
+import { generateTemporaryPassword, hashPassword } from '../passwordHash.js'
 import { normalizeRussianPhone } from '../phone.js'
 import { prisma } from '../prisma.js'
 import { adminAuthRouter } from './adminAuthRoutes.js'
@@ -35,7 +35,6 @@ type BarberBody = {
   description?: unknown
   experience?: unknown
   name?: unknown
-  password?: unknown
   phone?: unknown
   photoUrl?: unknown
   role?: unknown
@@ -250,8 +249,8 @@ adminRouter.post('/barbers', requireAdmin, async (request, response, next) => {
     const description = typeof body.description === 'string' ? body.description.trim() : ''
     const experience = typeof body.experience === 'string' ? body.experience.trim() : ''
     const name = typeof body.name === 'string' ? body.name.trim() : ''
-    const password = typeof body.password === 'string' ? body.password.trim() : ''
-    const passwordHash = await hashPassword(password || '111111')
+    const temporaryPassword = generateTemporaryPassword()
+    const passwordHash = await hashPassword(temporaryPassword)
     const phone = typeof body.phone === 'string' ? body.phone.trim() : ''
     const normalizedPhone = phone ? normalizeRussianPhone(phone) : ''
     const photoUrl = typeof body.photoUrl === 'string' ? body.photoUrl.trim() : ''
@@ -276,6 +275,7 @@ adminRouter.post('/barbers', requireAdmin, async (request, response, next) => {
         description: description || null,
         experience: experience || null,
         name,
+        mustChangePassword: true,
         password: '',
         passwordHash,
         phone: normalizedPhone || null,
@@ -285,7 +285,7 @@ adminRouter.post('/barbers', requireAdmin, async (request, response, next) => {
       select: adminBarberSelect,
     })
 
-    response.status(201).json({ barber })
+    response.status(201).json({ barber, temporaryPassword })
   } catch (error) {
     next(error)
   }

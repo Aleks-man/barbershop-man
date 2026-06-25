@@ -1,5 +1,10 @@
 import { Router } from 'express'
-import { createAdminToken, createBarberToken } from '../adminAuth.js'
+import {
+  createAdminToken,
+  createBarberToken,
+  getResponseSession,
+  requireStaff,
+} from '../adminAuth.js'
 import { config } from '../config.js'
 import { hashPassword, verifyPasswordHash } from '../passwordHash.js'
 import { prisma } from '../prisma.js'
@@ -8,6 +13,10 @@ type LoginBody = {
   barberId?: unknown
   password?: unknown
   role?: unknown
+}
+
+type PasswordChangeBody = {
+  password?: unknown
 }
 
 export const adminAuthRouter = Router()
@@ -41,6 +50,7 @@ adminAuthRouter.post('/login', async (request, response, next) => {
       },
       select: {
         id: true,
+        mustChangePassword: true,
         name: true,
         password: true,
         passwordHash: true,
@@ -79,10 +89,48 @@ adminAuthRouter.post('/login', async (request, response, next) => {
 
     response.json({
       barberId: barber.id,
+      mustChangePassword: barber.mustChangePassword,
       name: barber.name,
       role: 'barber',
       token: createBarberToken(barber.id),
     })
+  } catch (error) {
+    next(error)
+  }
+})
+
+adminAuthRouter.patch('/password', requireStaff, async (request, response, next) => {
+  try {
+    const session = getResponseSession(response.locals)
+    const body = request.body as PasswordChangeBody
+    const password = typeof body.password === 'string' ? body.password.trim() : ''
+
+    if (session.role !== 'barber' || !session.barberId) {
+      response.status(403).json({
+        error: 'Forbidden',
+      })
+      return
+    }
+
+    if (password.length < 6) {
+      response.status(400).json({
+        error: 'Password must be at least 6 characters',
+      })
+      return
+    }
+
+    await prisma.barber.update({
+      where: {
+        id: session.barberId,
+      },
+      data: {
+        mustChangePassword: false,
+        password: '',
+        passwordHash: await hashPassword(password),
+      },
+    })
+
+    response.status(204).send()
   } catch (error) {
     next(error)
   }

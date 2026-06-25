@@ -10,22 +10,23 @@ type AdminBarbersViewProps = {
   newBarberDescription: string
   newBarberExperience: string
   newBarberName: string
-  newBarberPassword: string
   newBarberPhone: string
   newBarberPhotoUrl: string
   newBarberRole: string
   selectedBarberId: string
+  temporaryPassword: string
+  temporaryPasswordBarberName: string
   onBarberPhotoChange: (file?: File) => void
   onCreateBarber: () => void
   onDeleteBarber: (barberId: string) => void
   onNewBarberDescriptionChange: (value: string) => void
   onNewBarberExperienceChange: (value: string) => void
   onNewBarberNameChange: (value: string) => void
-  onNewBarberPasswordChange: (value: string) => void
   onNewBarberPhoneChange: (value: string) => void
   onNewBarberRoleChange: (value: string) => void
   onRestoreBarber: (barberId: string) => void
   onSelectBarberSchedule: (barberId: string) => void
+  onTemporaryPasswordCopied: () => void
 }
 
 export function AdminBarbersView({
@@ -35,7 +36,6 @@ export function AdminBarbersView({
   newBarberDescription,
   newBarberExperience,
   newBarberName,
-  newBarberPassword,
   newBarberPhone,
   newBarberPhotoUrl,
   newBarberRole,
@@ -45,12 +45,14 @@ export function AdminBarbersView({
   onNewBarberDescriptionChange,
   onNewBarberExperienceChange,
   onNewBarberNameChange,
-  onNewBarberPasswordChange,
   onNewBarberPhoneChange,
   onNewBarberRoleChange,
   onRestoreBarber,
   onSelectBarberSchedule,
+  onTemporaryPasswordCopied,
   selectedBarberId,
+  temporaryPassword,
+  temporaryPasswordBarberName,
 }: AdminBarbersViewProps) {
   return (
     <section className="admin-manager-page">
@@ -59,18 +61,19 @@ export function AdminBarbersView({
         newBarberDescription={newBarberDescription}
         newBarberExperience={newBarberExperience}
         newBarberName={newBarberName}
-        newBarberPassword={newBarberPassword}
         newBarberPhone={newBarberPhone}
         newBarberPhotoUrl={newBarberPhotoUrl}
         newBarberRole={newBarberRole}
+        temporaryPassword={temporaryPassword}
+        temporaryPasswordBarberName={temporaryPasswordBarberName}
         onBarberPhotoChange={onBarberPhotoChange}
         onCreateBarber={onCreateBarber}
         onNewBarberDescriptionChange={onNewBarberDescriptionChange}
         onNewBarberExperienceChange={onNewBarberExperienceChange}
         onNewBarberNameChange={onNewBarberNameChange}
-        onNewBarberPasswordChange={onNewBarberPasswordChange}
         onNewBarberPhoneChange={onNewBarberPhoneChange}
         onNewBarberRoleChange={onNewBarberRoleChange}
+        onTemporaryPasswordCopied={onTemporaryPasswordCopied}
       />
       <AdminActiveBarbers
         activeBarbers={activeBarbers}

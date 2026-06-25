@@ -4,7 +4,7 @@ import type { AdminTab, AdminView, AppointmentPeriod } from './types'
 
 export const tokenStorageKey = 'barbershop-admin-token'
 export const sessionStorageKey = 'barbershop-admin-session'
-export const defaultBarberPassword = '111111'
+export const adminViewStorageKey = "admin-view";
 
 export const tabs: Array<{ label: string; value: AdminTab }> = [
   { label: 'Ожидают', value: 'upcoming' },

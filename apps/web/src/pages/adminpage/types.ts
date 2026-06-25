@@ -7,6 +7,7 @@ import type { DatePeriod } from '../../utils/dateTime'
 
 export type AdminSession = {
   barberId?: string
+  mustChangePassword?: boolean
   name?: string
   role: AdminSessionRole
   token: string

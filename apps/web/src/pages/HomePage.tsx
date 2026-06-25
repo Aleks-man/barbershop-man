@@ -8,7 +8,11 @@ import heroClubCard from "../assets/home-card-club.webp";
 import heroHaircutCard from "../assets/home-card-haircut.webp";
 import mastersBg from "../assets/masters-bg.webp";
 import { SocialLinks } from "../components/SocialLinks";
-import { fallbackPublicBarbers, getBarberPhoto } from "../data/barberPresentation";
+import {
+  fallbackPublicBarbers,
+  getBarberPhoto,
+  mergePublicBarberPresentation,
+} from "../data/barberPresentation";
 import { roomGallery, workGallery } from "../data/gallery";
 
 const mapUrl = "https://yandex.ru/maps/?text=Симферополь%2C%20Смежный%2010";
@@ -58,7 +62,7 @@ export function HomePage() {
           return
         }
 
-        setPreviewBarbers(nextBarbers)
+        setPreviewBarbers(mergePublicBarberPresentation(nextBarbers))
       })
       .catch((error: unknown) => {
         console.warn('Failed to load public barbers', error)

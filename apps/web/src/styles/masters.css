@@ -89,7 +89,9 @@
 
 .master-card strong {
   display: inline-flex;
-  margin-top: 1.35rem;
+  align-self: end;
+  justify-self: start;
+  margin-top: auto;
   color: var(--heading);
 }
 

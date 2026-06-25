@@ -12,6 +12,9 @@ export const hashPassword = async (password: string) => {
   return `${passwordHashPrefix}:${salt}:${derivedKey.toString('hex')}`
 }
 
+export const generateTemporaryPassword = () =>
+  `GR-${randomBytes(6).toString('base64url')}`
+
 export const verifyPasswordHash = async (password: string, passwordHash: string) => {
   const [algorithm, salt, storedKey] = passwordHash.split(':')
 

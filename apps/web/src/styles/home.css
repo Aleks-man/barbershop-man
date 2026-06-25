@@ -497,7 +497,14 @@
   max-width: 70%;
 }
 
+.master-preview-content strong {
+  align-self: end;
+  justify-self: start;
+  margin-top: 1rem;
+}
+
 .master-preview-content p {
+  margin-top: 1rem;
 max-width: 15ch;
 }
 

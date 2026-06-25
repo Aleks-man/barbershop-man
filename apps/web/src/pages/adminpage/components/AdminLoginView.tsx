@@ -1,6 +1,7 @@
 import type { FormEvent } from 'react'
 import type { AdminSessionRole } from '../../../api/admin'
 import { BookingSelect, type BookingSelectOption } from '../../../components/BookingSelect'
+import { AdminPasswordInput } from './AdminPasswordInput'
 
 type AdminLoginViewProps = {
   errorMessage: string
@@ -94,26 +95,22 @@ export function AdminLoginView({
           )}
         </>
       )}
-      <label>
-        Пароль
-        <input
-          type="password"
-          value={password}
-          onChange={(event) => {
-            onPasswordChange(event.target.value)
-            onErrorReset()
-          }}
-        />
-      </label>
+      <AdminPasswordInput
+        label="Пароль"
+        value={password}
+        onChange={(value) => {
+          onPasswordChange(value)
+          onErrorReset()
+        }}
+      />
       <button
-        type="button"
+        type="submit"
         className="admin-login-submit"
         disabled={
           isLoading ||
           !password.trim() ||
           (loginRole === 'barber' && !loginBarberId)
         }
-        onClick={onLogin}
       >
         Войти
       </button>

@@ -3,7 +3,11 @@ import { Link } from 'react-router-dom'
 import { getPublicBarbers, type PublicBarber } from '../api/barbers'
 import { PageIntro } from '../components/PageIntro'
 import mastersBg from '../assets/masters-bg.webp'
-import { fallbackPublicBarbers, getBarberPhoto } from '../data/barberPresentation'
+import {
+  fallbackPublicBarbers,
+  getBarberPhoto,
+  mergePublicBarberPresentation,
+} from '../data/barberPresentation'
 
 const fallbackBarbers: PublicBarber[] = fallbackPublicBarbers
 
@@ -19,7 +23,7 @@ export function MastersPage() {
           return
         }
 
-        setPageBarbers(nextBarbers)
+        setPageBarbers(mergePublicBarberPresentation(nextBarbers))
       })
       .catch((error: unknown) => {
         console.warn('Failed to load public barbers', error)

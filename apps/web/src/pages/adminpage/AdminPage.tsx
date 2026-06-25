@@ -7,6 +7,7 @@ import {
 } from "react";
 import { getAvailability } from "../../api/availability";
 import {
+  changeAdminPassword,
   createAdminBarber,
   createAdminTimeOff,
   deleteAdminBarber,
@@ -31,6 +32,7 @@ import { AdminBarbersView } from "./components/AdminBarbersView";
 import { AdminHeader } from "./components/AdminHeader";
 import { AdminClientsView } from "./components/AdminClientsView";
 import { AdminLoginView } from "./components/AdminLoginView";
+import { AdminPasswordChangeView } from "./components/AdminPasswordChangeView";
 import { AdminRescheduleModal } from "./components/AdminRescheduleModal";
 import { AdminScheduleView } from "./components/AdminScheduleView";
 import { useCurrentTime } from "../../hooks/useCurrentTime";
@@ -39,20 +41,21 @@ import { useAdminNotifications } from "./hooks/useAdminNotifications";
 import { useLoginBarbers } from "./hooks/useLoginBarbers";
 import {
   adminViews,
-  defaultBarberPassword,
   periods,
   sessionStorageKey,
   tabs,
   timeOptions,
   tokenStorageKey,
+  adminViewStorageKey,
 } from "./constants";
-import {
-  getPhoneHref,
-  getStatusLabel,
-  getStatusTone,
-} from "./helpers";
-import { readStoredSession } from "./storage";
-import type { AdminSession, AdminTab, AdminView, AppointmentPeriod } from "./types";
+import { getPhoneHref, getStatusLabel, getStatusTone } from "./helpers";
+import { readStoredSession, readStoredAdminView } from "./storage";
+import type {
+  AdminSession,
+  AdminTab,
+  AdminView,
+  AppointmentPeriod,
+} from "./types";
 import adminBg from "../../assets/admin-bg.webp";
 
 const adminPageStyle = {
@@ -68,20 +71,23 @@ export function AdminPage() {
   const [session, setSession] = useState<AdminSession | null>(() =>
     readStoredSession(),
   );
-  const [isCheckingSession, setIsCheckingSession] = useState(Boolean(session));
+  const [isCheckingSession, setIsCheckingSession] = useState(
+    Boolean(session && !session.mustChangePassword),
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [loginRole, setLoginRole] = useState<AdminSessionRole>("admin");
   const [newBarberDescription, setNewBarberDescription] = useState("");
   const [newBarberExperience, setNewBarberExperience] = useState("");
   const [newBarberName, setNewBarberName] = useState("");
-  const [newBarberPassword, setNewBarberPassword] = useState(
-    defaultBarberPassword,
-  );
   const [newBarberPhone, setNewBarberPhone] = useState("");
   const [newBarberPhotoUrl, setNewBarberPhotoUrl] = useState("");
   const [newBarberRole, setNewBarberRole] = useState("");
   const [password, setPassword] = useState("");
-  const [adminView, setAdminView] = useState<AdminView>("schedule");
+  const [newPassword, setNewPassword] = useState("");
+  const [repeatedPassword, setRepeatedPassword] = useState("");
+  const [createdBarberPassword, setCreatedBarberPassword] = useState("");
+  const [createdBarberName, setCreatedBarberName] = useState("");
+  const [adminView, setAdminView] = useState<AdminView>(readStoredAdminView);
   const [appointmentDate, setAppointmentDate] = useState("");
   const [appointmentPeriod, setAppointmentPeriod] =
     useState<AppointmentPeriod>("all");
@@ -112,23 +118,26 @@ export function AdminPage() {
     setLoginBarberId,
   } = useLoginBarbers(Boolean(session));
 
-  const handleAppointmentCreated = useCallback((appointment: AdminAppointment) => {
-    setAppointments((currentAppointments) => {
-      if (
-        currentAppointments.some(
-          (currentAppointment) => currentAppointment.id === appointment.id,
-        )
-      ) {
-        return currentAppointments;
-      }
+  const handleAppointmentCreated = useCallback(
+    (appointment: AdminAppointment) => {
+      setAppointments((currentAppointments) => {
+        if (
+          currentAppointments.some(
+            (currentAppointment) => currentAppointment.id === appointment.id,
+          )
+        ) {
+          return currentAppointments;
+        }
 
-      return [...currentAppointments, appointment].sort(
-        (firstAppointment, secondAppointment) =>
-          new Date(firstAppointment.startsAt).getTime() -
-          new Date(secondAppointment.startsAt).getTime(),
-      );
-    });
-  }, []);
+        return [...currentAppointments, appointment].sort(
+          (firstAppointment, secondAppointment) =>
+            new Date(firstAppointment.startsAt).getTime() -
+            new Date(secondAppointment.startsAt).getTime(),
+        );
+      });
+    },
+    [],
+  );
 
   const {
     isLoadingNotifications,
@@ -143,7 +152,7 @@ export function AdminPage() {
     toggleNotifications,
     unreadNotifications,
   } = useAdminNotifications({
-    session,
+    session: session?.mustChangePassword ? null : session,
     onAppointmentCreated: handleAppointmentCreated,
   });
 
@@ -151,9 +160,12 @@ export function AdminPage() {
     (appointment) => appointment.id === rescheduleAppointmentId,
   );
 
-
   useEffect(() => {
     if (!session) {
+      return;
+    }
+
+    if (session.mustChangePassword) {
       return;
     }
 
@@ -229,6 +241,10 @@ export function AdminPage() {
     [isAdminSession],
   );
 
+  useEffect(() => {
+    localStorage.setItem(adminViewStorageKey, adminView);
+  }, [adminView]);
+
   const handleLogin = async () => {
     if (!password.trim() || (loginRole === "barber" && !loginBarberId)) {
       return;
@@ -245,6 +261,7 @@ export function AdminPage() {
       });
       const nextSession: AdminSession = {
         barberId: response.barberId,
+        mustChangePassword: response.mustChangePassword,
         name: response.name,
         role: response.role,
         token: response.token,
@@ -253,7 +270,7 @@ export function AdminPage() {
       sessionStorage.removeItem(tokenStorageKey);
       sessionStorage.setItem(sessionStorageKey, JSON.stringify(nextSession));
       setSession(nextSession);
-      setIsCheckingSession(true);
+      setIsCheckingSession(!nextSession.mustChangePassword);
       setPassword("");
     } catch {
       setErrorMessage("Неверный пароль.");
@@ -281,6 +298,47 @@ export function AdminPage() {
     setTimeOffReason("");
     setTimeOffStartDate("");
     setTimeOffStartTime("");
+    setNewPassword("");
+    setRepeatedPassword("");
+    setCreatedBarberPassword("");
+    setCreatedBarberName("");
+  };
+
+  const handleChangeTemporaryPassword = async () => {
+    if (!session || !newPassword.trim() || newPassword !== repeatedPassword) {
+      setErrorMessage("Пароли не совпадают.");
+      return;
+    }
+
+    if (newPassword.trim().length < 6) {
+      setErrorMessage("Пароль должен быть не короче 6 символов.");
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage("");
+
+    try {
+      await changeAdminPassword({
+        password: newPassword,
+        token: session.token,
+      });
+
+      const nextSession = {
+        ...session,
+        mustChangePassword: false,
+      };
+
+      sessionStorage.setItem(sessionStorageKey, JSON.stringify(nextSession));
+      setSession(nextSession);
+      setIsCheckingSession(true);
+      setNewPassword("");
+      setRepeatedPassword("");
+    } catch {
+      setErrorMessage("Не удалось сменить пароль.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCreateBarber = async () => {
@@ -302,7 +360,6 @@ export function AdminPage() {
         description: newBarberDescription,
         experience: newBarberExperience,
         name: newBarberName,
-        password: newBarberPassword || defaultBarberPassword,
         phone: newBarberPhone,
         photoUrl: uploadedPhoto?.photoUrl ?? newBarberPhotoUrl,
         role: newBarberRole,
@@ -316,10 +373,11 @@ export function AdminPage() {
       setNewBarberDescription("");
       setNewBarberExperience("");
       setNewBarberName("");
-      setNewBarberPassword(defaultBarberPassword);
       setNewBarberPhone("");
       setNewBarberPhotoUrl("");
       setNewBarberRole("");
+      setCreatedBarberName(response.barber.name);
+      setCreatedBarberPassword(response.temporaryPassword);
     } catch {
       setErrorMessage("Не удалось добавить мастера.");
     } finally {
@@ -674,6 +732,26 @@ export function AdminPage() {
     );
   }
 
+  if (session.mustChangePassword) {
+    return (
+      <main className="admin-page" style={adminPageStyle}>
+        <div className="page-text-logo admin-text-logo" aria-hidden="true">
+          <img src="/gentlemansroom_text_logo_transparent.png" alt="" />
+        </div>
+        <AdminPasswordChangeView
+          errorMessage={errorMessage}
+          isLoading={isLoading}
+          newPassword={newPassword}
+          repeatedPassword={repeatedPassword}
+          onErrorReset={() => setErrorMessage("")}
+          onNewPasswordChange={setNewPassword}
+          onPasswordSave={() => void handleChangeTemporaryPassword()}
+          onRepeatedPasswordChange={setRepeatedPassword}
+        />
+      </main>
+    );
+  }
+
   return (
     <main className="admin-page" style={adminPageStyle}>
       <div className="page-text-logo admin-text-logo" aria-hidden="true">
@@ -765,7 +843,9 @@ export function AdminPage() {
               timeOffStartTime={timeOffStartTime}
               timeOptions={timeOptions}
               onCreateTimeOff={() => void handleCreateTimeOff()}
-              onDeleteTimeOff={(timeOffId) => void handleDeleteTimeOff(timeOffId)}
+              onDeleteTimeOff={(timeOffId) =>
+                void handleDeleteTimeOff(timeOffId)
+              }
               onErrorReset={() => setErrorMessage("")}
               onTimeOffBarberChange={setTimeOffBarberId}
               onTimeOffEndDateChange={setTimeOffEndDate}
@@ -797,10 +877,11 @@ export function AdminPage() {
             newBarberDescription={newBarberDescription}
             newBarberExperience={newBarberExperience}
             newBarberName={newBarberName}
-            newBarberPassword={newBarberPassword}
             newBarberPhone={newBarberPhone}
             newBarberPhotoUrl={newBarberPhotoUrl}
             newBarberRole={newBarberRole}
+            temporaryPassword={createdBarberPassword}
+            temporaryPasswordBarberName={createdBarberName}
             selectedBarberId={selectedBarberId}
             onBarberPhotoChange={(file) => void handleBarberPhotoChange(file)}
             onCreateBarber={() => void handleCreateBarber()}
@@ -808,9 +889,12 @@ export function AdminPage() {
             onNewBarberDescriptionChange={setNewBarberDescription}
             onNewBarberExperienceChange={setNewBarberExperience}
             onNewBarberNameChange={setNewBarberName}
-            onNewBarberPasswordChange={setNewBarberPassword}
             onNewBarberPhoneChange={setNewBarberPhone}
             onNewBarberRoleChange={setNewBarberRole}
+            onTemporaryPasswordCopied={() => {
+              setCreatedBarberPassword("");
+              setCreatedBarberName("");
+            }}
             onRestoreBarber={(barberId) => void handleRestoreBarber(barberId)}
             onSelectBarberSchedule={(barberId) => {
               setSelectedBarberId(barberId);

@@ -1,5 +1,6 @@
 type LoginResponse = {
   barberId?: string
+  mustChangePassword?: boolean
   name?: string
   role: AdminSessionRole
   token: string
@@ -35,6 +36,11 @@ export type AdminBarber = {
   phone?: string | null
   photoUrl?: string | null
   role: string | null
+}
+
+type CreateBarberResponse = {
+  barber: AdminBarber
+  temporaryPassword: string
 }
 
 export type AdminTimeOff = {
@@ -97,7 +103,6 @@ export const loginAdmin = async ({
 
 export const createAdminBarber = async ({
   name,
-  password,
   phone,
   description,
   experience,
@@ -108,14 +113,13 @@ export const createAdminBarber = async ({
   description: string
   experience: string
   name: string
-  password: string
   phone: string
   photoUrl: string
   role: string
   token: string
 }) => {
   const response = await fetch('/api/admin/barbers', {
-    body: JSON.stringify({ description, experience, name, password, phone, photoUrl, role }),
+    body: JSON.stringify({ description, experience, name, phone, photoUrl, role }),
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -127,7 +131,28 @@ export const createAdminBarber = async ({
     throw new Error('Failed to create barber')
   }
 
-  return response.json() as Promise<{ barber: AdminBarber }>
+  return response.json() as Promise<CreateBarberResponse>
+}
+
+export const changeAdminPassword = async ({
+  password,
+  token,
+}: {
+  password: string
+  token: string
+}) => {
+  const response = await fetch('/api/admin/password', {
+    body: JSON.stringify({ password }),
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    method: 'PATCH',
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to change password')
+  }
 }
 
 export const uploadAdminBarberPhoto = async ({

@@ -1,46 +1,53 @@
-import type { ChangeEvent } from 'react'
-import { formatPhoneInput, phoneMask } from '../../../utils/phone'
+import type { ChangeEvent } from "react";
+import { formatPhoneInput, phoneMask } from "../../../utils/phone";
 
 type AdminBarberFormProps = {
-  isLoading: boolean
-  newBarberDescription: string
-  newBarberExperience: string
-  newBarberName: string
-  newBarberPassword: string
-  newBarberPhone: string
-  newBarberPhotoUrl: string
-  newBarberRole: string
-  onBarberPhotoChange: (file?: File) => void
-  onCreateBarber: () => void
-  onNewBarberDescriptionChange: (value: string) => void
-  onNewBarberExperienceChange: (value: string) => void
-  onNewBarberNameChange: (value: string) => void
-  onNewBarberPasswordChange: (value: string) => void
-  onNewBarberPhoneChange: (value: string) => void
-  onNewBarberRoleChange: (value: string) => void
-}
+  isLoading: boolean;
+  newBarberDescription: string;
+  newBarberExperience: string;
+  newBarberName: string;
+  newBarberPhone: string;
+  newBarberPhotoUrl: string;
+  newBarberRole: string;
+  temporaryPassword: string;
+  temporaryPasswordBarberName: string;
+  onBarberPhotoChange: (file?: File) => void;
+  onCreateBarber: () => void;
+  onNewBarberDescriptionChange: (value: string) => void;
+  onNewBarberExperienceChange: (value: string) => void;
+  onNewBarberNameChange: (value: string) => void;
+  onNewBarberPhoneChange: (value: string) => void;
+  onNewBarberRoleChange: (value: string) => void;
+  onTemporaryPasswordCopied: () => void;
+};
 
 export function AdminBarberForm({
   isLoading,
   newBarberDescription,
   newBarberExperience,
   newBarberName,
-  newBarberPassword,
   newBarberPhone,
   newBarberPhotoUrl,
   newBarberRole,
+  temporaryPassword,
+  temporaryPasswordBarberName,
   onBarberPhotoChange,
   onCreateBarber,
   onNewBarberDescriptionChange,
   onNewBarberExperienceChange,
   onNewBarberNameChange,
-  onNewBarberPasswordChange,
   onNewBarberPhoneChange,
   onNewBarberRoleChange,
+  onTemporaryPasswordCopied,
 }: AdminBarberFormProps) {
   const handlePhotoChange = (event: ChangeEvent<HTMLInputElement>) => {
-    onBarberPhotoChange(event.target.files?.[0])
-  }
+    onBarberPhotoChange(event.target.files?.[0]);
+  };
+
+  const copyTemporaryPassword = () => {
+    void navigator.clipboard.writeText(temporaryPassword);
+    onTemporaryPasswordCopied();
+  };
 
   return (
     <section className="admin-manager">
@@ -73,15 +80,9 @@ export function AdminBarberForm({
             type="text"
             placeholder="Например: 7 лет опыта"
             value={newBarberExperience}
-            onChange={(event) => onNewBarberExperienceChange(event.target.value)}
-          />
-        </label>
-        <label>
-          Пароль
-          <input
-            type="text"
-            value={newBarberPassword}
-            onChange={(event) => onNewBarberPasswordChange(event.target.value)}
+            onChange={(event) =>
+              onNewBarberExperienceChange(event.target.value)
+            }
           />
         </label>
         <label>
@@ -92,7 +93,9 @@ export function AdminBarberForm({
             placeholder={phoneMask}
             value={newBarberPhone}
             onChange={(event) =>
-              onNewBarberPhoneChange(formatPhoneInput(event.currentTarget.value))
+              onNewBarberPhoneChange(
+                formatPhoneInput(event.currentTarget.value),
+              )
             }
           />
         </label>
@@ -109,7 +112,7 @@ export function AdminBarberForm({
         <label className="admin-photo-upload">
           Фото
           <input type="file" accept="image/*" onChange={handlePhotoChange} />
-          <span>{newBarberPhotoUrl ? 'Заменить фото' : 'Добавить фото'}</span>
+          <span>{newBarberPhotoUrl ? "Заменить фото" : "Добавить фото"}</span>
         </label>
         {newBarberPhotoUrl && (
           <img
@@ -127,6 +130,16 @@ export function AdminBarberForm({
           Добавить мастера
         </button>
       </div>
+      {temporaryPassword && (
+        <section className="admin-temporary-password">
+          <span className="admin-eyebrow">Временный пароль</span>
+          <h3>{temporaryPasswordBarberName}</h3>
+          <code>{temporaryPassword}</code>
+          <button type="button" onClick={copyTemporaryPassword}>
+            Скопировать
+          </button>
+        </section>
+      )}
     </section>
-  )
+  );
 }
