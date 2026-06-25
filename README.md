@@ -55,6 +55,7 @@ npm install
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/barbershop?schema=public"
 ADMIN_PASSWORD="admin123"
 ADMIN_TOKEN_SECRET="change-this-secret"
+CORS_ORIGIN="http://localhost:5173,https://your-vercel-domain.vercel.app"
 PROTECT_DEFAULT_STAFF=true
 PORT=4000
 ```
@@ -240,6 +241,7 @@ Environment variables:
 DATABASE_URL="postgresql://..."
 ADMIN_PASSWORD="admin123"
 ADMIN_TOKEN_SECRET="long-random-secret"
+CORS_ORIGIN="https://your-vercel-domain.vercel.app"
 PROTECT_DEFAULT_STAFF=true
 NODE_ENV="production"
 ```

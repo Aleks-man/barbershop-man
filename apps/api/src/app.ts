@@ -5,15 +5,31 @@ import { fileURLToPath } from 'node:url'
 import { adminRouter } from './routes/admin.js'
 import { appointmentsRouter } from './routes/appointments.js'
 import { availabilityRouter } from './routes/availability.js'
+import { config } from './config.js'
 import { barbersRouter } from './routes/barbers.js'
 import { servicesRouter } from './routes/services.js'
 
 export const app = express()
 
+const developmentOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173']
+const allowedOrigins =
+  config.corsOrigins.length > 0
+    ? config.corsOrigins
+    : config.nodeEnv === 'production'
+      ? []
+      : developmentOrigins
+
 app.use(
   cors({
-    origin: true,
     credentials: true,
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true)
+        return
+      }
+
+      callback(new Error(`Origin ${origin} is not allowed by CORS`))
+    },
   }),
 )
 app.use(express.json({ limit: '6mb' }))
