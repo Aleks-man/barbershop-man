@@ -5,23 +5,20 @@ import { randomUUID } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import {
   canManageBarber,
-  createAdminToken,
-  createBarberToken,
   getResponseSession,
-  getStaffSession,
   requireAdmin,
   requireStaff,
 } from '../adminAuth.js'
-import { addAdminEventClient } from '../adminEvents.js'
+import {
+  adminAppointmentSelect,
+  adminBarberSelect,
+  adminTimeOffSelect,
+} from '../adminSelects.js'
 import { addMinutes, businessHoursByDay, hasOverlap, parseDate, setTime } from '../bookingTime.js'
-import { config } from '../config.js'
 import { prisma } from '../prisma.js'
-
-type LoginBody = {
-  barberId?: unknown
-  password?: unknown
-  role?: unknown
-}
+import { adminAuthRouter } from './adminAuthRoutes.js'
+import { adminEventsRouter } from './adminEvents.js'
+import { adminNotificationsRouter } from './adminNotifications.js'
 
 type AppointmentStatusBody = {
   status?: unknown
@@ -64,71 +61,9 @@ const allowedPhotoTypes = new Map([
 
 export const adminRouter = Router()
 
-adminRouter.get('/events', (request, response) => {
-  const token = String(request.query.token ?? '')
-  const session = getStaffSession(token)
-
-  if (!session) {
-    response.status(401).json({
-      error: 'Unauthorized',
-    })
-    return
-  }
-
-  addAdminEventClient(response, session)
-})
-
-adminRouter.post('/login', async (request, response, next) => {
-  try {
-    const body = request.body as LoginBody
-    const barberId = typeof body.barberId === 'string' ? body.barberId.trim() : ''
-    const password = typeof body.password === 'string' ? body.password : ''
-    const role = body.role === 'barber' ? 'barber' : 'admin'
-
-    if (role === 'admin') {
-      if (password !== config.adminPassword) {
-        response.status(401).json({
-          error: 'Invalid password',
-        })
-        return
-      }
-
-      response.json({
-        role: 'admin',
-        token: createAdminToken(),
-      })
-      return
-    }
-
-    const barber = await prisma.barber.findFirst({
-      where: {
-        id: barberId,
-        isActive: true,
-      },
-      select: {
-        id: true,
-        name: true,
-        password: true,
-      },
-    })
-
-    if (!barber || barber.password !== password) {
-      response.status(401).json({
-        error: 'Invalid password',
-      })
-      return
-    }
-
-    response.json({
-      barberId: barber.id,
-      name: barber.name,
-      role: 'barber',
-      token: createBarberToken(barber.id),
-    })
-  } catch (error) {
-    next(error)
-  }
-})
+adminRouter.use(adminAuthRouter)
+adminRouter.use('/events', adminEventsRouter)
+adminRouter.use('/notifications', adminNotificationsRouter)
 
 adminRouter.get('/appointments', requireStaff, async (_request, response, next) => {
   try {
@@ -143,111 +78,10 @@ adminRouter.get('/appointments', requireStaff, async (_request, response, next) 
       orderBy: {
         startsAt: 'asc',
       },
-      select: {
-        id: true,
-        customerName: true,
-        customerPhone: true,
-        startsAt: true,
-        endsAt: true,
-        status: true,
-        barber: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        service: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
-      },
+      select: adminAppointmentSelect,
     })
 
     response.json({ appointments })
-  } catch (error) {
-    next(error)
-  }
-})
-
-adminRouter.get('/notifications', requireStaff, async (request, response, next) => {
-  try {
-    const session = getResponseSession(response.locals)
-    const scope = request.query.scope === 'all' ? 'all' : 'unread'
-    const notifications = await prisma.adminNotification.findMany({
-      where:
-        session.role === 'admin'
-          ? {
-              recipientRole: 'admin',
-              readAt: scope === 'unread' ? null : undefined,
-            }
-          : {
-              barberId: session.barberId,
-              recipientRole: 'barber',
-              readAt: scope === 'unread' ? null : undefined,
-            },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: scope === 'all' ? 100 : undefined,
-      select: {
-        id: true,
-        createdAt: true,
-        readAt: true,
-        appointment: {
-          select: {
-            id: true,
-            customerName: true,
-            customerPhone: true,
-            startsAt: true,
-            endsAt: true,
-            status: true,
-            barber: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-            service: {
-              select: {
-                id: true,
-                title: true,
-              },
-            },
-          },
-        },
-      },
-    })
-
-    response.json({ notifications })
-  } catch (error) {
-    next(error)
-  }
-})
-
-adminRouter.patch('/notifications/read', requireStaff, async (_request, response, next) => {
-  try {
-    const session = getResponseSession(response.locals)
-
-    await prisma.adminNotification.updateMany({
-      where:
-        session.role === 'admin'
-          ? {
-              recipientRole: 'admin',
-              readAt: null,
-            }
-          : {
-              barberId: session.barberId,
-              recipientRole: 'barber',
-              readAt: null,
-            },
-      data: {
-        readAt: new Date(),
-      },
-    })
-
-    response.status(204).send()
   } catch (error) {
     next(error)
   }
@@ -399,14 +233,8 @@ adminRouter.get('/barbers', requireStaff, async (_request, response, next) => {
         name: 'asc',
       },
       select: {
-        id: true,
-        name: true,
+        ...adminBarberSelect,
         password: session.role === 'admin',
-        description: true,
-        experience: true,
-        photoUrl: true,
-        isActive: true,
-        role: true,
       },
     })
 
@@ -442,16 +270,7 @@ adminRouter.post('/barbers', requireAdmin, async (request, response, next) => {
         photoUrl: photoUrl || null,
         role: role || null,
       },
-      select: {
-        description: true,
-        experience: true,
-        id: true,
-        isActive: true,
-        name: true,
-        password: true,
-        photoUrl: true,
-        role: true,
-      },
+      select: adminBarberSelect,
     })
 
     response.status(201).json({ barber })
@@ -589,16 +408,7 @@ adminRouter.patch('/barbers/:id/restore', requireAdmin, async (request, response
       data: {
         isActive: true,
       },
-      select: {
-        description: true,
-        experience: true,
-        id: true,
-        isActive: true,
-        name: true,
-        password: true,
-        photoUrl: true,
-        role: true,
-      },
+      select: adminBarberSelect,
     })
 
     response.json({ barber })
@@ -620,18 +430,7 @@ adminRouter.get('/time-off', requireStaff, async (_request, response, next) => {
       orderBy: {
         startsAt: 'asc',
       },
-      select: {
-        id: true,
-        reason: true,
-        startsAt: true,
-        endsAt: true,
-        barber: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
+      select: adminTimeOffSelect,
     })
 
     response.json({ timeOffs })
@@ -743,18 +542,7 @@ adminRouter.post('/time-off', requireStaff, async (request, response, next) => {
         reason,
         startsAt,
       },
-      select: {
-        id: true,
-        reason: true,
-        startsAt: true,
-        endsAt: true,
-        barber: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
+      select: adminTimeOffSelect,
     })
 
     response.status(201).json({ timeOff })

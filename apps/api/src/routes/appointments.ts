@@ -2,6 +2,7 @@ import { AppointmentStatus } from '@prisma/client'
 import { Router } from 'express'
 import { addMinutes, businessHoursByDay, hasOverlap, parseDate, setTime } from '../bookingTime.js'
 import { notifyAppointmentCreated } from '../adminEvents.js'
+import { adminAppointmentSelect, adminNotificationSelect } from '../adminSelects.js'
 import { prisma } from '../prisma.js'
 
 type AppointmentRequestBody = {
@@ -162,26 +163,7 @@ appointmentsRouter.post('/', async (request, response, next) => {
         serviceId,
         startsAt,
       },
-      select: {
-        barber: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        customerName: true,
-        customerPhone: true,
-        endsAt: true,
-        id: true,
-        service: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
-        status: true,
-        startsAt: true,
-      },
+      select: adminAppointmentSelect,
     })
 
     const notifications = await prisma.$transaction([
@@ -190,35 +172,7 @@ appointmentsRouter.post('/', async (request, response, next) => {
           appointmentId: appointment.id,
           recipientRole: 'admin',
         },
-        select: {
-          id: true,
-          createdAt: true,
-          readAt: true,
-          recipientRole: true,
-          barberId: true,
-          appointment: {
-            select: {
-              id: true,
-              customerName: true,
-              customerPhone: true,
-              startsAt: true,
-              endsAt: true,
-              status: true,
-              barber: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-              service: {
-                select: {
-                  id: true,
-                  title: true,
-                },
-              },
-            },
-          },
-        },
+        select: adminNotificationSelect,
       }),
       prisma.adminNotification.create({
         data: {
@@ -226,35 +180,7 @@ appointmentsRouter.post('/', async (request, response, next) => {
           barberId: appointment.barber.id,
           recipientRole: 'barber',
         },
-        select: {
-          id: true,
-          createdAt: true,
-          readAt: true,
-          recipientRole: true,
-          barberId: true,
-          appointment: {
-            select: {
-              id: true,
-              customerName: true,
-              customerPhone: true,
-              startsAt: true,
-              endsAt: true,
-              status: true,
-              barber: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-              service: {
-                select: {
-                  id: true,
-                  title: true,
-                },
-              },
-            },
-          },
-        },
+        select: adminNotificationSelect,
       }),
     ])
 

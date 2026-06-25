@@ -1,6 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
-import { AdminPage } from './pages/AdminPage'
+import { AdminPage } from './pages/adminpage/AdminPage'
 import { BookingPage } from './pages/BookingPage'
 import { GalleryPage } from './pages/GalleryPage'
 import { HomePage } from './pages/HomePage'
