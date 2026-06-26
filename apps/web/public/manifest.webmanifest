@@ -1,0 +1,25 @@
+{
+  "name": "Gentleman's Room",
+  "short_name": "Gentleman's",
+  "description": "Barbershop appointment and admin system.",
+  "lang": "ru",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f100e",
+  "theme_color": "#0f100e",
+  "icons": [
+    {
+      "src": "/pwa-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
