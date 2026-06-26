@@ -21,6 +21,7 @@ Fullstack-приложение для барбершопа с публичным
 - Перенос, отмена и просмотр записей.
 - Закрытие периода от записи: отпуск, личные дела, занятость.
 - Уведомления о новых записях.
+- Telegram-уведомления администратору о новых записях через bot token и admin chat id.
 - Защита базовых тестовых аккаунтов от удаления и смены пароля через `PROTECT_DEFAULT_STAFF`.
 
 ## Стек
@@ -57,6 +58,8 @@ ADMIN_PASSWORD="admin123"
 ADMIN_TOKEN_SECRET="change-this-secret"
 CORS_ORIGIN="http://localhost:5173,https://your-vercel-domain.vercel.app"
 PROTECT_DEFAULT_STAFF=true
+TELEGRAM_BOT_TOKEN=""
+ADMIN_TELEGRAM_CHAT_ID=""
 PORT=4000
 ```
 
@@ -206,6 +209,17 @@ GET http://localhost:4000/api/health
 
 Frontend в разработке проксирует API-запросы на backend, поэтому обычно достаточно открыть `http://localhost:5173`.
 
+## Telegram-уведомления
+
+Сейчас реализован минимальный вариант: при создании новой записи backend отправляет Telegram-сообщение администратору. Для этого нужно создать Telegram-бота через `@BotFather`, нажать `Start` в чате с ботом и указать в backend `.env`:
+
+```env
+TELEGRAM_BOT_TOKEN="token-from-botfather"
+ADMIN_TELEGRAM_CHAT_ID="admin-chat-id"
+```
+
+Уведомления мастерам пока не подключены. Для этого следующим этапом нужно хранить `telegramChatId` у каждого мастера в базе, добавить привязку Telegram в кабинете мастера или через админку и при создании записи отправлять сообщение не только админу, но и конкретному мастеру.
+
 ## Деплой
 
 Рекомендуемая схема:
@@ -243,6 +257,8 @@ ADMIN_PASSWORD="admin123"
 ADMIN_TOKEN_SECRET="long-random-secret"
 CORS_ORIGIN="https://your-vercel-domain.vercel.app"
 PROTECT_DEFAULT_STAFF=true
+TELEGRAM_BOT_TOKEN="telegram-bot-token"
+ADMIN_TELEGRAM_CHAT_ID="telegram-admin-chat-id"
 NODE_ENV="production"
 ```
 
