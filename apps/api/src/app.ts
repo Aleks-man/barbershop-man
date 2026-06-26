@@ -11,19 +11,42 @@ import { servicesRouter } from './routes/services.js'
 
 export const app = express()
 
-const developmentOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173']
+const isPrivateNetworkHost = (host: string) =>
+  host === 'localhost' ||
+  host === '127.0.0.1' ||
+  host.startsWith('10.') ||
+  host.startsWith('192.168.') ||
+  /^172\.(1[6-9]|2\d|3[01])\./.test(host)
+
+const isDevelopmentOrigin = (origin: string) => {
+  if (config.nodeEnv === 'production') {
+    return false
+  }
+
+  try {
+    const url = new URL(origin)
+
+    return (
+      (url.protocol === 'http:' || url.protocol === 'https:') &&
+      isPrivateNetworkHost(url.hostname)
+    )
+  } catch {
+    return false
+  }
+}
+
 const allowedOrigins =
   config.corsOrigins.length > 0
     ? config.corsOrigins
     : config.nodeEnv === 'production'
       ? []
-      : developmentOrigins
+      : []
 
 app.use(
   cors({
     credentials: true,
     origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.includes(origin) || isDevelopmentOrigin(origin)) {
         callback(null, true)
         return
       }
