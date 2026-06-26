@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import type { AdminAppointment, AdminBarber } from '../../../api/admin'
 import { BookingDatePicker } from '../../../components/BookingDatePicker'
 import { formatAdminDateTime } from '../../../utils/dateTime'
@@ -65,6 +65,24 @@ export function AdminScheduleView({
   tabCounts,
   tabs,
 }: AdminScheduleViewProps) {
+  const [expandedAppointmentIds, setExpandedAppointmentIds] = useState<Set<string>>(
+    () => new Set(),
+  )
+
+  const toggleAppointmentDetails = (appointmentId: string) => {
+    setExpandedAppointmentIds((currentIds) => {
+      const nextIds = new Set(currentIds)
+
+      if (nextIds.has(appointmentId)) {
+        nextIds.delete(appointmentId)
+      } else {
+        nextIds.add(appointmentId)
+      }
+
+      return nextIds
+    })
+  }
+
   return (
     <>
       {isAdminSession && (
@@ -214,46 +232,68 @@ export function AdminScheduleView({
             </div>
 
             <div className="admin-appointment-list">
-              {filteredAppointments.map((appointment) => (
-                <article className="admin-appointment-card" key={appointment.id}>
-                  <header>
-                    <strong>{formatAdminDateTime(appointment.startsAt)}</strong>
-                    <span
-                      className={`admin-status admin-status--${getStatusTone(appointment)}`}
-                    >
-                      {getStatusLabel(appointment)}
-                    </span>
-                  </header>
-                  <dl>
-                    {canViewAllBarbers && (
-                      <div>
-                        <dt>Мастер</dt>
-                        <dd>{appointment.barber.name}</dd>
-                      </div>
-                    )}
-                    <div>
-                      <dt>Клиент</dt>
-                      <dd>{appointment.customerName}</dd>
-                    </div>
-                    <div>
-                      <dt>Телефон</dt>
-                      <dd>
-                        <a
-                          className="admin-phone-link"
-                          href={getPhoneHref(appointment.customerPhone)}
+              {filteredAppointments.map((appointment) => {
+                const isExpanded = expandedAppointmentIds.has(appointment.id)
+                const detailsId = `appointment-details-${appointment.id}`
+
+                return (
+                  <article
+                    className={`admin-appointment-card${isExpanded ? ' is-expanded' : ''}`}
+                    key={appointment.id}
+                  >
+                    <div className="admin-appointment-summary">
+                      <span className="admin-appointment-summary-main">
+                        <strong>{appointment.customerName}</strong>
+                        <span>{formatAdminDateTime(appointment.startsAt)}</span>
+                      </span>
+                      <span className="admin-appointment-summary-side">
+                        <span
+                          className={`admin-status admin-status--${getStatusTone(appointment)}`}
                         >
-                          {appointment.customerPhone}
-                        </a>
-                      </dd>
+                          {getStatusLabel(appointment)}
+                        </span>
+                      </span>
                     </div>
-                    <div>
-                      <dt>Услуга</dt>
-                      <dd>{appointment.service.title}</dd>
+                    <div className="admin-appointment-contact-row">
+                      <a
+                        className="admin-phone-link admin-appointment-phone"
+                        href={getPhoneHref(appointment.customerPhone)}
+                      >
+                        {appointment.customerPhone}
+                      </a>
+                      <button
+                        type="button"
+                        aria-label={isExpanded ? 'Скрыть подробности' : 'Показать подробности'}
+                        aria-controls={detailsId}
+                        aria-expanded={isExpanded}
+                        className="admin-appointment-toggle"
+                        onClick={() => toggleAppointmentDetails(appointment.id)}
+                      >
+                        <span className="admin-appointment-chevron" aria-hidden="true" />
+                      </button>
                     </div>
-                  </dl>
-                  {renderAppointmentActions(appointment)}
-                </article>
-              ))}
+                    <div
+                      className="admin-appointment-details"
+                      id={detailsId}
+                      aria-hidden={!isExpanded}
+                    >
+                      <dl>
+                        {canViewAllBarbers && (
+                          <div>
+                            <dt>Мастер</dt>
+                            <dd>{appointment.barber.name}</dd>
+                          </div>
+                        )}
+                        <div>
+                          <dt>Услуга</dt>
+                          <dd>{appointment.service.title}</dd>
+                        </div>
+                      </dl>
+                      {renderAppointmentActions(appointment)}
+                    </div>
+                  </article>
+                )
+              })}
             </div>
           </>
         )}
