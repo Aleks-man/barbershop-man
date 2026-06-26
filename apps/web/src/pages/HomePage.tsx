@@ -51,7 +51,7 @@ const homeGallerySections = [
 ];
 
 export function HomePage() {
-  const [previewBarbers, setPreviewBarbers] = useState<PublicBarber[]>(fallbackPublicBarbers)
+  const [previewBarbers, setPreviewBarbers] = useState<PublicBarber[]>([])
 
   useEffect(() => {
     let isMounted = true
@@ -66,6 +66,11 @@ export function HomePage() {
       })
       .catch((error: unknown) => {
         console.warn('Failed to load public barbers', error)
+        if (!isMounted) {
+          return
+        }
+
+        setPreviewBarbers(fallbackPublicBarbers)
       })
 
     return () => {

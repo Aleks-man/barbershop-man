@@ -12,7 +12,7 @@ import {
 const fallbackBarbers: PublicBarber[] = fallbackPublicBarbers
 
 export function MastersPage() {
-  const [pageBarbers, setPageBarbers] = useState(fallbackBarbers)
+  const [pageBarbers, setPageBarbers] = useState<PublicBarber[]>([])
 
   useEffect(() => {
     let isMounted = true
@@ -27,6 +27,11 @@ export function MastersPage() {
       })
       .catch((error: unknown) => {
         console.warn('Failed to load public barbers', error)
+        if (!isMounted) {
+          return
+        }
+
+        setPageBarbers(fallbackBarbers)
       })
 
     return () => {
