@@ -30,6 +30,7 @@ type AdminScheduleViewProps = {
   selectedTab: AdminTab
   tabCounts: Record<AdminTab, number>
   tabs: Tab[]
+  upcomingAppointmentDates: Set<string>
   getPhoneHref: (phone: string) => string
   getStatusLabel: (appointment: AdminAppointment) => string
   getStatusTone: (appointment: AdminAppointment) => string
@@ -64,6 +65,7 @@ export function AdminScheduleView({
   selectedTab,
   tabCounts,
   tabs,
+  upcomingAppointmentDates,
 }: AdminScheduleViewProps) {
   const [expandedAppointmentIds, setExpandedAppointmentIds] = useState<Set<string>>(
     () => new Set(),
@@ -158,6 +160,7 @@ export function AdminScheduleView({
                 allowPastDates
                 label="Дата"
                 placeholder="Выбрать дату"
+                highlightedDates={upcomingAppointmentDates}
                 value={appointmentDate}
                 onChange={(nextDate) => {
                   onAppointmentDateChange(nextDate)

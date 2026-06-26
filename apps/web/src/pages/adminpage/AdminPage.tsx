@@ -225,6 +225,7 @@ export function AdminPage() {
     selectedBarber,
     tabCounts,
     timeOffBarber,
+    upcomingAppointmentDates,
   } = useAdminDerivedData({
     appointmentDate,
     appointmentPeriod,
@@ -875,6 +876,7 @@ export function AdminPage() {
               selectedTab={selectedTab}
               tabCounts={tabCounts}
               tabs={tabs}
+              upcomingAppointmentDates={upcomingAppointmentDates}
               onAppointmentDateChange={setAppointmentDate}
               onAppointmentPeriodChange={setAppointmentPeriod}
               onHideBarber={(barberId) => void handleHideBarber(barberId)}

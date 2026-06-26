@@ -8,6 +8,7 @@ import {
 type BookingDatePickerProps = {
   allowPastDates?: boolean
   disabled?: boolean
+  highlightedDates?: Set<string>
   label: string
   placeholder: string
   unavailableDates?: string[]
@@ -67,6 +68,7 @@ const formatDisplayDate = (value: string) => {
 export function BookingDatePicker({
   allowPastDates = false,
   disabled = false,
+  highlightedDates,
   label,
   placeholder,
   unavailableDates = [],
@@ -182,6 +184,7 @@ export function BookingDatePicker({
               {dates.map((date) => {
                 const dateValue = getDateValue(date)
                 const isPastDate = !allowPastDates && date < today
+                const isHighlightedDate = highlightedDates?.has(dateValue) ?? false
                 const isUnavailableDate = unavailableDateSet.has(dateValue)
                 const isOutsideMonth = date.getMonth() !== visibleMonth.getMonth()
 
@@ -192,6 +195,7 @@ export function BookingDatePicker({
                     disabled={isPastDate}
                     aria-disabled={isUnavailableDate}
                     aria-pressed={dateValue === value}
+                    data-highlighted={isHighlightedDate}
                     data-outside-month={isOutsideMonth}
                     data-unavailable={isUnavailableDate}
                     key={dateValue}

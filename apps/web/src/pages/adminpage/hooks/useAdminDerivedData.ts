@@ -4,6 +4,7 @@ import type {
   AdminBarber,
   AdminTimeOff,
 } from '../../../api/admin'
+import { formatDateValue } from '../../../utils/dateTime'
 import { tabs } from '../constants'
 import {
   buildClients,
@@ -112,6 +113,15 @@ export function useAdminDerivedData({
       ),
     [periodAppointments, selectedTab],
   )
+  const upcomingAppointmentDates = useMemo(
+    () =>
+      new Set(
+        scopedAppointments
+          .filter((appointment) => getAppointmentTab(appointment) === 'upcoming')
+          .map((appointment) => formatDateValue(appointment.startsAt)),
+      ),
+    [scopedAppointments],
+  )
   const tabCounts = useMemo(
     () =>
       tabs.reduce<Record<AdminTab, number>>(
@@ -159,5 +169,6 @@ export function useAdminDerivedData({
     selectedBarber,
     tabCounts,
     timeOffBarber,
+    upcomingAppointmentDates,
   }
 }
