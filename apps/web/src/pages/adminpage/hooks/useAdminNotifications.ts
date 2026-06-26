@@ -6,6 +6,11 @@ import {
   type AdminNotification,
 } from '../../../api/admin'
 import { apiUrl } from '../../../api/client'
+import {
+  announceOverlayOpen,
+  getOverlaySourceId,
+  overlayOpenEvent,
+} from '../../../utils/overlayEvents'
 import type { NotificationMode } from '../components/AdminNotifications'
 import type { AdminSession } from '../types'
 
@@ -20,6 +25,7 @@ export function useAdminNotifications({
 }: UseAdminNotificationsParams) {
   const notificationsRef = useRef<HTMLDivElement | null>(null)
   const isNotificationsOpenRef = useRef(false)
+  const notificationOverlayId = useRef('admin-notifications')
   const token = session?.token ?? ''
   const [notifications, setNotifications] = useState<AdminNotification[]>([])
   const [notificationMode, setNotificationMode] =
@@ -78,6 +84,7 @@ export function useAdminNotifications({
   )
 
   const openNotifications = useCallback(async () => {
+    announceOverlayOpen(notificationOverlayId.current)
     setIsNotificationsOpen(true)
     setNotificationMode('unread')
     setUnreadNotifications(0)
@@ -125,6 +132,12 @@ export function useAdminNotifications({
       return
     }
 
+    const handleOverlayOpen = (event: Event) => {
+      if (getOverlaySourceId(event) !== notificationOverlayId.current) {
+        closeNotifications()
+      }
+    }
+
     const handlePointerDown = (event: PointerEvent) => {
       if (
         notificationsRef.current &&
@@ -140,10 +153,12 @@ export function useAdminNotifications({
       }
     }
 
+    window.addEventListener(overlayOpenEvent, handleOverlayOpen)
     document.addEventListener('pointerdown', handlePointerDown)
     document.addEventListener('keydown', handleKeyDown)
 
     return () => {
+      window.removeEventListener(overlayOpenEvent, handleOverlayOpen)
       document.removeEventListener('pointerdown', handlePointerDown)
       document.removeEventListener('keydown', handleKeyDown)
     }

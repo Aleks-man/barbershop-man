@@ -1,4 +1,9 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
+import {
+  announceOverlayOpen,
+  getOverlaySourceId,
+  overlayOpenEvent,
+} from '../utils/overlayEvents'
 
 export type BookingSelectOption = {
   label: string
@@ -27,7 +32,21 @@ export function BookingSelect({
   const [isOpen, setIsOpen] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
   const listId = useId()
+  const overlayId = useId()
   const selectedOption = options.find((option) => option.value === value)
+
+  useEffect(() => {
+    const handleOverlayOpen = (event: Event) => {
+      if (getOverlaySourceId(event) !== overlayId) {
+        setIsOpen(false)
+        setIsClosing(false)
+      }
+    }
+
+    window.addEventListener(overlayOpenEvent, handleOverlayOpen)
+
+    return () => window.removeEventListener(overlayOpenEvent, handleOverlayOpen)
+  }, [overlayId])
 
   const closeMenu = () => {
     if (!isOpen || disabled) {
@@ -51,6 +70,7 @@ export function BookingSelect({
       return
     }
 
+    announceOverlayOpen(overlayId)
     setIsOpen(true)
   }
 

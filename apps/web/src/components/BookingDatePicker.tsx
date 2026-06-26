@@ -1,4 +1,9 @@
 import { useEffect, useId, useMemo, useState } from 'react'
+import {
+  announceOverlayOpen,
+  getOverlaySourceId,
+  overlayOpenEvent,
+} from '../utils/overlayEvents'
 
 type BookingDatePickerProps = {
   allowPastDates?: boolean
@@ -72,6 +77,7 @@ export function BookingDatePicker({
   const [isOpen, setIsOpen] = useState(false)
   const [visibleMonth, setVisibleMonth] = useState(() => getStartOfDay(new Date()))
   const menuId = useId()
+  const overlayId = useId()
   const today = useMemo(() => getStartOfDay(new Date()), [])
   const dates = getMonthGrid(visibleMonth)
   const selectedText = formatDisplayDate(value)
@@ -83,6 +89,18 @@ export function BookingDatePicker({
       year: visibleMonth.getFullYear(),
     })
   }, [onVisibleMonthChange, visibleMonth])
+
+  useEffect(() => {
+    const handleOverlayOpen = (event: Event) => {
+      if (getOverlaySourceId(event) !== overlayId) {
+        setIsOpen(false)
+      }
+    }
+
+    window.addEventListener(overlayOpenEvent, handleOverlayOpen)
+
+    return () => window.removeEventListener(overlayOpenEvent, handleOverlayOpen)
+  }, [overlayId])
 
   const closeCalendar = () => {
     if (disabled) {
@@ -130,7 +148,14 @@ export function BookingDatePicker({
               return
             }
 
-            setIsOpen((currentValue) => !currentValue)
+            setIsOpen((currentValue) => {
+              if (currentValue) {
+                return false
+              }
+
+              announceOverlayOpen(overlayId)
+              return true
+            })
           }}
         >
           <span className={selectedText ? undefined : 'booking-select-placeholder'}>
