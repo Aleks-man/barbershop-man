@@ -137,7 +137,7 @@ export function AdminScheduleView({
 
         <div className="admin-schedule-tools">
           <div className="admin-filter-group">
-            <span>Период</span>
+            <span>Запись</span>
             <div className="admin-segmented" aria-label="Период записей">
               {periods.map((period) => (
                 <button
