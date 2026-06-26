@@ -16,4 +16,6 @@ export const config = {
   protectDefaultStaff: isEnabled(process.env.PROTECT_DEFAULT_STAFF),
   port: Number(process.env.PORT ?? 4000),
   nodeEnv: process.env.NODE_ENV ?? 'development',
+  telegramAdminChatId: process.env.ADMIN_TELEGRAM_CHAT_ID ?? '',
+  telegramBotToken: process.env.TELEGRAM_BOT_TOKEN ?? '',
 }

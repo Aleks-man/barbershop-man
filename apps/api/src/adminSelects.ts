@@ -21,6 +21,10 @@ export const adminAppointmentSelect = {
   },
 } satisfies Prisma.AppointmentSelect
 
+export type AdminAppointmentPayload = Prisma.AppointmentGetPayload<{
+  select: typeof adminAppointmentSelect
+}>
+
 export const adminNotificationSelect = {
   id: true,
   createdAt: true,

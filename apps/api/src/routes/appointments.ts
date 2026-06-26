@@ -5,6 +5,7 @@ import { notifyAppointmentCreated } from '../adminEvents.js'
 import { adminAppointmentSelect, adminNotificationSelect } from '../adminSelects.js'
 import { normalizeRussianPhone } from '../phone.js'
 import { prisma } from '../prisma.js'
+import { notifyAdminTelegramAppointmentCreated } from '../telegram.js'
 
 type AppointmentRequestBody = {
   barberId?: unknown
@@ -166,6 +167,9 @@ appointmentsRouter.post('/', async (request, response, next) => {
     ])
 
     notifyAppointmentCreated({ notifications })
+    void notifyAdminTelegramAppointmentCreated(appointment).catch((error: unknown) => {
+      console.warn('Failed to send Telegram appointment notification', error)
+    })
 
     response.status(201).json({ appointment })
   } catch (error) {
