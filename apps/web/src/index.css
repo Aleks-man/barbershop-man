@@ -44,6 +44,7 @@ html {
 }
 
 body {
+  scrollbar-gutter: stable;
   min-width: 320px;
   margin: 0;
   background:
