@@ -5,6 +5,7 @@ type CreateAppointmentInput = {
   customerName: string
   customerPhone: string
   date: string
+  privacyAccepted: boolean
   serviceId: string
   time: string
 }

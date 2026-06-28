@@ -12,6 +12,7 @@ type AppointmentRequestBody = {
   customerName?: unknown
   customerPhone?: unknown
   date?: unknown
+  privacyAccepted?: unknown
   serviceId?: unknown
   time?: unknown
 }
@@ -28,6 +29,7 @@ appointmentsRouter.post('/', async (request, response, next) => {
       typeof body.customerPhone === 'string' ? body.customerPhone.trim() : ''
     const normalizedCustomerPhone = normalizeRussianPhone(customerPhone)
     const date = typeof body.date === 'string' ? body.date.trim() : ''
+    const privacyAccepted = body.privacyAccepted === true
     const serviceId = typeof body.serviceId === 'string' ? body.serviceId.trim() : ''
     const time = typeof body.time === 'string' ? body.time.trim() : ''
     const selectedDate = parseDate(date)
@@ -37,11 +39,13 @@ appointmentsRouter.post('/', async (request, response, next) => {
       !customerName ||
       !normalizedCustomerPhone ||
       !selectedDate ||
+      !privacyAccepted ||
       !serviceId ||
       !time
     ) {
       response.status(400).json({
-        error: 'barberId, serviceId, date, time, customerName and customerPhone are required',
+        error:
+          'barberId, serviceId, date, time, customerName, customerPhone and privacyAccepted are required',
       })
       return
     }
@@ -142,6 +146,7 @@ appointmentsRouter.post('/', async (request, response, next) => {
         customerName,
         customerPhone: normalizedCustomerPhone,
         endsAt,
+        privacyAcceptedAt: new Date(),
         serviceId,
         startsAt,
       },

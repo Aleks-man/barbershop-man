@@ -58,6 +58,7 @@ model Appointment {
   id            String            @id @default(cuid())
   customerName  String
   customerPhone String
+  privacyAcceptedAt DateTime?
   startsAt      DateTime
   endsAt        DateTime
   status        AppointmentStatus @default(PENDING)

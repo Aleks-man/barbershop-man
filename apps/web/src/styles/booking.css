@@ -96,11 +96,39 @@
   z-index: 85;
 }
 
+.booking-form .booking-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  color: var(--soft);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.booking-form .booking-consent input {
+  flex: 0 0 auto;
+  width: 1.05rem;
+  height: 1.05rem;
+  margin: 0.12rem 0 0;
+  accent-color: var(--gold);
+}
+
+.booking-consent a {
+  color: var(--gold);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.booking-consent a:hover {
+  color: var(--heading);
+}
+
 .booking-date-label > span:first-child {
   min-width: 0;
 }
 
-.booking-form input:not([type="hidden"]),
+.booking-form input:not([type="hidden"]):not([type="checkbox"]),
 .booking-select-trigger {
   width: 100%;
   min-height: 50px;
@@ -337,7 +365,7 @@
 
 .booking-select:has(.booking-select-menu) .booking-select-trigger,
 .booking-date:has(.booking-calendar) .booking-date-trigger,
-.booking-form input:not([type="hidden"]):focus,
+.booking-form input:not([type="hidden"]):not([type="checkbox"]):focus,
 .booking-select-trigger:focus,
 .booking-date-trigger:focus {
   border-color: var(--gold);
@@ -534,7 +562,7 @@
     overflow-wrap: anywhere;
   }
 
-  .booking-form input:not([type="hidden"]),
+  .booking-form input:not([type="hidden"]):not([type="checkbox"]),
   .booking-select-trigger,
   .booking-date-trigger,
   .booking-select-option {

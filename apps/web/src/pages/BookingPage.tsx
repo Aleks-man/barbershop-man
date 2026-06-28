@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { getAvailability, getAvailabilityMonth } from '../api/availability'
 import { createAppointment } from '../api/appointments'
 import { getBookingOptions } from '../api/bookingOptions'
@@ -39,19 +39,68 @@ const findOptionValue = (options: BookingSelectOption[], requestedValue: string)
   return option?.value ?? ''
 }
 
+const bookingDraftStorageKey = 'barbershop-booking-draft'
+
+type BookingDraft = {
+  barber: string
+  date: string
+  name: string
+  phone: string
+  privacyAccepted: boolean
+  service: string
+  time: string
+}
+
+const emptyBookingDraft: BookingDraft = {
+  barber: '',
+  date: '',
+  name: '',
+  phone: '',
+  privacyAccepted: false,
+  service: '',
+  time: '',
+}
+
+const readBookingDraft = () => {
+  try {
+    const rawDraft = window.sessionStorage.getItem(bookingDraftStorageKey)
+
+    if (!rawDraft) {
+      return emptyBookingDraft
+    }
+
+    return {
+      ...emptyBookingDraft,
+      ...(JSON.parse(rawDraft) as Partial<BookingDraft>),
+    }
+  } catch {
+    return emptyBookingDraft
+  }
+}
+
+const writeBookingDraft = (draft: BookingDraft) => {
+  try {
+    window.sessionStorage.setItem(bookingDraftStorageKey, JSON.stringify(draft))
+  } catch {
+    // Browser storage can be unavailable in private mode.
+  }
+}
+
 export function BookingPage() {
   const [searchParams] = useSearchParams()
   const requestedService = searchParams.get('service') ?? ''
   const requestedBarber = searchParams.get('barber') ?? ''
-  const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
+  const [bookingDraft] = useState(readBookingDraft)
+  const [name, setName] = useState(bookingDraft.name)
+  const [phone, setPhone] = useState(bookingDraft.phone)
   const [service, setService] = useState(() =>
-    findOptionValue(fallbackServiceOptions, requestedService),
+    findOptionValue(fallbackServiceOptions, requestedService) || bookingDraft.service,
   )
-  const [barber, setBarber] = useState(() => findOptionValue(fallbackBarberOptions, requestedBarber))
-  const [date, setDate] = useState('')
-  const [time, setTime] = useState('')
+  const [barber, setBarber] = useState(() => findOptionValue(fallbackBarberOptions, requestedBarber) || bookingDraft.barber)
+  const [date, setDate] = useState(bookingDraft.date)
+  const [time, setTime] = useState(bookingDraft.time)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [privacyAccepted, setPrivacyAccepted] = useState(bookingDraft.privacyAccepted)
   const [statusMessage, setStatusMessage] = useState('')
   const [barberOptions, setBarberOptions] = useState(fallbackBarberOptions)
   const [serviceOptions, setServiceOptions] = useState(fallbackServiceOptions)
@@ -82,7 +131,8 @@ export function BookingPage() {
       service.trim() &&
       barber.trim() &&
       date.trim() &&
-      time.trim(),
+      time.trim() &&
+      privacyAccepted,
   )
   const canSubmit = isFormReady && !isSubmitting
   const submitButtonText = isSubmitting
@@ -92,6 +142,18 @@ export function BookingPage() {
       : !barber
         ? 'Сначала выберите мастера'
         : 'Записаться'
+
+  useEffect(() => {
+    writeBookingDraft({
+      barber,
+      date,
+      name,
+      phone,
+      privacyAccepted,
+      service,
+      time,
+    })
+  }, [barber, date, name, phone, privacyAccepted, service, time])
 
   useEffect(() => {
     if (!statusMessage) {
@@ -219,6 +281,7 @@ export function BookingPage() {
         customerName: name,
         customerPhone: normalizedPhone,
         date,
+        privacyAccepted,
         serviceId: service,
         time,
       })
@@ -229,6 +292,7 @@ export function BookingPage() {
       setService('')
       setBarber('')
       setDate('')
+      setPrivacyAccepted(false)
       setTime('')
       setAvailableTimeOptions(null)
       setUnavailableDates([])
@@ -353,6 +417,20 @@ export function BookingPage() {
               setStatusMessage('')
             }}
           />
+        </label>
+        <label className="booking-consent">
+          <input
+            type="checkbox"
+            checked={privacyAccepted}
+            onChange={(event) => {
+              setPrivacyAccepted(event.currentTarget.checked)
+              setStatusMessage('')
+            }}
+          />
+          <span>
+            Я согласен на обработку персональных данных и ознакомлен с{' '}
+            <Link to="/privacy">Политикой конфиденциальности</Link>.
+          </span>
         </label>
         <button type="button" disabled={!canSubmit} onClick={handleSubmit}>
           {submitButtonText}

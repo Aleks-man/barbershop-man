@@ -5,6 +5,7 @@ import { BookingPage } from './pages/BookingPage'
 import { GalleryPage } from './pages/GalleryPage'
 import { HomePage } from './pages/HomePage'
 import { MastersPage } from './pages/MastersPage'
+import { PrivacyPage } from './pages/PrivacyPage'
 import { ServicesPage } from './pages/ServicesPage'
 import { roomGallery, workGallery } from './data/gallery'
 import './styles/layout.css'
@@ -25,6 +26,7 @@ function App() {
         <Route path="services" element={<ServicesPage />} />
         <Route path="masters" element={<MastersPage />} />
         <Route path="booking" element={<BookingPage />} />
+        <Route path="privacy" element={<PrivacyPage />} />
         <Route
           path="works"
           element={
